@@ -1,0 +1,12 @@
+# Gowin implementation output and per-user IDE state
+/impl/
+*.gprj.user
+
+# Regenerable IP and simulation artifacts
+src/**/temp/
+*.vo
+*.vvp
+
+# Local runtime caches
+__pycache__/
+*.pyc

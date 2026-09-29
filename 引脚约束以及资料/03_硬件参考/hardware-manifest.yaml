@@ -1,0 +1,787 @@
+manifest:
+  name: ACG138-RK3588 Hardware Manifest
+  version: 0.1
+  generated_from:
+    - RK3588+GW5AT-60K.NET
+    - ACG138-RK3588-CB(1).NET
+  excluded_sources:
+    - file: allegro.zip
+      reason: "Extracted PDF identifies itself as MPSOC-STAR/Xilinx MPSoC design; not treated as ACG138 RK3588 hardware truth."
+  rule: "Do not infer unknown pins. Re-derive from the two NET files or board documentation before enabling a DTS node."
+
+soc:
+  device: RK3588
+  refdes: U1
+  debug_uart:
+    logical: UART2_M0
+    tx:
+      connector: P6-19
+      core_net: PMU2_GPIO_B5
+      rk3588_ball: P29
+    rx:
+      connector: P6-22
+      core_net: PMU2_GPIO_B6
+      rk3588_ball: R29
+
+memory:
+  dram:
+    parts:
+      - {refdes: U3, part: K4F8E3S4HD-GHCL}
+      - {refdes: U4, part: K4F8E3S4HD-GHCL}
+    type: LPDDR4
+    note: "DDR training/init comes from RK3588 rkbin loader; validate detected capacity and stability on real board."
+  emmc:
+    refdes: U5
+    part: H26M51002KPR
+    nominal_capacity: 16GB
+    interface: eMMC 5.1 / HS400-capable
+
+power:
+  pmic:
+    refdes: U25
+    part: RK806-1
+    interrupt:
+      core_net: PMIC_INT_L
+      rk3588_ball: M30
+    reset:
+      core_net: RESET_L
+      rk3588_ball: M31
+  external_regulators:
+    - {refdes: U7, family: RK860}
+    - {refdes: U8, family: RK860}
+    - {refdes: U9, family: RK860}
+
+fpga:
+  refdes: U10
+  part: GW5AT-LV60PG484A
+  scope: "Treat RK3588<->FPGA software-visible links as a separate BSP workstream after base SoC bring-up."
+
+ethernet0:
+  phy:
+    refdes: U19
+    part: YT8531C-CA
+    interface: RGMII
+  signals:
+    mdc:      {connector: P5-81, rk3588_ball: AB34}
+    mdio:     {connector: P5-83, rk3588_ball: AB33}
+    txd3:     {connector: P5-75, rk3588_ball: AC34}
+    txd2:     {connector: P5-71, rk3588_ball: AC33}
+    txd1:     {connector: P5-69, rk3588_ball: AD34}
+    txd0:     {connector: P5-79, rk3588_ball: AD33}
+    tx_en:    {connector: P5-77, rk3588_ball: AE34}
+    gtx_clk:  {connector: P5-73, rk3588_ball: AE33}
+    rxd3:     {connector: P5-76, rk3588_ball: AC31}
+    rxd2:     {connector: P5-80, rk3588_ball: AC32}
+    rxd1:     {connector: P5-78, rk3588_ball: AD31}
+    rxd0:     {connector: P5-72, rk3588_ball: AD32}
+    rx_dv:    {connector: P5-70, rk3588_ball: AE31}
+    rx_clk:   {connector: P5-74, rk3588_ball: AE32}
+    refclk25: {connector: P5-85, rk3588_ball: AD30, note: "DNI/0R option observed; verify population."}
+  unresolved:
+    - phy_reset_gpio_and_polarity
+    - phy_irq_gpio_if_used
+    - rgmii_tx_rx_delay_values
+
+micro_sd:
+  connector_refdes: J1
+  signals:
+    d0:  {connector: P3-29, rk3588_ball: AD2}
+    d1:  {connector: P3-31, rk3588_ball: AD1}
+    clk: {connector: P3-33, rk3588_ball: AE1}
+    cmd: {connector: P3-35, rk3588_ball: AE2}
+    d3:  {connector: P3-37, rk3588_ball: AF1, note: "Carrier net naming overlaps JTAG_TMS_M0; verify pinmux conflict."}
+    d2:  {connector: P3-39, rk3588_ball: AF2, note: "Carrier net naming overlaps JTAG_TCK_M0; verify pinmux conflict."}
+    cd:  {connector: P6-85, core_net: SDMMC_DET, rk3588_ball: P31}
+
+pcie:
+  slot_x1:
+    refdes: J4
+    phy_group: PCIE20_1/SATA30_1 combo
+    refclk_p: {connector: P2-71, rk3588_ball: H32}
+    refclk_n: {connector: P2-73, rk3588_ball: H33}
+    wake_n:   {connector: P6-28, core_net: B6_GPIO4_C0, rk3588_ball: AJ25}
+    clkreq_n: {connector: P6-39, core_net: B6_GPIO4_B7, rk3588_ball: AJ28}
+    unresolved: [perst_n_exact_path]
+  m2_m_key:
+    refdes: U20
+    width: x2
+    controller_hint: PCIe3 port1
+    rx0_p: {connector: P2-72, rk3588_ball: B32}
+    rx0_n: {connector: P2-74, rk3588_ball: A32}
+    rx1_p: {connector: P2-77, rk3588_ball: C31}
+    rx1_n: {connector: P2-79, rk3588_ball: B31}
+    tx0_p: {connector: P2-78, rk3588_ball: B30}
+    tx0_n: {connector: P2-80, rk3588_ball: A30}
+    tx1_p: {connector: P2-83, rk3588_ball: C29}
+    tx1_n: {connector: P2-85, rk3588_ball: B29}
+    refclk_p: {connector: P2-84, rk3588_ball: A28}
+    refclk_n: {connector: P2-86, rk3588_ball: B28}
+    perst_n:  {connector: P6-36, core_net: B6_GPIO4_B0, rk3588_ball: AK26}
+    clkreq_n: {connector: P6-31, core_net: B6_GPIO4_A6, rk3588_ball: AL27}
+    wake_n:   {connector: P6-27, core_net: B6_GPIO4_A7, rk3588_ball: AM27}
+
+sata0:
+  connector_refdes: CON1
+  phy_group: PCIE20_0/SATA30_0 combo
+  rx_p: {connector: P2-47, rk3588_ball: N33}
+  rx_n: {connector: P2-49, rk3588_ball: N34}
+  tx_p: {connector: P2-48, rk3588_ball: M34}
+  tx_n: {connector: P2-50, rk3588_ball: M33}
+
+usb3_type_a:
+  connector_refdes: J8
+  phy_group: PCIE20_2 combo PHY configured for USB3
+  rx_p: {connector: P2-54}
+  rx_n: {connector: P2-56}
+  tx_p: {connector: P2-59}
+  tx_n: {connector: P2-61}
+  note: "Resolve exact RK3588 balls and USB2 companion/power-enable before DTS finalization."
+
+typec0:
+  controller: {refdes: U33, part: FUSB302BMPX}
+  vbus_switch: {refdes: U34, part: DIO7002AST5}
+  i2c_sda: {connector: P6-10, core_net: PMU2_GPIO_C7, rk3588_ball: V31}
+  i2c_scl: {connector: P6-12, core_net: PMU2_GPIO_D0, rk3588_ball: W31}
+  irq_n:    {connector: P6-18, core_net: PMU2_GPIO_D3, rk3588_ball: U33}
+  usb2_dp:  {connector: P3-68, rk3588_ball: AL12}
+  usb2_dm:  {connector: P3-70, rk3588_ball: AM12}
+  otg_id:   {connector: P3-79, rk3588_ball: AL14}
+  aux_p:    {connector: P3-67, rk3588_ball: AL15}
+  aux_n:    {connector: P3-69, rk3588_ball: AM15}
+  lane0_rx_p: {connector: P3-55, rk3588_ball: AN13}
+  lane0_rx_n: {connector: P3-57, rk3588_ball: AP13}
+  lane1_tx_p: {connector: P3-56, rk3588_ball: AP14}
+  lane1_tx_n: {connector: P3-58, rk3588_ball: AN14}
+  lane2_rx_p: {connector: P3-61, rk3588_ball: AN15}
+  lane2_rx_n: {connector: P3-63, rk3588_ball: AP15}
+  lane3_tx_p: {connector: P3-62, rk3588_ball: AP16}
+  lane3_tx_n: {connector: P3-64, rk3588_ball: AN16}
+  unresolved: [fusb302_i2c_bus_number, i2c_address, vbus_enable_gpio, validated_pd_power_policy]
+
+typec1:
+  controller: {refdes: U39, part: FUSB302BMPX}
+  vbus_switch: {refdes: U38, part: DIO7002AST5}
+  i2c_sda: {connector: P6-15, core_net: PMU2_GPIO_C4, rk3588_ball: R30}
+  i2c_scl: {connector: P6-17, core_net: PMU2_GPIO_C5, rk3588_ball: P30}
+  irq_n:    {connector: P6-33, core_net: B6_GPIO4_A3, rk3588_ball: AL29}
+  usb2_dp:  {connector: P3-74, rk3588_ball: AK9}
+  usb2_dm:  {connector: P3-76, rk3588_ball: AL9}
+  otg_id:   {connector: P3-80, rk3588_ball: AK8}
+  aux_p:    {connector: P3-73, rk3588_ball: AL10}
+  aux_n:    {connector: P3-75, rk3588_ball: AM10}
+  lane0_rx_p: {connector: P3-43, rk3588_ball: AN8}
+  lane0_rx_n: {connector: P3-45, rk3588_ball: AP8}
+  lane1_tx_p: {connector: P3-44, rk3588_ball: AP9}
+  lane1_tx_n: {connector: P3-46, rk3588_ball: AN9}
+  lane2_rx_p: {connector: P3-49, rk3588_ball: AN10}
+  lane2_rx_n: {connector: P3-51, rk3588_ball: AP10}
+  lane3_tx_p: {connector: P3-50, rk3588_ball: AP11}
+  lane3_tx_n: {connector: P3-52, rk3588_ball: AN11}
+  unresolved: [fusb302_i2c_bus_number, i2c_address, vbus_enable_gpio, validated_pd_power_policy]
+
+camera:
+  i2c_mux:
+    refdes: U17
+    part: PCA9546APWR
+    upstream: [CSI_I2C_SCL, CSI_I2C_SDA]
+    # 2026-09-21 上板实测（硬件事实，与 DTS 是否打开无关）：
+    #   i2cdetect -y -r 3   -> 只有 0x70 应答（0x71..0x77 全无）
+    #   i2cget -y 3 0x70 0  -> 0x00  rc=0    （4 通道全关 = PCA9546 上电默认）
+    #   i2cget -y 3 0x74 0  -> Error: Read failed  rc=2
+    # 网表按 "A0/A1 接地、A2 经 R18 4.7K 上拉" 推算应为 0x74，与实测不符。
+    # DTS 一律以实测 0x70 为准；R18 是否实贴留作待查（不臆断）。
+    i2c_address: 0x70
+    i2c_address_source: "measured 2026-09-21 (i2cget on i2c-3)"
+    i2c_address_netlist_guess: 0x74
+    downstream:
+      - CSI0_I2C_SCL/SDA
+      - CSI1_I2C_SCL/SDA
+      - CSI2_I2C_SCL/SDA
+      - CSI3_I2C_SCL/SDA
+  ports:
+    - {refdes: FPC2, logical: CSI0, phy_hint: MIPI_DPHY0_RX}
+    - {refdes: FPC1, logical: CSI1, phy_hint: MIPI_DPHY1_RX, verify: true}
+    - {refdes: FPC5, logical: CSI2, phy_hint: MIPI_DPHY2_RX}
+    - {refdes: FPC4, logical: CSI3, phy_hint: MIPI_DPHY3_RX}
+  pwdn:
+    csi0: {connector: P6-24, core_net: B6_GPIO4_B5, rk3588_ball: AJ26}
+    csi1: {connector: P6-30, core_net: B6_GPIO4_B1, rk3588_ball: AL24}
+    csi2: {note: "via level shifter; re-trace upstream RK GPIO"}
+    csi3: {note: "via level shifter; re-trace upstream RK GPIO"}
+  unresolved:
+    - sensor_models
+    - sensor_i2c_addresses
+    - reset_polarities
+    - mclk_assignments
+    - endpoint_lane_maps
+
+display:
+  dsi0:
+    connector_refdes: FPC3
+    phy_hint: MIPI_DPHY0_TX
+    interrupt: {connector: P6-14, rk3588_ball: V29}
+    backlight: {connector: P6-38, rk3588_ball: AL26}
+  dsi1:
+    connector_refdes: FPC6
+    phy_hint: MIPI_DPHY1_TX
+    interrupt: {connector: P6-16, rk3588_ball: V28}
+    backlight: {connector: P6-40, rk3588_ball: AJ27}
+  unresolved: [panel_models, reset_gpio_mapping, touch_i2c_addresses, timing_parameters]
+
+hdmi:
+  connectors:
+    - J5
+    - J6
+    - J7
+  topology: "J5=HDMI0 TX (TX1), J6=HDMI1 TX (TX2), J7=HDMI RX; connector roles confirmed from carrier NET."
+  hdmi_rx_control:
+    cec_m2: {connector: P3-4, rk3588_ball: E27}
+    hpdout_m2: {connector: P3-6, rk3588_ball: E26}
+    scl: {connector: P3-38, rk3588_ball: F24}
+    sda: {connector: P3-40, rk3588_ball: F25}
+    detect_l: {connector: P6-8, rk3588_ball: AC30}
+  hdmi_tx_control:
+    tx1_cec_m0: {connector: P6-26, rk3588_ball: AK24}
+    tx1_on_h:   {connector: P6-32, rk3588_ball: AK25}
+    tx0_on_h:   {connector: P6-34, rk3588_ball: AM25}
+  control_pin_review_20260922:
+    source: "hardware/connector-map.tsv and carrier NET Q5/Q6/Q7/Q14/Q15/Q16/Q19..Q24"
+    tx1_j5:
+      ddc_scl: {gpio: GPIO3_C7, connector: P4-86, group: hdmim2_tx0_scl}
+      ddc_sda: {gpio: GPIO3_D0, connector: P4-84, group: hdmim2_tx0_sda}
+      hpd: {gpio: GPIO3_D4, connector: P4-76, group: hdmim1_tx0_hpd}
+      cec: {gpio: GPIO4_C1, connector: P6-26, group: hdmim0_tx0_cec}
+      enable: {gpio: GPIO4_B3, connector: P6-34, active: high}
+    tx2_j6:
+      ddc_scl: {gpio: GPIO3_C6, connector: P4-94, group: hdmim1_tx1_scl}
+      ddc_sda: {gpio: GPIO3_C5, connector: P4-90, group: hdmim1_tx1_sda}
+      hpd: {gpio: GPIO3_B7, connector: P4-98, group: hdmim1_tx1_hpd}
+      cec: {gpio: GPIO3_C4, connector: P4-92, group: hdmim2_tx1_cec}
+      enable: {gpio: GPIO4_B2, connector: P6-32, active: high}
+    rx_j7:
+      ddc_scl: {gpio: GPIO1_D6, connector: P3-38, group: hdmim2_rx_scl}
+      ddc_sda: {gpio: GPIO1_D7, connector: P3-40, group: hdmim2_rx_sda}
+      hpd_output: {gpio: GPIO1_B6, connector: P3-6, group: hdmim2_rx_hpdin, trigger_level: 1}
+      cec: {gpio: GPIO1_B7, connector: P3-4, group: hdmim2_rx_cec}
+      detect_5v: {gpio: GPIO2_C4, connector: P6-8, active: low}
+    note: "Net-name TX1/M0 suffixes differ from RK3588 Linux mux group names; derive groups from SoC pad. EVB work LED on GPIO3_B7 disabled to release TX2 HPD. Mapping review is not functional CEC/RX validation."
+  unresolved: [full_hdmi_highspeed_map, cec_functional_validation, rx_capture_validation]
+
+audio:
+  codec:
+    refdes: U46
+    part: ES8388
+  i2s0:
+    mclk:    {connector: P3-1, rk3588_ball: F30}
+    sclk_tx: {connector: P3-3, rk3588_ball: E31}
+    lrck_tx: {connector: P3-7, rk3588_ball: D30}
+    sdo0:    {connector: P3-11, rk3588_ball: E29}
+    sdi1:    {connector: P3-13, rk3588_ball: D28}
+  unresolved: [codec_i2c_bus, codec_i2c_address, hp_detect, speaker_amp_control, exact_sound_card_routes]
+
+rtc:
+  refdes: U50
+  part: BM8563T
+  unresolved: [i2c_bus, i2c_address_crosscheck, irq_gpio_if_used]
+
+eeprom:
+  refdes: U49
+  part: 24LC64
+  unresolved: [i2c_bus, i2c_address_from_straps]
+
+fan:
+  pwm:
+    connector: P6-20
+    core_net: PMU2_GPIO_C6
+    rk3588_ball: T29
+
+validation_policy:
+  states: [PASS, FAIL, BLOCKED_HW, BLOCKED_INFO, NOT_RUN]
+  rule: "No feature is PASS until tested on physical ACG138 hardware with captured logs."
+
+# ---------------------------------------------------------------------------
+# Phase 0 网表反查结果（2026-09-19）
+# 来源：hardware/source/RK3588+GW5AT-60K.NET 与 hardware/source/ACG138-RK3588-CB.NET
+# 工具：tools/parse_netlists.py
+# 详细证据：reports/phase0-netlist-check.md 与 logs/phase-0/*.txt
+#
+# 注意：以下结论全部来自网表本身，尚未在实物上验证，因此不是 PASS，
+# 只是"已从原始网表确认"的硬件事实，用于编写 DTS。
+# ---------------------------------------------------------------------------
+phase0_resolved:
+  method: "netlist trace (tools/parse_netlists.py --trace / --net)"
+  confidence: "netlist-confirmed; not yet board-verified"
+
+  ethernet0_phy_reset:
+    chain: "U19-12 -> R82(0R) -> ENET0_RESET -> P4-78 -> B5_GPIO3_B2 -> U1-AE28"
+    rk3588_gpio: GPIO3_B2
+    rk3588_ball: AE28
+    core_net: B5_GPIO3_B2
+    carrier_net: ENET0_RESET
+    pull: "R83 4.7K to VCC_1V8 (deasserted high, reset active low)"
+    note: "Resolves prior unresolved item phy_reset_gpio_and_polarity. Still needs scope/board confirmation of timing."
+
+  ethernet0_phy_straps:
+    observations:
+      - "U19 pin 36/37: 25MHz crystal Y3 (C50/C51 load caps), not the 25MHz REFCLK path"
+      - "U19 pin 31: R77 4.7K pull-up to VCC_1V8"
+      - "U19 pin 35: R81 4.7K pull-down to GND"
+      - "U19 pin 39: R84 2.49K 1% to GND (bias/RSET type pin)"
+    note: "Strap polarity must still be read against the YT8531 datasheet before setting rgmii delays."
+
+  ethernet0_leds:
+    mapping: "ETH0_PHY_LED0/1/2 -> U19 pin 32/33/34 -> R72/R74/R76 -> J3 (LED header)"
+
+  pcie_x1_j4_perst:
+    chain: "U14 pin 14 -> PCIE_PERST -> J4-A11 (and R98 -> U14 area)"
+    driven_by: "U14 = SN74AVC4T774PWR (netlist is authoritative), channel A1(3) <-> B1(14)"
+    rk3588_gpio: GPIO3_C1
+    rk3588_ball: Y27
+    core_net: B5_GPIO3_C1
+    note: "Netlist-authoritative per hardware owner decision 2026-09-19. Pin-name mapping comes from the project's own AVC4T774PWR symbol; re-check when the matching schematic revision is available."
+
+  typec_vbus_enable:
+    typec0: "USB_EN0 -> U34 (DIO7002AST5) pin 4; load switch output USB_VBUS1 -> U33 pin 2 and Type-C0 VBUS"
+    typec1: "USB_EN1 -> U38 (DIO7002AST5) pin 4; load switch output USB_VBUS2 -> Type-C1 VBUS"
+    source_of_USB_EN: "U14 (SN74AVC4T774PWR) channel A2(4)<->B2(13) and A3(5)<->B3(12)"
+    typec0_enable_gpio: "GPIO3_B6"
+    typec0_enable_ball: AE29
+    typec1_enable_gpio: "GPIO3_D1"
+    typec1_enable_ball: AG23
+    rk_key0_gpio: "GPIO3_C0"
+    rk_key0_ball: Y29
+    note: "U14 channel A4(6)<->B4(11) drives RK_KEY0; DIR4 and OE# are tied to GND, so the device is always enabled."
+
+  usb3_typea_vbus:
+    chain: "U41 (DIO7002AST5) pin 1 -> USB_VBUS3 -> J8-1"
+    enable: "U41 pin 4 = NetR201_1 -> R201 4.7K -> VCC5V0_SYS only; no RK3588 GPIO"
+    conclusion: "J8 VBUS is permanently enabled by a hardware pull-up; there is no software VBUS control for this port"
+    verify: "confirm the load-switch enable polarity against the DIO7002AST5 datasheet"
+    usb2_companion: "J8 pin 2/3 -> USB20_HOST0_D_N/P -> U1-AL6 / U1-AK6"
+    usb3_superspeed: "J8 pin 8/9 = StdA_SSTX_N/P; SoM side is PCIE20_2_TX_N/P -> U1-H29/H30 via AC coupling C143/C144"
+    usb3_receive: "J8 pin 5/6 = PCIE20_2_RX_N/P -> U1-J30/J31"
+
+  rtc_and_eeprom_i2c:
+    bus: I2C1_M4
+    chain: "U1 I2C1_SDA_M4/SCL_M4 -> U54 (PCA9306DP1 level translator) -> IIC_SDA/IIC_SCL (3.3V) -> U49 (24LC64) / U50 (BM8563T) / DSI0 touch (FPC3-22 via R330/R329 0R)"
+    pullups: "R266/R267 4.7K to VCC_3V3; R164/R165 4.7K on the touch branch"
+    note: "Resolves prior unresolved items rtc.i2c_bus and eeprom.i2c_bus. I2C addresses still need datasheet/strap confirmation and a bus scan on hardware."
+
+  audio_es8388:
+    codec: "U46 ES8388 (I2C pins still to be traced; digital audio now confirmed)"
+    i2s0_map:
+      - "U46 pin 1  -> R305 33R -> I2S0_MCLK    -> P3-1  -> B1_GPIO1_C2 -> U1-F30"
+      - "U46 pin 5  -> R307 33R -> I2S0_SCLK_TX -> P3-3  -> B1_GPIO1_C3 -> U1-E31"
+      - "U46 pin 7  -> R308 33R -> I2S0_LRCK_TX -> P3-7  -> B1_GPIO1_C5 -> U1-D30"
+      - "U46 pin 6  -> R309 33R -> I2S0_SDO0    -> P3-11 -> B1_GPIO1_C7 -> U1-E29"
+      - "U46 pin 8  -> R310 33R -> I2S0_SDI1    -> P3-13 -> B1_GPIO1_D4 -> U1-D28"
+    unresolved_after_phase0: [codec_i2c_bus, codec_i2c_address, hp_detect, speaker_amp_control]
+
+  hdmi_connector_roles:
+    J5: "HDMI0 TX (nets HDMI0_TX0..3*_PORT, HDMI0_TX_CEC_PORT, HDMI0_TX_SCL/SDA_PORT, HDMI0_5V)"
+    J6: "HDMI1 TX (nets HDMI1_TX0..3*_PORT, HDMI1_TX_CEC_PORT, HDMI1_TX_SCL/SDA_PORT, HDMI1_5V)"
+    J7: "HDMI0 RX (nets HDMI0_RX0..2*, HDMI0_RX_CLK*, HDMI0_RX_CEC_PORT, HDMI0_RX_HPD_PORT, HDMI0_RX_PORT_5V)"
+    note: "Resolves connector_role_crosscheck from the netlist. High-speed pair to ball mapping still to be extended."
+
+  camera_and_dsi_level_shift:
+    csi0_pwdn: "P6-24 / FPC2-3 / R169 4.7K pull-down  -> already known GPIO4_B5 (AJ26)"
+    csi1_pwdn: "P6-30 / FPC1-3 / R170 4.7K pull-down  -> already known GPIO4_B1 (AL24)"
+    csi2_pwdn: "U35 (SN74AVC4T774PWR) pin 12 -> CSI2_PWDN -> FPC5-3, R177 4.7K pull-down"
+    dsi0_ct_reset: "U35 pin 13 -> DSI0_CT_RESET"
+    dsi0_reset: "U35 pin 11 -> MIPI_DSI0_RESET"
+    level_shifter_inputs: "U35 pin 4/5/6 = B4_GPIO1_B4 (E24) / B4_GPIO1_B1 (D25) / B4_GPIO1_A6 (C24)"
+    level_shifter_symbol: "A1..A4 = pin 3..6, B1..B4 = pin 14..11, DIR1..DIR4 = pin 1,2,7,8, OE# = pin 9, VCCB = 15, VCCA = 16"
+    pairing: "A1(3)<->B1(14); A2(4)<->B2(13); A3(5)<->B3(12); A4(6)<->B4(11)"
+    derived:
+      csi2_pwdn: "GPIO1_B1 (D25)"
+      dsi0_ct_reset: "GPIO1_B4 (E24)"
+      mipi_dsi0_reset: "GPIO1_A6 (C24)"
+      netU35_14: "channel A1 unused / to be confirmed"
+    status: "netlist-authoritative; pin-name mapping to re-check against the matching schematic revision"
+
+phase0_open_questions:
+  - "obtain the Altium schematic revision that matches the netlists, then re-verify U14/U35 pin names (see hardware/source-audit.md 4.2)"
+  - "ES8388 I2C bus/address and analog routing"
+  - "I2C address straps for 24LC64 / BM8563T / PCA9546 / FUSB302"
+  - "RGMII TX/RX delay selection versus YT8531 strap pins"
+
+# ---------------------------------------------------------------------------
+# Phase 2（ACG138 最小可启动 BSP）从网表反查得到的板级事实
+#
+# 这一节记录的是"设备树里必须写对，否则板子起不来"的那几条。
+# 复现命令：
+#   python3 tools/parse_netlists.py --refdes U7,U8,U9
+#   （注意：U7/U8/U9 在底板网表里是 ESD 管 SRV05-4，核心板里才是 RK860，
+#     两份网表位号会重名，反查时要指明是哪一份）
+# ---------------------------------------------------------------------------
+phase2_dts_resolved:
+
+  pmic_topology:
+    fact: "single PMIC"
+    evidence: "核心板网表只有一颗 U25 = RK806-1；U7/U8/U9 是三颗外挂 RK860（不是第二颗 PMIC）"
+    consequence: >
+      U-Boot 的 drivers/power/pmic/rk8xx_spi.c 按**设备树节点名**区分单/双 PMIC
+      （单 = rk806single@0，双 = rk806master@0 + rk806slave@1），再与芯片读回的
+      RK806_HW_VER 比对（HW_SINGLE_PMIC = 0xe8，HW_DUAL_PMIC = 0x28），
+      不一致就直接 run_command("download") 把板子按进 RockUSB 下载模式。
+      本板实测读回 0xe8，因此设备树必须是 rk806single@0。
+    which_dtb: >
+      U-Boot 启动中段会调用 arch/arm/mach-rockchip/kernel_dtb.c 的
+      init_kernel_dtb()，把 gd->fdt_blob 换成启动分区里的 rk-kernel.dtb。
+      这条校验读的是**内核设备树**，不是 U-Boot 自带的设备树。
+    observed_log: "spi2: RK806: 2 / ON=0x40, OFF=0x00 / HW single pmic, the firmware dual pmic(0xe8)!"
+
+  external_bucks:
+    # 三颗 RK860 的供电对象、I2C 归属与使能方式，全部由核心板网表反查得到
+    - refdes: U7
+      part: RK860-2
+      output_net: VDD_CPU_BIG0
+      consumed_by: "RK3588 U1 balls M16/M17/M19, N16/N17/N19, P16/P17, R16/R17, T16/T17"
+      i2c:
+        bus_nets: [I2C0_SDA_M2, I2C0_SCL_M2]
+        rk3588_balls: [W29, W30]
+        dts_mux: i2c0m2_xfer
+        address: "0x42"
+      enable_net: BIG/NPU_EN
+      vsel_net: VSEL2
+      vsel_ball: R31
+      vin: VCC5V0_SYS
+      dts_labels: [vdd_cpu_big0_s0, vdd_cpu_big0_mem_s0]
+    - refdes: U8
+      part: RK860-3
+      output_net: VDD_CPU_BIG1
+      consumed_by: "RK3588 U1 balls K23/K24, L23/L24, M23/M24, N23/N24, P23/P24"
+      i2c:
+        bus_nets: [I2C0_SDA_M2, I2C0_SCL_M2]
+        rk3588_balls: [W29, W30]
+        dts_mux: i2c0m2_xfer
+        address: "0x43"
+      enable_net: BIG/NPU_EN
+      vsel_net: VSEL6
+      vsel_ball: W28
+      vin: VCC5V0_SYS
+      dts_labels: [vdd_cpu_big1_s0, vdd_cpu_big1_mem_s0]
+    - refdes: U9
+      part: RK860-2
+      output_net: VDD_NPU
+      consumed_by: "RK3588 U1 balls AB21/AB22/AB23, AC22/AC23, AD22/AD23, AE22/AE23"
+      i2c:
+        bus_nets: [I2C2_SDA_M0, I2C2_SCL_M0]
+        rk3588_balls: [T31, T28]
+        dts_mux: i2c2m0_xfer
+        address: "0x42"
+      enable_net: BIG/NPU_EN
+      vsel_net: VSEL3
+      vsel_ball: U32
+      vin: VCC5V0_SYS
+      dts_labels: [vdd_npu_s0, vdd_npu_mem_s0]
+    # 开放问题（同样属于 BLOCKED_HW）：
+    #   - VSEL2 / VSEL3 / VSEL6 三档对应的实际电压（需器件手册或实测）
+    #   - 0x42 / 0x43 是否可达，需上板 i2cdetect 复核
+
+  external_buck_enable:
+    net: BIG/NPU_EN
+    members: [U7-A2, U8-A2, U9-A2]
+    straps:
+      - "R102 -> VCC_3V3（上拉）"
+      - "R103 -> GND（下拉）"
+    conclusion: "使能由电阻选装决定，网络上没有任何 RK3588 GPIO；固件按 regulator-always-on/boot-on 描述"
+    status: "BLOCKED_INFO（哪一支实装需实物确认）"
+
+  pmic_derived_rails:
+    # 两条由 RK806-1 自身引出的轨，内核侧按固定轨登记
+    - net: VDDA_0V85
+      source_pin: U25-10
+      series: "R217 0R"
+      consumed_by: "RK3588 U1 balls AH13/AH14, AJ13/AJ14, K28/L28/M28（模拟/PLL 供电）"
+      dts_label: avdd_0v85_s0
+    - net: VCC_1V1_NLDO
+      source_pin: "U25-9 / U25-13"
+      dts_label: vcc_1v1_nldo_s3
+      referenced_by: "rk3588-rk806-single.dtsi 的 vcc13-supply / vcc14-supply"
+
+  usb_controllers:
+    dual_role: "Type-C0 的 OTG_ID -> AL14，Type-C1 的 OTG_ID -> AK8；两个 dwc3 控制器置 dr_mode = otg"
+    host_only: "USB3 Type-A（J8）没有 ID 信号，置 dr_mode = host"
+    vbus_always_on: "J8 的 VBUS 由 U41 使能脚经 R201 4.7K 上拉到 VCC5V0_SYS，硬件常开，无 GPIO"
+    why_explicit: >
+      U-Boot 的 usb_get_dr_mode() 读不到 dr_mode 会打印
+      "usb dr_mode not found" 并返回 UNKNOWN。该阶段 U-Boot 用的同样是内核
+      设备树（见 pmic_topology.which_dtb），所以内核 DT 必须显式给出 dr_mode。
+    open_questions:
+      - "控制器编号与物理口的对应关系（需 RK3588 USB PHY lane↔ball 表）— BLOCKED_INFO"
+
+  display_placeholders:
+    reason: >
+      基线 rk3588-evb1-lp4-yyt.dtsi 引用了 &backlight / &dsi0_panel /
+      &dsi1_panel 三个标签，但它自身及其 include 链并不定义它们（在厂商树里
+      由参考板的 LCD 文件提供）。本板屏型号未确认，不能照抄参考板时序，
+      因此以 disabled 占位节点提供标签。
+    items:
+      - {dts_label: backlight, status: disabled}
+      - {dts_label: dsi0_panel, status: disabled, known_hw: "DSI0 背光 P6-38 -> ball AL26；MIPI_DSI0_RESET 上游 GPIO1_A6 (C24)"}
+      - {dts_label: dsi1_panel, status: disabled, known_hw: "DSI1 背光 P6-40 -> ball AJ27；触摸复位 GPIO1_B4 (E24)"}
+    status: "BLOCKED_INFO（panel 型号与初始化时序待确认）"
+
+  phase2_static_verification:
+    script: scripts/verify_acg138_dtb.sh
+    method: "构建完成后从 update.img 里提取内核 DTB，逐条核对特征（构建 rc=0 不能作为判据：dts 编译失败时构建不报错，会沿用旧 DTB）"
+    result: "11/11 PASS（2026-09-20，镜像 ACG138-RK3588-20260920_update.img）"
+    scope: "仅静态产物校验；串口日志、rootfs shell、eMMC 识别、50 次冷启动、内存压力仍为 BLOCKED_HW"
+
+# ---------------------------------------------------------------------------
+# Phase 3 起步：上板实测确认的总线/器件地址（把 Phase 0 的 BLOCKED_INFO 落定）
+# 实测方法：串口控制台执行 `i2cdetect -l` 与 `i2cdetect -y -r <bus>`，
+#           完整记录见 reports/phase3-i2c-and-emmc-findings.md
+# ---------------------------------------------------------------------------
+phase3_resolved:
+  i2c_adapter_map:
+    - {linux: i2c-0,  controller: fd880000.i2c, dt_node: i2c0}
+    - {linux: i2c-1,  controller: fea90000.i2c, dt_node: i2c1}
+    - {linux: i2c-2,  controller: feaa0000.i2c, dt_node: i2c2}
+    - {linux: i2c-7,  controller: fec90000.i2c, dt_node: i2c7}
+    - {linux: i2c-9,  controller: fde80000.hdmi, role: "HDMI0 DDC"}
+    - {linux: i2c-10, controller: fdea0000.hdmi, role: "HDMI1 DDC"}
+
+  device_addresses:
+    - {refdes: U49, part: 24LC64,   bus: i2c1, address: "0x50", status: "实测应答（Phase 0 原为 BLOCKED_INFO）"}
+    - {refdes: U50, part: BM8563T,  bus: i2c1, address: "0x51", status: "实测应答（Phase 0 原为 BLOCKED_INFO）"}
+    - {refdes: U46, part: ES8388,   bus: i2c7, address: "0x10", status: "实测应答；基线写的 0x11 错误（原日志 ES8323 7-0011 i2c recv Failed）"}
+    - {refdes: U7,  part: RK860-2,  bus: i2c0, address: "0x42", status: "已被驱动占用（UU），VDD_CPU_BIG0"}
+    - {refdes: U8,  part: RK860-3,  bus: i2c0, address: "0x43", status: "已被驱动占用（UU），VDD_CPU_BIG1"}
+    - {refdes: U9,  part: RK860-2,  bus: i2c2, address: "0x42", status: "已被驱动占用（UU），VDD_NPU"}
+
+  emmc_measured:
+    mode: "HS400 Enhanced Strobe"
+    clock: "200 MHz"
+    bus_width_bits: 8
+    signal_voltage_v: 1.8
+    device_name: AJTD4R
+    rootfs: "/dev/mmcblk0p6 on /"
+    evidence: "/sys/kernel/debug/mmc0/ios"
+
+  phase3_decisions:
+    - "eMMC：用户决定跳过专门的 fio/extcsd 压测（系统本身跑在 eMMC 上），以 mmc0/ios 实测参数作为证据"
+    - "MicroSD：卡已插入（空卡）；需先在设备树打开 &sdmmc 并补 cd-gpios（SDMMC_DET P6-85 -> ball P31）"
+    - "RTC：电池已安装，地址 0x51，待补节点后做重启与断电保持测试"
+    - "FAN PWM：风扇未安装，用户决定最后再测，先记待办"
+
+# ---------------------------------------------------------------------------
+# Phase 5：USB 主机口（J8 = USB3 Type-A）反查结果（2026-09-20，纯网表 + 内核源码确认）
+#
+# 复现命令：
+#   python tools/net_query.py --board carrier comp J8 U41 U34 U38 R201 R203
+#   python tools/net_query.py --board som net USB20_HOST0_D_P
+# ---------------------------------------------------------------------------
+phase5_resolved:
+  usb3_type_a_j8:
+    connector_refdes: J8
+    part: "HC-USB3.0-L257-P（USB3.0 Type-A 母座）"
+    superspeed_tx: "J8-8/9 (StdA_SSTX_N/P) -> C143/C144 0.1uF 交流耦合 -> 底板网 PCIE20_2_TX_N/P -> 核心板 P2-59/61 -> U1-H29/H30"
+    superspeed_rx: "J8-5/6 -> 底板网 PCIE20_2_RX_N/P -> 核心板 P2-56/54 -> U1-J30/J31"
+    usb2_dm: "J8-2 -> USB20_HOST0_D_N -> P4-99 -> U1-AL6"
+    usb2_dp: "J8-3 -> USB20_HOST0_D_P -> P4-97 -> U1-AK6"
+    vbus: "J8-1 = USB_VBUS3 <- U41 (DIO7002AST5) pin 1（负载开关输出）"
+    otg_id: "无（纯主机口，dr_mode 必须为 host）"
+
+  usb3_vbus_switch:
+    refdes: U41
+    part: DIO7002AST5
+    topology: "pin5 = VIN = VCC5V0_SYS；pin1 = VOUT = USB_VBUS3；pin2 = GND；pin3 = 限流设置脚（R203 6.8K -> GND）；pin4 = EN"
+    enable: "pin4 经 R201 4.7K 上拉到 VCC5V0_SYS —— 无 RK3588 GPIO，硬件常开"
+    pinout_proof: >-
+      U34/U38（两颗同型号，Type-C0/Type-C1 的 VBUS 开关）的 pin4 分别由
+      USB_EN0（U14-13，来自 GPIO3_B6）和 USB_EN1（U14-12，来自 GPIO3_D1）驱动，
+      说明 pin4 就是 EN；U41/U42 的 pin4 没有 GPIO，只接 R201/R202 上拉，
+      因此设计意图就是"常开"。
+    sibling: "U42 (DIO7002AST5) -> USB_VBUS4 -> 另一个 Type-A 口 USB_HOST1-1"
+    status: "netlist-confirmed；上板实测仍未枚举到设备，见 phase5_observations"
+
+  usb2_typea_second_port:
+    connector_refdes: USB_HOST1
+    note: "底板上还有第二个 Type-A 口（仅 USB2），VBUS 由 U42 供，信号为 USB20_HOST1_D_P/N -> P4-91/93 -> U1-AL7/AM7"
+    use: "可作为 J8 的对照口，用来区分'U 盘/供电问题'与'J8 专属问题'"
+
+# ---------------------------------------------------------------------------
+phase10_resolved:
+  说明: >
+    Phase 10（DSI 屏 ×2 + CSI 摄像头 ×4）2026-09-21 上板实测记录。
+    显示部分做到"驱动链路全通"：DRM 连接器出现、模式正确、背光常亮；
+    画面是否正常仍以用户目视为准。
+  镜像: "ACG138-RK3588-20260921_update.img  SHA256 3eff5ea50bbcf3725fd02b27f2d4b045e60f347ca9ffbf3764c576d8386a3576"
+  内核: "#60 SMP Mon Sep 21 03:14:57 UTC 2026"
+
+  dsi0:
+    connector_refdes: FPC3
+    result: "PASS（驱动链路）"
+    drm_connector: card0-DSI-1
+    connector_status: connected
+    mode: 1080x1920
+    enabled: true
+    backlight: "backlightdsi0；PWM11_M1(GPIO4_B4/AL26)；period 25000ns duty 18823ns"
+    panel_reset: "GPIO1_A6 (C24)，低有效"
+    drm_bound: "rockchip-drm display-subsystem: bound fde20000.dsi"
+
+  dsi1:
+    connector_refdes: FPC6
+    result: "PASS（驱动链路）"
+    drm_connector: card0-DSI-2
+    connector_status: connected
+    mode: 1080x1920
+    enabled: true
+    backlight: "backlightdsi1；PWM13_M1(GPIO4_B6/AJ27)；period 25000ns duty 18823ns"
+    panel_reset: "GPIO1_C4（网表反查 MIPI_DSI1_RESET：FPC6-2 <- U36-11 <- U36-5）"
+    drm_bound: "rockchip-drm display-subsystem: bound fde30000.dsi"
+    panel_model: "与 DSI0 同型号同批次（用户 2026-09-21 确认），复用同一份 COE 初始化序列与时序"
+
+  dsi_open_items:
+    - "panel-simple-dsi: Expected bpc in {6,8} but got: 0 —— 目前无害，待定是否补 bpc"
+    - "GT911 触摸两路都还没做（地址 0x5D/0x14 需上板 i2cdetect 实测）"
+
+  csi:
+    i2c_mux: "PCA9546 (U17) @ I2C3；**实测地址 0x70**（网表按 A2 上拉推算的 0x74 与实际不符）"
+    downstream_buses: ["i2c-9 = chan0", "i2c-10 = chan1", "i2c-11 = chan2", "i2c-12 = chan3"]
+    camera_scan_20260921:
+      chan0: "0x36 应答；0x300A 读回 0x56 0x47 → 确认 OV5647"
+      chan1: "无应答（i2ctransfer: No such device or address）"
+      chan2: "无应答"
+      chan3: "无应答"
+    pwdn_pins: "CSI0=GPIO4_B5(141)、CSI1=GPIO4_B1(137)、CSI2=GPIO1_B1(41)、CSI3=GPIO1_C4(52)；均 4.7K 下拉，默认低电平=使能"
+    pwdn_measured_20260921:
+      gpio141: "dir=in val=0 → CSI0 使能（能识别，与现象一致）"
+      gpio137: "被 dwhdmi-rockchip 占用（export 失败）→ 见下面的抢脚条目"
+      gpio41: "dir=in val=0 → CSI2 使能，但仍不识别"
+      gpio52: "dir=in val=0 → CSI3 使能，但仍不识别"
+    root_cause_csi1: >-
+      参考板 EVB1 的 hdmi@fde80000 带 enable-gpios = <&gpio4 RK_PB1>，
+      而本板 GPIO4_B1 是 **CSI1_PWDN**（connector-map.tsv: P6-30 CSI1_PWDN B6_GPIO4_B1 AL24）。
+      该引脚被驱动拉高（/sys/kernel/debug/gpio 里 gpio-137 (|enable) out hi），
+      等于把 CSI1 的 sensor 置于掉电状态 → I2C 不应答。
+      本板 HDMI0 的使能其实在 GPIO4_B3（P6-34 HDMI0_TX_ON_H AM25），
+      已在 board/acg138/kernel/dts/rk3588-acg138-carrier.dtsi 里改成 &hdmi0 { enable-gpios = <&gpio4 RK_PB3 ...>; }。
+      修复镜像：SHA256 adb65b9d…f13381a（phase10-csi1-hdmi-gpio-fix）。
+    forbidden_ops:
+      - >-
+        echo fde80000.hdmi > /sys/bus/platform/drivers/dwhdmi-rockchip/unbind
+        —— 2026-09-21 实测直接触发内核 oops 并把板子挂死（需断电）。
+        与 Mali 驱动热重载同属禁止项，不要用来做"在线验证"。
+    result: >-
+      BLOCKED_HW —— 复用器/总线/地址链已通；第 1 路确认为 OV5647；
+      CSI1 的阻塞原因已定位并修复（HDMI 抢 PWDN）；CSI2/CSI3 的 PWDN 实测为使能，
+      软件侧已无解释，需要靠"换座子/换模块"的物理隔离实验继续查。
+
+  mipi_csi_ballmap_20260921:
+    note: "网表反查得到的 4 路 MIPI CSI 接收球位（用于后续 D-PHY 实例映射）"
+    MIPI_DPHY0_RX: "CLK AN32/AP31, D0 AN29/AP29, D1 AN30/AP30, D2 AN33/AP32"
+    MIPI_DPHY1_RX: "CLK AK20/AL20, D0 AK18/AL18, D1 AK19/AL19, D2 AK21/AL21, D3 AK22/AL22"
+    MIPI_DPHY2_RX: "CLK0 AJ33/AJ34, CLK1 AM33/AM34, D0 AG33/AG34, D1 AH33/AH34, D2 AK33/AK34"
+    MIPI_DPHY3_RX: "CLK0 AJ31/AJ32, CLK1 AM31/AM32, D0 AG31/AG32, D1 AH31/AH32, D2 AK31/AK32"
+    open_item: >-
+      "球位 ↔ RK3588 csi2_dphyN / mipiX_csi2 实例"的对应关系仍需 RK3588 数据手册/TRM
+      确认（厂商 SoM 基线 DTS 里没有任何 CSI/D-PHY 接法可抄）。
+
+  combo_phy_conflict:
+    phy: combphy2_psu
+    dt_node: "phy@fee20000"
+    shared_by:
+      - "usbhost_dwc3_0 (usb@fcd00000)  phys = <&combphy2_psu PHY_TYPE_USB3>"
+      - "pcie2x1l1 (pcie@fe180000)     phys = <&combphy2_psu PHY_TYPE_PCIE>"
+      - "sata2 (sata@fe230000)         phys = <&combphy2_psu PHY_TYPE_SATA>"
+    driver_evidence: >-
+      drivers/phy/rockchip/phy-rockchip-naneng-combphy.c:
+      rockchip_combphy_xlate() 把 PHY 类型记在 priv->mode 这一个变量里，
+      第二个消费者会覆盖它并打印
+      "phy type select %d overwriting type %d"（这里实测为 4 覆盖 2）。
+      即同一路 combo PHY 只能有一个功能生效。
+    observed_log: "[    7.720439] naneng-combphy fee20000.phy: phy type select 4 overwriting type 2"
+    resolution: "Phase 5 关闭 pcie2x1l1（基线 EVB1 是拿这一路接 RTL8111 PCIe 网卡），把 combphy2_psu 让给 usbhost3_0；最终组合矩阵在 Phase 6 给出"
+
+  phy_ownership_map:
+    combphy0_ps:  {dt: "phy@fee00000", users: ["pcie2x1l2 (pcie@fe190000)", "sata0 (sata@fe210000)"], board_use: "SATA CON1（Phase 6）"}
+    combphy1_ps:  {dt: "phy@fee10000", users: ["pcie2x1l0 (pcie@fe170000)", "sata1 (sata@fe220000)"], board_use: "PCIe x1 插座 J4（Phase 6）"}
+    combphy2_psu: {dt: "phy@fee20000", users: ["pcie2x1l1 (pcie@fe180000)", "sata2 (sata@fe230000)", "usbhost3_0 (usb@fcd00000)"], board_use: "J8 USB3 Type-A（Phase 5）"}
+    pcie30phy:    {dt: "phy@fee80000", users: ["pcie3x4 (pcie@fe150000)"], board_use: "M.2 M-Key U20 x2（Phase 6）"}
+
+  phase5_observations:
+    - "第一版（只打开 usbhost3_0/usbhost_dwc3_0，pcie2x1l1 仍为 okay）：xHCI 控制器注册成功，但 U 盘在**任何总线**上都不出现；EHCI fc800000/fc880000 端口读数为 status 501000 / sig=se0"
+    - "定位：同一路 combphy2_psu 被 pcie2x1l1 与 usbhost3_0 同时引用，驱动单值 mode 被覆盖（日志 'phy type select 4 overwriting type 2'），SS 链路根本没建立；USB3 设备此时不会退回 USB2，所以在总线上完全看不到设备（这也是当时误判为'供电问题'的原因）"
+    - "修复后实测（2026-09-20 20:22 启动日志）：combphy 告警消失；'usb 2-1: new SuperSpeed USB device number 2 using xhci-hcd'；Kingston DataTraveler 3.0（0951:1666，USB 3.20）在 5000 Mbps 枚举为 /dev/sda 62.0GB"
+    - "存储：分区 sda1 = NTFS，由 rootfs 的 S50usbdevice.sh 自动挂载为 /mnt/udisk（fuseblk/rw，ntfs-3g）"
+    - "读写：256MiB 随机数据写入后清 page cache 回读，sha256 一致（FS_RW_VERIFY_OK）；持续写约 13.8 MB/s、读约 63.8 MB/s（受该 U 盘本身限制，非链路瓶颈）"
+    - "裸块级写测试采用'备份→写→校验→恢复→再校验'流程，恢复后再次读取与备份哈希一致（b6e2add4...435d），NTFS 分区内容未被破坏"
+    - "拔插复测：J8 上连续 2 次拔插，每次均重新按 SuperSpeed 枚举（设备号 2→3→4），usb-storage 重新绑定并自动挂载回 /mnt/udisk"
+    - "第二个 Type-A 口（USB_HOST1，仅 USB2，VBUS 由 U42 供）也在同一轮拔插中被动验证：设备落在 bus 7（EHCI fc880000），speed=480，同样能自动挂载"
+    - "调试提示：区分插的是哪个 Type-A 口，看设备落在哪条总线 —— bus 2 = xhci-hcd.3.auto（J8，USB3）；bus 5/7 = EHCI HOST0/HOST1（USB2）"
+    - "遗留（非阻塞）：UAS 与 BOT 对照、以及用高速盘测链路吞吐上限，都需要换一支 U 盘才能做"
+
+# ---------------------------------------------------------------------------
+# Phase 10 摄像头"出图"（MIPI 采集链路）推进记录 —— 全程远程验证，未依赖用户动手
+#
+csi_capture_20260921:
+  record_scope: "Historical initial attempt; superseded by reports/camera-bringup-20260921.md. Not current topology or blocker."
+  remote_update_method: >-
+    内核与 DTB 都在 boot 分区（mmcblk0p3）。用法：wget boot.img（HTTP，板子 eth0 直连
+    电脑 192.168.0.3:8899）→ dd if=/tmp/boot.img of=/dev/mmcblk0p3 bs=1M → sync → reboot。
+    可在不烧录整镜像的情况下迭代内核/设备树，约 5 分钟一轮。
+  dts_chain: "ov5647_0 → csi2_dphy1 → mipi2_csi2 → rkcif_mipi_lvds2（候选#1；配对表见 dtsi 注释）"
+  dts_result: >-
+    PASS（拓扑层）—— media 实测全链路 ENABLED：
+    ov5647 9-0036(/dev/v4l-subdev2) → rockchip-csi2-dphy1(/dev/v4l-subdev1)
+    → rockchip-mipi-csi2(/dev/v4l-subdev0) → stream_cif_mipi_id0(/dev/video0)；
+    /dev/video0..video11 与 /dev/media0 均已创建；
+    日志："rockchip-csi2-dphy csi2-dphy1: dphy1 matches ov5647 9-0036:bus type 5"。
+  driver_gap_fixed: >-
+    mainline ov5647 驱动只有 .s_stream，缺 Rockchip 需要的两个回调：
+      "csi2-dphy1: ov5647 9-0036 get_mbus_config fail, pls check it"
+      "rkcif-mipi-lvds2: ... g_frame_interval failed!"
+    已补 ov5647_get_mbus_config（CSI2 DPHY / 2 lane / 连续时钟→flags=0）与
+    ov5647_g_frame_interval（标称 30fps）；重新导出为
+    patches/kernel/0002-ov5647-accept-24mhz-xclk.patch（1230→3008 字节）。
+    补后两条报错计数归零，dphy1 probe successfully。
+  build_trap_seen: >-
+    补丁第一版用了不存在的宏 V4L2_MBUS_CSI2_CONTINUOUS_CLOCK → 内核编译报错，
+    但外层 vm_task 仍返回 rc=0 并把**旧内核**重新打包成"新"boot.img
+    （compile.sh 的 try_func 吞掉步骤失败）。表现为"推上新内核后报错依旧"。
+    教训：每次构建后必须查 /tmp/acg138-kernel-only.log 的 error: 计数、
+    KERNEL_STEP_EXIT，以及 Image / ov5647.o 的 mtime。
+  current_blocker: >-
+    STREAMON 失败："rkcif-mipi-lvds2: crop size is bigger than input"。
+    已验证 sensor/mipi-csi2 pad0 均为 640x480 SBGGR10；
+    v4l2-ctl --set-subdev-fmt 对各 subdev 均 rc=0；
+    --set-selection 设 crop 也被接受（日志 "static crop, S_SELECTION(640x480@0:0)"）；
+    换成 1920x1080 同样报错 → 说明 CIF 算出的 input 尺寸是 0，而不是 crop 真的大。
+    怀疑点：rkcif_get_input_fmt() 先调 RKMODULE_GET_CHANNEL_INFO，OV5647 未实现；
+    若内核返回 0（而非 -ENOIOCTLCMD），CIF 会采用全 0 的 ch_info → input=0。
+    下一步：给 ov5647 补 RKMODULE_GET_CHANNEL_INFO，或在 CIF 侧校验 ch_info 非零。
+  media_ctl_note: >-
+    media-ctl -d /dev/media0 -V '<entity>:<pad>[fmt:...]' 在本板一律返回
+    "Unable to setup formats: Invalid argument (22)"；
+    改用 v4l2-ctl --set-subdev-fmt pad=N,width=,height=,code=0x3007 可正常设置。
+
+# ---------------------------------------------------------------------------
+# Phase 12 音频：实物模拟环回实测（2026-09-21，用户用一根线对接 Line Out↔Line In）
+#
+audio_loopback_20260921:
+  hardware_evidence: >-
+    用户提供 ES8388 原理图：OUT1 = LOUT1(pin12)/ROUT1(pin11) 经 C171 47uF + R303/R306 470R
+    输出；IN1 = 经 R311/R312 4.7K + C175/C176 2.2uF 接 LIN1(pin24)/RIN1(pin23)。
+    LOUT2/ROUT2/LIN2/RIN2 全部未接（图上打叉）——所以采集必须选 LIN1/RIN1。
+  mixer_state: >-
+    amixer -c 1 实测：'Left Line Mux'(numid=47) 四选项为 'Line 1L'/'Line 2L'/'NC'/'MicL'，
+    当前值 0 = 'Line 1L' ✓ 与原理图一致（无需修改）；
+    'Headphone Switch'(39)=on、'Left Mixer Left Playback Switch'(49)=on、'Capture Mute'(26)=off。
+  test_method: >-
+    板上用 GStreamer 合成测试音从 hw:1,0 播放，同时 arecord 录制（同一张 card1），
+    再直接读 WAV 采样值判断有无信号。
+  result: >-
+    PASS —— 单声道 1kHz 版本：录音 960044 字节（5 秒整），采样值呈清晰正弦
+    （5095→4383→3181→…→-5422），峰值 10005~10009（约 -10 dBFS）；
+    加 audioconvert 后的立体声版本：左峰值 11711、右峰值 9346，双声道均有信号。
+    证明「DAC → OUT1 → 对接线 → IN1 → LIN1/RIN1 → ADC」整条模拟链路可用。
+  pitfall: >-
+    第一版测试右声道恒为 0，一开始怀疑硬件/线是单声道；实际原因是 GStreamer 链里
+    audiotestsrc 为单声道且没有 audioconvert，caps 改成 channels=2 并没有真正上混。
+    加 audioconvert 后左右都有信号 —— 排除了"右声道硬件坏"的误判。
+  open_items:
+    - "左右幅度差约 1.25 倍（11711 vs 9346），需用定幅信号标定 PGA/输出增益后再判是否正常"
+    - "频响平坦度 / THD / SNR / 串扰的量化分析：把 WAV 拉回虚拟机做 FFT 即可补上"
