@@ -16,13 +16,13 @@ module vga_timing#(
 	output                vs,            //vertical synchronization
 	output                de,            //video valid
 
-	output reg [9:0] active_x,           //video x position 
-	output reg [9:0] active_y            //video y position 
+	output reg [10:0] active_x,          //video x position
+	output reg [10:0] active_y           //video y position
 	
 	);
 
-	parameter H_TOTAL  = H_ACTIVE + H_FP + H_SYNC + H_BP;//horizontal total time (pixels)
-	parameter V_TOTAL  = V_ACTIVE + V_FP + V_SYNC + V_BP;//vertical total time (lines)
+	localparam [15:0] H_TOTAL = H_ACTIVE + H_FP + H_SYNC + H_BP;
+	localparam [15:0] V_TOTAL = V_ACTIVE + V_FP + V_SYNC + V_BP;
 
 
 /***** FOR REFERENCE *******/
@@ -104,14 +104,14 @@ end
 always@(posedge clk)
 begin
 	if(h_cnt >= H_FP + H_SYNC + H_BP)//horizontal video active
-		active_x <= h_cnt - (H_FP[11:0] + H_SYNC[11:0] + H_BP[11:0]);
+		active_x <= h_cnt[10:0] - (H_FP[10:0] + H_SYNC[10:0] + H_BP[10:0]);
 	else
 		active_x <= active_x;
 end
 always@(posedge clk)
 begin	
 	if(v_cnt >= V_FP + V_SYNC + V_BP)//horizontal video active
-		active_y <= v_cnt - (V_FP[11:0] + V_SYNC[11:0] + V_BP[11:0]);
+		active_y <= v_cnt[10:0] - (V_FP[10:0] + V_SYNC[10:0] + V_BP[10:0]);
 	else
 		active_y <= active_y;
 end
@@ -178,4 +178,4 @@ begin
 end
 
 
-endmodule 
+endmodule

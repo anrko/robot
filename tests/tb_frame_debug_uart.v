@@ -6,6 +6,13 @@ module tb_frame_debug_uart;
     reg [15:0] dbg2 = 16'h1BCD;
     reg [11:0] dbg3 = 12'hABC;
     reg [31:0] dbg4 = 32'h12345678;
+    reg [15:0] overflow_count = 16'h0123, underflow_count = 16'h4567;
+    reg [31:0] write_cmd_req_count = 32'h01234567;
+    reg [31:0] write_cmd_accept_count = 32'h89ABCDEF;
+    reg [31:0] read_cmd_req_count = 32'h13579BDF;
+    reg [31:0] read_cmd_accept_count = 32'h2468ACE0;
+    reg [31:0] write_data_accept_count = 32'hDEADBEEF;
+    reg [31:0] read_data_count = 32'hC001D00D;
     reg [9:0] x = 0, y = 0;
     reg [15:0] pixel = 0;
     wire tx;
@@ -17,6 +24,14 @@ module tb_frame_debug_uart;
         .pll_stop(pll_stop), .ddr_rst(ddr_rst),
         .dbg_vector1(dbg1), .dbg_vector2(dbg2),
         .dbg_vector3(dbg3), .dbg_vector4(dbg4),
+        .vfb_overflow_count(overflow_count),
+        .vfb_underflow_count(underflow_count),
+        .write_cmd_req_count(write_cmd_req_count),
+        .write_cmd_accept_count(write_cmd_accept_count),
+        .read_cmd_req_count(read_cmd_req_count),
+        .read_cmd_accept_count(read_cmd_accept_count),
+        .write_data_accept_count(write_data_accept_count),
+        .read_data_count(read_data_count),
         .pixel_valid(valid), .pixel_x(x), .pixel_y(y),
         .pixel_data(pixel), .uart_tx(tx)
     );
@@ -61,7 +76,7 @@ module tb_frame_debug_uart;
         wait (dut.state == dut.WAIT_FRAME && dut.complete == 0);
         wait (dut.uart_busy == 0);
         repeat (20) @(negedge clk);
-        if (length != 16628) $fatal(1, "byte count %0d", length);
+        if (length != 16746) $fatal(1, "byte count %0d", length);
         if (received[0] != "C" || received[4] != "1" ||
             received[12] != "1" || received[13] != "0" ||
             received[14] != "0" || received[15] != "0")
@@ -74,9 +89,26 @@ module tb_frame_debug_uart;
             received[67] != "A" || received[68] != "B" ||
             received[76] != "1" || received[83] != "8")
             $fatal(1, "DDR PHY debug vectors wrong");
-        if (received[86] != "F" || received[106] != "0" ||
-            received[107] != "7" || received[108] != "E" || received[109] != "0" ||
-            received[234] != "F" || received[235] != "8")
+        if (received[90] != "1" || received[95] != "0" || received[96] != "0" ||
+            received[101] != "0" || received[102] != "0" ||
+            received[107] != "0" || received[108] != "0")
+            $fatal(1, "cumulative diagnostic status wrong");
+        if (received[113] != "4" || received[116] != "7" ||
+            received[121] != "0" || received[124] != "3")
+            $fatal(1, "VFB FIFO diagnostic status wrong");
+        if (received[127] != "B" || received[128] != "U" ||
+            received[129] != "S" || received[134] != "0" ||
+            received[141] != "7" || received[146] != "8" ||
+            received[153] != "F" || received[158] != "1" ||
+            received[165] != "F" || received[170] != "2" ||
+            received[177] != "0" || received[182] != "D" ||
+            received[189] != "F" || received[194] != "C" ||
+            received[201] != "D" || received[202] != 8'h0d ||
+            received[203] != 8'h0a)
+            $fatal(1, "BUS diagnostic line wrong");
+        if (received[204] != "F" || received[224] != "0" ||
+            received[225] != "7" || received[226] != "E" || received[227] != "0" ||
+            received[352] != "F" || received[353] != "8")
             $fatal(1, "header / first row data wrong");
         if (received[length-10] != "E" || received[length-9] != "N")
             $fatal(1, "missing trailer");

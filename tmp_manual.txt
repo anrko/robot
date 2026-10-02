@@ -1,0 +1,3423 @@
+           ACG138 型异构开发板
+            RK3588 + GW5AT-60K 用户手册
+
+                （核心板 + 底板 分体式结构 ·硬件参考）
+
+
+
+
+                       图 0-1 ACG138 开发板整板正面
+
+
+
+
+          文档名称：ACG138 型 RK3588+GW5AT-60K 异构开发板用户手册
+
+                           文档版本：V1.11
+
+适用硬件：底板 ACG138-RK3588-CB（26090801） + 核心板 RK3588+GW5AT-60K（26082801）
+
+                         编制日期：2026 年 9 月
+
+                       文档性质：产品硬件说明书
+修订记录
+
+   版本          日期                        修订内容                                   编制
+   V1.0   2026-09-22   第一版发行；依据官方原理图、网表及硬件实拍照片编制                            —
+   V1.1   2026-09-22   按原文与原理图 PDF 逐项复核，更正核心板存储器料号与容                        —
+                       量：eMMC（U5）、FPGA 侧 DDR3L（U15/U16）、配置
+                       Flash（U13）；LPDDR4X（U3/U4）因原理图未标注型号，
+                       标注来源
+V1.5      2026-09-23   按功能链路（PCIe 3.0 ×2 / RGMII / I2C7 / FSPI）重写 §2.3；修正   —
+                       PCIe 交流耦合电容数量（8 只）与 RK3588 AF33 的复用功能；
+                       §2.3、§2.4 的管脚表统一为「信号名 + 管脚」结构；同步更正
+                       §2.1、第 1 章概述、§2.2.2 与系统框图中的互联描述
+V1.6      2026-09-23   修正图 2-1：底板的「存储」框不应包含 eMMC（eMMC 位于核                   —
+                       心板），并为核心板两个存储/时钟框补注芯片归属；§2.4.3 补
+                       充板载 eMMC 位置说明
+V1.7      2026-09-23   §2.1 正文与图 2-1 对齐并修正片间链路数量表述；§2.3 标题层级                —
+                       统一；§2.4 各接口表统一为「接口功能 | 信号名 | 管脚分配（芯
+                       片）| 说明」，信号名改用原理图标签名（自动命名网络还原为
+                       对应标签），管脚单元格只给管脚
+V1.8      2026-09-23   ①§2.3、§2.4 及附录相关管脚表的「信号名（FPGA）」列改用原                  —
+                       理图 FPGA 符号上印出的引脚名（IOT/IOR/IOB/IOL…，与球号一
+                       一对应），不再使用网表网络名；②表格题注由表格下方移到表
+                       格上方（图片题注仍在下）；③修正 §4.1 中约束示例的写法
+V1.9      2026-09-23   按发布前审查清理：删除编辑口径说明与占位图，统一题注与图                         —
+                       号；修正前言存储器容量与片间链路表述、§2.2.2 命名规则；目
+                       录与正文标题对齐
+V1.10     2026-09-23   §2.4 改为「底板资源详解」：按资源而不是连接器组织，每个接                      —
+                       口统一为「实现说明 → 实物位置图 → 管脚分配表」三段，正文
+                       连贯、不分（1）（2）（3）；补齐 SATA / M.2 / HDMI / 按键 /
+                       LED 等原先缺失的实现说明；删除与新正文重复的说明块；订正
+                       电源链路与指示灯描述
+V1.11     2026-09-24   ① 补齐 18 张电路图的题注，并给第 2 章全部表格加题注，按位                    —
+                       置统一重排图号（章 2 现为 图 2-1 ~ 图 2-50）；② §2.4 各子项
+                       标题改为资源口径（如「SATA 存储（CON1）」）；③ 依据新
+                       版底板图纸（26092401）更新：RK3588 侧 USB 转串口芯片改为
+                       CH9102F（U45）、两个 Type-C 座位号改为 USB0 / USB1、
+                       VCCADJ 档位改为 1.2 / 1.8 / 2.5 / 3.3V（U23 改为 AP2127K-
+                       ADJ）、5V 域网名 OUTPUT_5V 取消（改 DC_5V）并修正 S1 的
+                       作用表述；④ 补全表格空缺单元格，对齐目录条目与文档属性
+前 言
+     ACG138 是一块采用“核心板 + 底板”分体式架构的异构计算开发板。核心板以瑞芯微 RK3588
+为主控，并板载一颗国产高云（GOWIN）GW5AT-60K 系列 FPGA，二者之间通过 PCIe 3.0 ×2、
+RGMII 千兆以太网、I2C7 与 FSPI 四条片间链路互联（其中 FSPI 与板载 eMMC 复用 RK3588 的同
+一组控制器引脚，通过 0 Ω 电阻分选）；底板则把 RK3588 的多媒体、高速接口资源与 FPGA 的可
+编程 IO 资源全部引出，并提供 FMC LPC、LVDS 排针、MIPI、SFP、M.2、PCIe 等扩展能力。
+
+     与所有资源都围绕单一器件展开的传统开发板不同，ACG138 的价值在于“两条腿走路”：
+
+•   RK3588 侧提供成熟的操作系统生态（Android / Linux / Debian）、强大的 CPU/GPU/NPU 算力，
+    以及 HDMI、MIPI、USB3、SATA、PCIe、千兆网等标准接口；
+•   GW5AT-60K 侧提供完全可编程的 IO 与硬核收发器，配合 512MB DDR3L 缓存，适合做高速数
+    据采集、协议桥接、视频预处理、接口转换等处理器不擅长的工作；
+•   两者通过片间 PCIe 、RGMII 与 I2C7 协同，可以把 FPGA 采集的数据直接高速送入 RK3588 处
+    理或显示。
+
+     本文档面向使用 ACG138 进行二次开发的硬件工程师、FPGA 工程师与嵌入式软件工程师，目
+标是让读者在不翻阅原理图的前提下，快速掌握开发板的外形结构、供电方式、每一个连接器的引
+脚定义以及各接口的信号来源。文档共分为五个部分：
+
+•   【第一部分】快速上手 —— 从插线供电到串口登录的最短路径；
+•   【第二部分】硬件资源详解 —— 逐项说明板载器件与接口；
+•   【第三部分】系统启动与默认系统 —— 启动介质选择与控制台使用；
+•   【第四部分】开发与调试 —— FPGA 与 SoC 两侧的工具链和固化方法；
+•   【第五部分】接口引脚定义总表 —— 全部连接器的逐引脚定义与核心板-底板连接器对照表。
+
+
+    【阅读建议】本手册配套资料包括：底板与核心板原理图（PDF）、装配图、网表文件（.NET）
+    以及本手册。建议将本手册与原理图对照阅读。
+目 录
+
+修订记录
+
+前 言
+【第一部分】快速上手
+
+  第一步：认识 ACG138
+  第二步：给开发板供电
+
+  第三步：连接调试线缆
+  第四步：安装驱动程序
+
+  第五步：上电与串口登录
+
+  第六步：开发环境与配套资料
+  第七步：常见问题与注意事项
+
+【第二部分】硬件资源详解
+  2.1 系统总体架构
+
+  2.2 核心板资源
+  2.2.1 主控 RK3588
+
+  2.2.2 可编程逻辑 GW5AT-60K
+  2.2.3 存储器
+
+  2.2.4 时钟
+  2.2.5 电源管理
+
+  2.2.6 板对板连接器
+  2.3 RK3588 与 FPGA 之间的互联
+
+  2.3.1 互联总览
+  2.3.2 PCIe 3.0 ×2 高速链路
+  2.3.3 RGMII 千兆以太网链路（GMAC1 与 Bank B2）
+
+  2.3.4 I2C7 低速控制链路
+  2.3.5 FSPI 复用链路（默认给 eMMC）
+
+  2.3.6 复位与重配置链路
+  2.4 底板资源详解
+
+      2.4.1 板级供电与电源管理
+      2.4.2 调试、串口与下载
+
+      2.4.3 存储（MicroSD / SATA / M.2）
+      2.4.4 网络（千兆以太网 / SFP）
+   2.4.5 显示（HDMI / MIPI DSI）
+
+   2.4.6 摄像输入（MIPI CSI）
+   2.4.7 USB
+   2.4.8 音频
+   2.4.9 扩展与配置
+
+   2.4.10 用户交互
+   2.4.11 RTC 与 EEPROM
+
+ 2.5 电气特性与使用注意
+【第三部分】系统启动与默认系统
+ 3.1 启动方式与启动介质
+ 3.2 串口控制台
+
+ 3.3 上电自检与状态指示
+【第四部分】开发与调试
+
+ 4.1 FPGA 开发流程（Gowin EDA）
+ 4.2 FPGA 配置与固化
+ 4.3 RK3588 侧开发与固件烧录
+
+ 4.4 联调与故障排查
+【第五部分】接口引脚定义总表
+
+ 附录 A 底板连接器引脚定义
+ 附录 B 核心板-底板 600pin 连接器引脚对照表
+
+ 附录 C 主要器件清单（BOM 摘要）
+ 附录 D 术语与缩写
+【第一部分】快速上手
+
+第一步：认识 ACG138
+
+    ACG138 由两块印制板通过 6 个 100pin 板对板连接器（共 600pin）对插组成：
+
+•   核心板（丝印 RK3588+GW5AT-60K，料号 26082801）—— 板载 RK3588 主控、GW5AT-60K
+    FPGA、2GB LPDDR4X、8GB eMMC、512MB FPGA 专用 DDR3L、128Mb 配置 Flash 与全套
+    电源管理电路；
+•   底板（丝印 ACG138-RK3588-CB，料号 26090801）—— 承载全部对外接口、扩展连接器与调
+    试电路。
+    两块板卡的尺寸不同，核心板四周各有 1 个 φ4mm 安装孔，底板四角同样各有 1 个 φ4mm 安
+装孔（位号 E1~E4）。实际装配时，应先用连接器对插定位，再通过安装孔固定，避免单侧受力导
+致连接器损伤。
+
+
+
+
+            图 1-1 核心板正面（RK3588 + GW5AT-60K + LPDDR4X + eMMC + DDR3L）
+                     图 1-2 核心板背面（6 个 100pin 板对板连接器）
+
+
+    底板的接口分布可参考图 0-1，各主要接口的位置与名称汇总如下：
+
+     区域              接口 / 器件             位号                       说明
+    面板左侧    HDMI 输出 ×2          J5 / J6          RK3588 HDMI0_TX / HDMI1_TX
+    面板左侧    HDMI 输入 ×1          J7               RK3588 HDMI0_RX
+    面板左侧    千兆以太网 RJ45          J3               YT8531C PHY
+    面板左侧    SFP 光模块笼 ×2         U22 / U55        接 FPGA 硬核收发器
+    板边左上    USB 3.0 Type-A      J8               RK3588 组合 PHY
+    板边左上    USB 2.0 Type-A      USB_HOST1        RK3588 USB2.0 HOST1
+    板边左上    USB Type-C ×2       USB0 / USB1      含 PD 与 DP Alt Mode
+    板上中部    MicroSD 卡座          J1               与 JTAG_M0 复用 DAT2/DAT3
+    板上中部    FMC LPC 扩展座         P16              FPGA Bank B4/B5/B8
+    板边右上    USB_Debug（Type-C）   J2               调试口，内含 USB Hub 与下载器
+    板上右侧    M.2 Key-M 2280      U20              PCIe 3.0 ×2
+    板上中部    SATA 数据口 + 电源口      CON1 / P14       RK3588 SATA
+    板边右侧    LVDS/GPIO 排针        P7               2×20，FPGA Bank B6/B7
+    板边右侧    差分排针                P10              2×12，FPGA Bank B1/B2/B11
+    板边右侧    扩展排针                P19              2×15，混合信号引出
+    板边右下    电源开关 / DC 输入        S1 / DC1         12V 直流输入
+    板上下方    MIPI 显示 ×2、摄像 ×4    FPC3/FPC6、       RK3588 DSI / CSI
+                                FPC1/2/4/5
+    板上下方    用户按键 5 个 / 系统按键 6   S3~S7 / S8~S13   —
+            个
+    板上下方    拨码开关 8 位            S2               接 FPGA Bank B11
+
+
+
+
+第二步：给开发板供电
+
+    ACG138 采用单路 12V 直流供电，板载 DC-DC 将 12V 降压为 5V 主电源，再由核心板上的
+PMIC 及其配套电路生成各电压域。供电入口位于底板右下角。
+
+•   电源接口：DC1，标准 DC-002 圆孔插座（内正外负）；
+•   输入电压：12V（板上有 SMCJ15CA 瞬态抑制二极管与 F1/F2/F3 保险丝做输入防护）；
+•   电源开关：S1（3 脚拨动开关），位于 DC1 上方，丝印 ON / OFF；
+•   5V 主域额定电流：经 F4（3A）保险丝后提供给 VCC5V0_SYS。
+
+
+
+
+                图 1-3 DC1 电源输入与 S1 电源开关（丝印 12V / OFF / ON）
+
+
+     上电顺序建议：
+
+•   先将 S1 拨到 OFF 位置（靠近丝印 OFF 一侧）；
+•   把 12V 电源适配器插入 DC1，确认适配器极性正确；
+•   将 S1 拨到 ON 位置，底板上的电源指示灯点亮；
+•   断电时先拨回 OFF，再拔出适配器。
+
+    【警告】请勿使用劣质或电压不符的电源适配器。输入电压超标会直接损坏 12V 域电路；如果使
+    用外接稳压电源，务必确认内正外负且电压为 12V。
+
+     ACG138 支持 12V 供电的同时通过 USB_Debug 口连接 PC，用于供电、调试串口与 FPGA 下
+载：
+               图 1-4 典型连接：12V 电源（右下）+ USB_Debug 数据线（右上）
+
+
+
+第三步：连接调试线缆
+
+    ACG138 把调试功能集中在一个 Type-C 口上，即底板右上角的 USB_Debug 接口（J2）。该口
+内部连接一颗 USB Hub（SL2.1S），向下扩展出三路 USB 设备：
+
+•   CH9102F（U45）—— RK3588 侧调试串口；
+•   CH340E（U15）—— FPGA 侧调试串口；
+•   板上 USB-JTAG 下载器（U13，JTAG18M02HS2）—— 通过 USB 完成 FPGA 的 JTAG 配置与
+    在线调试。
+    因此，用一根 Type-C 数据线把 PC 与 J2 相连，就同时获得了“两个串口 + 一个下载器”，无需
+外接任何下载器。
+
+
+
+
+                     图 1-5 USB_Debug 接口（J2）及周边电路实拍
+     除 USB_Debug 外，板上还引出了三组独立的调试接口，供外接调试器使用：
+
+         接口            位号         形式                             用途
+      FPGA JTAG   P8        2×5 排针（2.54mm）   FPGA 的 TCK/TDI/TDO/TMS，支持外接 JTAG 电缆
+      SWD 调试      P9        1×4 排针（1.27mm）   SWCLK / SWDIO，用于调试板载下载器 MCU 或外
+                                             接 SWD
+      ARM JTAG    P11       1×4 排针           JTAG_TMS_M0 / JTAG_TCK_M0，调试 ARM 侧
+                                             JTAG 接口
+
+
+    【提示】P8 上第 2 脚为 EX_JTAG_detect（外部 JTAG 接入检测），当接入外部 JTAG 电缆时，
+    板上会自动把 JTAG 链路切给外部接口，避免与板载下载器冲突。
+
+
+第四步：安装驱动程序
+
+     ACG138 在 PC 侧需要三类驱动：RK3588 侧串口芯片 CH9102F 与 FPGA 侧串口芯片 CH340E
+的 USB 转串口驱动，以及 USB-JTAG 下载器驱动。多数情况下 Windows 10 / 11 会自动识别并安装
+串口驱动。
+
+•    串口驱动：按所用芯片型号安装沁恒（WCH）官方驱动后，设备管理器的“端口（COM 和
+     LPT）”下会出现两个 COM 口，分别对应 RK3588 串口（CH9102F）与 FPGA 串口（CH340E）；
+•    USB-JTAG 驱动：按照所用 FPGA 工具链（Gowin Programmer）提示安装，或直接使用 Gowin
+     EDA 安装目录下的驱动安装程序。
+
+
+
+
+          图 1-6 J2（USB_Debug）在设备管理器中的枚举结果：USB Hub 下挂两路 USB 转串口设备
+
+
+     驱动安装完成后，建议记录两个 COM 口的编号（例如 COM71 对应 RK3588、COM67 对应
+FPGA），后续串口终端与下载工具都要用到。
+第五步：上电与串口登录
+
+     串口参数：数据位 8、无校验、停止位 1、无流控。波特率需与固件配置一致：RK3588 侧常见
+为 1500000，FPGA 侧常见为 115200，请以实际出厂固件为准。
+
+     操作步骤：
+
+•   按第二步给开发板上电，并将 USB_Debug 接入 PC；
+•   打开串口终端（SecureCRT、MobaXterm、PuTTY 或 minicom 均可），选择 RK3588 对应的
+    COM 口；
+•   设置上述串口参数后打开端口，复位或重新上电，即可看到系统启动日志；
+•   需要观察 FPGA 侧打印时，切换到 FPGA 对应的 COM 口即可。
+
+    【排错】若打开串口后无任何输出，请依次检查：电源是否已打开（S1 是否在 ON）、
+    USB_Debug 线缆是否为数据线（而非纯充电线）、COM 口是否选错、波特率是否与固件一致。
+
+
+第六步：开发环境与配套资料
+
+     根据开发侧的不同，需要准备两类工具：
+
+         开发侧                   工具 / 环境                      用途
+     FPGA（GW5AT-     Gowin EDA（云源软件）               综合、布局布线、时序分析、生成比特流
+         60K）
+     FPGA（GW5AT-     Gowin Programmer              通过 USB-JTAG 下载 / 固化比特流
+         60K）
+     FPGA（GW5AT-     Gowin Analyzer Oscilloscope   片内逻辑分析仪，在线抓取内部信号
+         60K）
+        RK3588       Linux SDK（内核 / U-Boot /       编译系统镜像、驱动开发
+                     Buildroot）
+       RK3588        RKDevTool / upgrade_tool      通过 Type-C 或 USB 烧写固件
+       RK3588        交叉编译工具链                       应用程序与内核模块编译
+
+
+     随板资料通常包括：原理图（PDF）、装配图、本文档，以及 FPGA 约束文件与示例工程。建
+议把原理图与本手册的附录 A / 附录 B 对照使用。
+
+
+第七步：常见问题与注意事项
+
+        现象                                     可能原因与处理方法
+    上电后电源指示灯不亮            检查 S1 是否在 ON；确认 12V 适配器输出正常、极性正确；检查 F1~F4 保险丝
+      串口无输出               确认 USB 线为数据线；确认 COM 口选择正确；确认波特率与固件一致
+    只识别到一个 COM 口          串口驱动（CH9102F / CH340E）未安装完整，或 USB Hub 供电异常；重新安装
+                          驱动后重新插拔
+       FPGA 下载失败          确认 JTAG 链路未接外部电缆；确认 FPGA 已供电；确认 Gowin Programmer 中
+                          芯片型号选择正确
+      M.2 SSD 不识别         确认模块为 NVMe（PCIe）而非 SATA 协议；确认 M.2 参考时钟由主板（U21）
+                          提供
+      SFP 无光 / 无链路        确认光模块速率与 FPGA 设计匹配；确认 SFP 的 TX_DIS 未被拉高
+        HDMI 无输出          确认使用的是 J5 / J6 输出口（J7 为输入口）；确认对应 TX_ON_H 使能信号已拉
+             高
+长时间大负载运行掉电   5V 域经 F4（3A）限流，请核算外设总功耗；必要时降低外设负载
+
+
+【安全】严禁在通电状态下插拔板对板连接器、FPC 排线以及 M.2 / SFP 模块。所有插拔操作必
+须在断电、且 5V 电源域完全放电后进行。
+【第二部分】硬件资源详解
+
+2.1 系统总体架构
+
+    ACG138 的整体架构可以概括为「一颗应用处理器 + 一颗可编程逻辑器件 + 四条片间链路」。
+RK3588 负责操作系统、多媒体与上层业务，GW5AT-60K 负责可编程 IO、高速收发与数据预处理，
+两者之间通过 PCIe 3.0 ×2、RGMII 千兆以太网、I2C7 与 FSPI 四条链路协同工作；底板则承载全部
+对外接口、扩展连接器与调试电路，并与核心板通过 6 个 100pin 连接器对插。
+
+                                                                       开发                              件
+                                                 （R 35   主       G 5 T        0             FPG 异构核心板         底板）
+
+
+                                                   PCIe 3.0 ×2（PCI 30 PORT0 与 MGT0 / MGT1， C 耦合）
+                                                          RGMII（GM C1 与 B     B2） I2C7（2 ）
+                                                              FSPI（    ， 用 0 电 分选）
+
+
+
+                                                         MGT CL 0 100M        参考时钟由 R 35             提供
+
+            R 35 侧：存储与电源                                                                                                FPG 侧：存储与时钟
+    LP R4 2GB（2× G ×32，以装配为 ）                                                                                   R3L 512MB（2×MT41 12 M1 T 125，32 ）
+     eMMC 5.1 GB（F M RM00 G 5 3 ）                                                                               配置 F      25 12 SI 12 M （MSPI）
+        电源管理 R 0 1 R       0×3                                                                                     时钟 100M / 200M PL CL / 50M
+
+
+
+
+                                                             接器
+
+
+
+
+               MI0 T （ 5）       MI1 T （ ）                        MIPI CSI×4（FPC1/2/4/5，24              ）               千兆以太网 R 45（ 3， T 531C）
+                        MI0 R （ 7）                                各通              P        /R S T/IC                        SFP1（ 22）    FPG MGT2
+           MIPI SI×2（FPC3 / FPC ，2        ）                         经 PC      54           路IC                              SFP2（ 55）    FPG MGT3
+
+
+
+
+          M.2 e M 22 0（ 20）        PCIe 3.0 ×2                           SB 3.0 T      e   （ ）                      FMC LPC（P1 ）        FPG B       B4/B5/B
+          M    S （ 1） S T 7 15（CO 1）                               SB 2.0 T       e   （ SB       OST1）                  L    S 排针（P7）        B     B /B7
+                    S T 电源（P14）                              T   e C ×2（ SB1/ SB2，含 P              与     P）            差分排针（P10）         B       B1/B2/B11
+
+
+
+                            与                                                     用
+
+          SB   e    （ 2）              C 340                      用户按键 S3 S7 系统按键 S                  S13                 C 12 输入（ C1） 电源开关 S1
+                   板上   SB T G（ 13）                          位拨码 S2               器 LS1      外接收（ 30）           千兆 P    25M       M.2 100M       SFP 125M
+    FPG   T G（P ） S        （P ）   RM T G（P11）                        L        0       7 及电源/串口指示                    RTC BM 5 3T    CR1220        PROM 24LC 4
+
+
+
+
+                                                     图 2-1 ACG138 开发板系统硬件框图
+
+
+    从图中的信号流向可以看到四条片间链路、FPGA 的对外扩展通道，以及底板承载的对外接口：
+
+•   高速数据通道：RK3588 的 PCIE30_PORT0（×2）与 FPGA 的硬核收发器 MGT0 / MGT1 通过
+    交流耦合电容直连，RK3588 作为 Root Complex、FPGA 作为 Endpoint；参考时钟由 RK3588 提
+    供（MGT_CLK0）。
+•   千兆以太网通道（RGMII）：RK3588 的 GMAC1 控制器与 FPGA 的 Bank B2 之间以 RGMII 相
+    连（15 根信号）。FPGA 相当于挂在 RK3588 上的一颗以太网 PHY，可用于把 FPGA 侧的数据
+    直接送入 SoC 的网络协议栈。
+•   低速控制通道（I2C7）：两芯片之间另有 2 根 I²C7（M2 组）连线，带 2.2 kΩ 上拉，用于状态
+    寄存器读取、握手等低速交互。
+•   复用链路（FSPI）：RK3588 的 SDMMC / eMMC 控制器引脚复用为 FSPI，通过 0 Ω 电阻分选：
+    默认接板载 eMMC，改贴电阻后交由 FPGA 使用。
+•   扩展通道：FPGA 的用户 IO 分 8 组（B1、B2、B4、B5、B6、B7、B8、B11）。其中 B4 / B5 /
+    B8 送往 FMC LPC 座（P16），B6 / B7 送往 LVDS 排针（P7），B1 / B2 / B11 除片间链路占用
+    外引至差分排针（P10）与板上按键、拨码、LED 等外设控制；另外两路硬核收发器 MGT2 /
+    MGT3 分别驱动 SFP1 与 SFP2。
+•   底板对外接口：图中底板部分按 ①~⑨ 归纳了底板承载的对外接口——视频 / 显示、摄像输入、
+    网络、存储、USB、扩展总线、调试与配置、用户交互、供电与时钟，各接口的说明、实物位
+    置与管脚分配见 §2.4。
+
+
+2.2 核心板资源
+
+2.2.1 主控 RK3588
+
+                             表 2-2-1 RK3588 主要规格
+
+       项目                                        规格
+       型号         Rockchip RK3588（封装 FCBGA-1088，位号 U1）
+       CPU        4 × C ex- 7     4 × C ex-A55，大小核架构
+     GPU / NPU    Mali-G610 MP4 GPU；NPU 算力 6 TOPS（INT8）
+     内存 制器        LPDDR4 / LPDDR4X / LPDDR5，4 通
+      高速接口        PCIe 3.0 ×4 制器（分 PORT0/PORT1/PORT2 等）、SATA 3.0、USB 3.1、HDMI 2.1
+                  T ×2 / R ×1、MIPI DSI / CSI、千兆以太网 MAC 等
+      工作时钟        24MHz 无源晶体（Y1）
+
+
+
+2.2.2 可编程逻辑 GW5AT-60K
+
+    核心板搭载高云半导体 Arora V 家族 GW5AT-60 系列 FPGA，型号 GW5AT-LV60PG484A（位
+号 U10），采用 22nm 工艺，主要资源如下（数据来源：高云官方《Arora V 60K FPGA Products
+Data Sheet》）：
+
+                           表 2-2-2 GW5AT-60K 主要资源
+
+            资源项                                  数量 / 指标
+       逻辑单元（LUT4）         59,904
+        寄存器（REG）          59,904
+     分布式 SRAM（SSRAM）      468 Kb
+     块 SRAM（BSRAM）        2,124 Kb（118 块）
+        DSP（27×1 ）        118 个
+         锁相环 PLL          最多 8 个
+       全局时钟 / 高速时钟        16 / 20
+      硬核收发器（SerDes）       4 通 ，速率 270Mbps ~ 12.5Gbps
+          PCIe 硬核         支持 x1 / x2 / x4（数据手册 DS1225E / DS1228E）
+          LVDS 速率         1.25Gbps
+          DDR3 接口            最高 1333Mbps
+   MIPI D-PHY / C-PHY 硬核     2.5Gbps（4 数据 lane + 1 时钟 lane）/ 2.5Gsps（器件级；PG484A 封装不
+                             提供）
+            ADC              2路
+        GPIO Bank 数          11
+     PG484A 封装 用 IO          297 个用户 IO（其中 143 对真 LVDS）
+        封装 / 核电压             PBGA-484，1.0mm 焊球间距，23mm × 23mm；核电压 0.9V / 1.0V / 1.2V
+
+
+ 【注意】GW5AT-60 的 PG484A 封装不带 MIPI D-PHY / C-PHY 硬核，仅有 4 路通用 SerDes 与
+ 297 个用户 IO。板上的 MIPI 通道全部来自 RK3588。
+
+  本板实际使用的 FPGA 用户 IO 分布如下：
+
+                           表 2-2-3 FPGA 用户 IO 分组与主要去向
+
+   IO 组             信号数                               要去向
+    B1       21                 底板 8 路指示 LED（LED0~LED7）、差分排针 P10、FMC 相关 制
+    B2       26                 RGMII（15 +1 GPIO）与 RK3588 直连 I2C7（2    ） FSPI（6   ，
+                                需改电 ） 差分排针 P10（2 ）
+    B4       16                 FMC LPC（P16）差分对 B4_R20 ~ B4_R36；另含 MIPI 制与 I C
+    B5       32                 FMC LPC（P16）差分对 B5_B39 ~ B5_B72；另含按键/使能等 制
+    B6       18                 LVDS 排针 P7（9 对差分）
+    B7       18                 LVDS 排针 P7（9 对差分）
+    B8       24                 FMC LPC（P16）差分对 B8_B75 ~ B8_B99
+    B11      24                 差分排针 P10、板上按键 S0~S4 与 外接收、FMC 供电 制
+    合计       179 个信号            —
+
+
+ 【命名规则】原理图上 FPGA 器件的引脚名形如 IOTxxxA/B（Gowin 的 IO 位置名，写 .cst 约
+ 束时使用，球号即 BGA 焊球编号）；走线上的网络名形如 Bn_<编号>[_P/_N]，其中 _P/_N 只
+ 是成对走线的命名习惯，并不代表两根必定是同一差分对——例如 Bank B2 上的 B2_T112_P /
+ B2_T112_N 分别是 RGMII 的 RXD0 与 RXD1，两者互不相干。Bn_GPIOm_<引脚> 形式的网络
+ 则属于 RK3588 的 GPIO，并非 FPGA 管脚，请注意区分。
+
+2.2.3 存储器
+
+                            表 2-2-4 核心板存储器配置与型号
+
+     类别                   型号 / 位号            容量与规格                    说明
+    主内存           K4F8E3S4HD-GHCL（U3、     2× G =1 G      三星 LPDDR4 / LPDDR4X，x32 组
+                  U4）※                    （2GB）          织，最高 4266Mbps，FBGA-200
+   系统存储           FEMDRM008G-58A39（U5）    8GB            江波龙 FORESEE 工业级 eMMC 5.1
+                                                         （HS400），MLC，FBGA-153，
+                                                         11.5×13×1.0mm，-25 5℃，顺序
+                                                         读 230MB/s / 写 105MB/s
+  FPGA 数据缓存       MT41K128M16T-125（U15、   2 × 2G = 4G    Micron DDR3L，12 M×1 组织，
+                  U16）                    （512MB）        两片组成 32bit 总线，最高
+                                                         1333Mbps
+ FPGA 配置 Flash    W25Q128JVSIQ（U13）       128Mb（16MB）    Winbond SPI NOR，经 MSPI 接口
+                                                         连至 FPGA，用于固化比特流
+   说明：LPDDR4X 采用两颗 x32 器件，分别对接 RK3588 的两组控制器通道；DDR3L 为 FPGA
+专属，与 RK3588 的内存完全独立，因此 FPGA 的带宽不受 SoC 负载影响。
+
+2.2.4 时钟
+
+                                     表 2-2-5 核心板时钟资源
+
+     位号                   器件                 率 / 类型                     去向
+     Y1          X4-3225 无源晶体           24MHz           RK3588 主时钟
+     U2          SiT9121 系列 TCXO        100MHz          FPGA 侧参考时钟
+     U11         SiT9121 系列 TCXO        200MHz          经交流耦合送入 FPGA 专用时钟输入
+                                                        PL_CLK_P / PL_CLK_N
+     U12         有源晶振                   50MHz           经 22Ω 串 送入 FPGA CLK_50MHz
+  Y1（底板）         X4-3225 无源晶体           12MHz           USB Hub（SL2.1S）时钟
+  Y3（底板）         X4-3225 无源晶体           25MHz           千兆以太网 PHY（YT8531C）
+  Y4（底板）         MC-146 无源晶体            32.768kHz       RTC（BM8563T）
+      Y2         X4-3225 无源晶体           8MHz            板上 USB-JTAG 下载器 MCU
+  U21（底板）        SiT9121 系列 TCXO        100MHz          M.2 接口 PCIe 参考时钟
+
+
+
+2.2.5 电源管理
+
+                                 表 2-2-6 核心板电源管理器件
+
+     位号                   器件                                 作用
+      U25        RK806-1                RK3588 主 PMIC，生成 CPU / GPU / NPU / 逻辑等核心电压
+  U7、U8、U9       RK860-2 / RK860-3      大电流降压，为大核与 NPU 提供动 调压（DVFS）
+   U18 ~ U21     TPS563201              通用降压，生成 3.3V / 1.8V 等系统域
+   U22 ~ U24     TPS7A8400              低噪声 LDO，为 PLL / PHY 等模拟电源供电
+      U17        TPS51200               LPDDR4X 终端电源（VTT）与参考电压（VREF）
+      U6         ETA3409                辅助电源
+
+
+
+2.2.6 板对板连接器
+
+   核心板通过 6 个 100pin 板对板连接器（位号 P1 ~ P6）与底板对接，共 600 个引脚。核心板侧
+使用 AXK500137YG，底板侧使用配对的 AXK600337YG。各连接器的功能分配如下：
+
+                               表 2-2-7 板对板连接器与承载信号
+
+    接器                                             要承载信号
+    P1         FPGA Bank B5 / B8 差分对（送往 FMC）；VCCADJ 供电
+    P2         FPGA Bank B1 / B2 / B4 差分对；R 35 PCIe 3.0 ×2（送往 M.2）、SATA、SFP 制、
+               VCC_3V3 / VCC3P3 供电
+    P3         RK3588 GPI O（B1/B3/B4/B5/B6_GPIO*）、USB Type-C、HDMI、SD、I S、I C、JTAG_M0、
+               RK_VCCIO4/5/6 等；VCC_1V8 供电
+    P4         RK3588 MIPI DSI / CSI、HDMI0、USB2.0 HOST、SARADC、RECOVERY、以太网 RGMII、FPGA
+               GPIO 等
+    P5         RK3588 以太网 RGMII、MIPI 差分、FPGA 收发器 MGT2 / MGT3（送 SFP）、MGT_CLK1
+    P6         FPGA Bank B3 / B6 / B11 及其 制信号、I C、USB Type-C 使能、HDMI0 制、PCIe30X2、
+               UART2、SD_CD 等；VCC5V0_SYS 供电
+      【提示】完整到引脚的对照表见【附录 B】。
+
+
+  2.3 RK3588 与 FPGA 之间的互联
+
+        ACG138 采用「应用处理器 + 可编程逻辑」的异构架构，RK3588（U1）与 GW5AT-
+  LV60PG484A（U10）之间并非只靠一根总线相连，而是同时存在 4 条用途不同的链路，外加 1 条
+  复位/重配置链路。
+
+
+
+
+                          图 2-2 RK3588 与 FPGA 之间的四条片间链路
+
+
+
+
+        这 4 条链路全部走核心板内部，不经过板对板连接器——也就是说，底板如何设计都不会影响
+  这部分互联，二次开发时只需在 FPGA 工程与 RK3588 设备树两侧做对应配置。
+
+  •     PCIe 3.0 ×2 高速链路：走 SerDes 硬核（MGT0 / MGT1），4 对差分线 + 1 对 100 MHz 参考时
+        钟，可跑 PCIe 3.0 ×2，也可跑自定义私有协议。
+  •     RGMII 千兆以太网链路：走 RK3588 的 GMAC1 控制器，15 根信号。这条链路的本质是「把
+        FPGA 当成一颗挂在 RK3588 上的以太网 PHY」。
+  •     I2C7 低速控制链路：2 根，带 2.2 kΩ 上拉，用于两颗芯片之间的低速状态交换。
+  •     FSPI 复用链路：6 根，与板载 eMMC 共用 RK3588 的同一组控制器引脚，通过 0 Ω 电阻二选一，
+        默认给 eMMC。
+
+  2.3.1 互联总览
+
+                         表 2-3-1 RK3588 与 FPGA 之间链路总览
+
+     链路          类型           信号数           RK3588 侧            FPGA 侧       出厂默认状态
+PCIe 3.0 ×2   高速串行（差分）     4对+1对      PCIE30_PORT0（RC）+   SerDes 硬核 MGT0 /    用
+                           REFCLK     MGT_CLK0 输出         MGT1（EP）
+RGMII         千兆以太网（单      15         GMAC1（GPIO3 域，      Bank B2            用
+               端）                          RK_VCCIO5）
+I2C7           低速   制总线           2        GPIO3_D2 / GPIO3_D3   Bank B2（U10-B21 /    用（2.2 Ω
+                                           （复用 I2C7_M2）          U10-A21）            上拉）
+FSPI             线 SPI（复用         6        SDMMC / eMMC 制器       Bank B2             需改电 才能
+               eMMC 制器）                    引脚（复用 FSPI）                               使用
+复位 / 重配置       分    制信号           2        RESET_L（NPOR 复位输      RECONFIG_N          由底板按键 S8
+                                           入）                                        触发
+
+
+  2.3.2 PCIe 3.0 ×2 高速链路
+
+       这条链路承担两颗芯片之间的高带宽数据通道，也是本板最有价值的部分：RK3588 的 PCIe
+  3.0 控制器（PCIE30_PORT0，配置为 ×2）作为 Root Complex，FPGA 的 2 路 SerDes 硬核（MGT0、
+  MGT1）作为 Endpoint。
+
+  （1）电路说明
+
+  •    交流耦合：4 对差分线各自串入 2 只 0.1 µF 电容（共 8 只），用于隔开两端不同的共模电平，
+       符合 PCIe 规范的 AC 耦合要求，同时也让 FPGA 侧可以自由设定 SerDes 的共模电压。
+  •    收发交叉：RK3588 的发送对（TX）接 FPGA 的接收对（MGT_RX），RK3588 的接收对（RX）
+       接 FPGA 的发送对（MGT_TX）。这个交叉关系在 PCB 上已经固定，无法通过配置反转。
+  •    参考时钟：由 RK3588 的 E33 / E34 输出 100 MHz 差分时钟（MGT_CLK0），直流耦合直接送
+       入 FPGA 的 F6 / E6，并在 FPGA 侧并联 R126（100 Ω）做差分端接；R58 为同值备位，默认不
+       贴装。
+  •    另一路时钟：FPGA 的 MGT_CLK1（F10 / E10）不来自 RK3588，而是经板对板连接器 P5 从底
+       板引入，供 SFP 使用（对应的 125 MHz 时钟源默认不贴装），不属于本条链路。
+
+  （2）管脚与信号对应
+
+       本链路两端被耦合电容隔开，两侧信号名不同；最后两行为参考时钟，两侧同名。
+
+                                  表 2-3-2 PCIe 链路管脚与信号对应
+
+       信号名 FPGA          信号名 RK3588        FPGA 管脚    RK3588 管脚        耦合器件
+       MGT_RX0_P     PCIE30_PORT0_TX0_P       B8         D32       C26
+       MGT_RX0_N     PCIE30_PORT0_TX0_N       A8         D33       C31
+       MGT_RX1_P     PCIE30_PORT0_TX1_P       D11        C33       C33
+       MGT_RX1_N     PCIE30_PORT0_TX1_N       C11        C34       C35
+       MGT_TX0_P     PCIE30_PORT0_RX0_P       B4         G33       C13
+       MGT_TX0_N     PCIE30_PORT0_RX0_N       A4         G34       C27
+       MGT_TX1_P     PCIE30_PORT0_RX1_P       D5          F32      C32
+       MGT_TX1_N     PCIE30_PORT0_RX1_N       C5          F33      C34
+       MGT_CLK0_P    MGT_CLK0_P                F6         E33      直流耦合（R12 = 100 Ω 端
+                                                                   接）
+       MGT_CLK0_N    MGT_CLK0_N               E6          E34      直流耦合（R12 = 100 Ω 端
+                                                                   接）
+
+  （3）使用注意
+
+  •    FPGA 未加载工程时，RK3588 在这条链路上枚举不到任何设备，属于正常现象，不会影响系统
+       启动。只有当 FPGA 的 PCIe 硬核完成配置并响应链路训练后，RK3588 才能识别到 Endpoint。
+•   链路的收发方向在硬件上已经交叉固定，因此 RK3588 侧只能做 RC、FPGA 侧只能做 EP。若
+    要反转主从角色，需要改板。
+•   实际工作速率由 FPGA 侧 SerDes 配置决定：可跑 PCIe Gen3 ×2，也可跑自定义私有协议；若两
+    者都不使用，这 4 对差分线处于空闲状态，不影响其他功能。
+
+2.3.3 RGMII 千兆以太网链路（GMAC1 与 Bank B2）
+
+    这条链路上没有独立的以太网 PHY 芯片——FPGA 直接扮演了 RK3588 的 PHY 角色。因此使
+用时需要在两侧各做一件事：RK3588 侧用 GMAC1 控制器（RGMII 模式）驱动，FPGA 侧自行实
+现 RGMII 接口逻辑。
+
+（1）电路说明
+
+•   信号构成：12 根 RGMII 信号、2 根 MDC/MDIO、1 根 25 MHz 参考时钟信号。
+•   连接方式：两侧直连，板上既没有串阻、也没有电平转换器。RGMII 本身的电平由
+    RK_VCCIO5（RK3588 GPIO3 域的 IO 电源）与 FPGA 的 VCCIO2（Bank B2 的 IO 电源）决定，
+    使用前请确认两者一致。
+•   时钟方向：RGMII 中 TXCLK 由 MAC（RK3588）提供，RXCLK 需要由 PHY 侧（即 FPGA）
+    产生 125 MHz。板上的 25 MHz 参考时钟、以及 FPGA 自身的板载时钟都可以用作 PLL 参考。
+
+（2）管脚与信号对应
+
+                        表 2-3-3 RGMII 与相关信号的管脚对应
+
+           信号名 FPGA         信号名 RK3588       FPGA 管脚       RK3588 管脚
+      ENET1_RX_DATA0     ENET1_RX_DATA0         B20        GMAC1_RXD0
+      ENET1_RX_DATA1     ENET1_RX_DATA1         A20        GMAC1_RXD1
+      ENET1_RX_DATA2     ENET1_RX_DATA2         C19        GMAC1_RXD2
+      ENET1_RX_DATA3     ENET1_RX_DATA3         F18        GMAC1_RXD3
+      ENET1_RX_CLK       ENET1_RX_CLK           E18       GMAC1_RXCLK
+      ENET1_RX_DV        ENET1_RX_DV            F19      GMAC1_RXDV_CRS
+      ENET1_TX_DATA0     ENET1_TX_DATA0         F20        GMAC1_TXD0
+      ENET1_TX_DATA1     ENET1_TX_DATA1         D20        GMAC1_TXD1
+      ENET1_TX_DATA2     ENET1_TX_DATA2         A18        GMAC1_TXD2
+      ENET1_TX_DATA3     ENET1_TX_DATA3         A19        GMAC1_TXD3
+      ENET1_GTX_CLK      ENET1_GTX_CLK          E19       GMAC1_TXCLK
+      ENET1_TX_EN        ENET1_TX_EN            C20        GMAC1_TXEN
+      ENET1_MDC          ENET1_MDC              C22        GMAC1_MDC
+      ENET1_MDIO         ENET1_MDIO             B22       GMAC1_MDIO
+      ETH1_REFCLKO25M    ETH1_REFCLKO25M        D19     ETH1_REFCLKO_25M
+
+
+2.3.4 I2C7 低速控制链路
+
+（1）电路说明
+
+•   信号来源：RK3588 的 GPIO3_D2 / GPIO3_D3 复用为 I2C7 的 M2 组（I2C7_SCL_M2 /
+    I2C7_SDA_M2），接入 FPGA 的 Bank B2。
+•   上拉电阻：核心板上为这两根各配了一只 2.2 kΩ 上拉电阻（R41 上拉 SCL、R42 上拉 SDA），
+    上拉电源为 RK_VCCIO5，与 RGMII 同域。
+•   用途：用于两颗芯片之间的低速状态交换，例如 FPGA 状态寄存器、版本/温度读取、握手等，
+    具体协议由 FPGA 工程定义。
+
+（2）管脚与信号对应
+
+                                  表 2-3-4 I2C7 管脚与信号对应
+
+              信号名 FPGA              信号名 RK3588      FPGA 管脚         RK3588 管脚
+           I2C7_SCL_M2           I2C7_SCL_M2           B21         I2C7_SCL_M2
+           I2C7_SCL_M2           I2C7_SDA_M2           A21         I2C7_SDA_M2
+    【易混淆】核心板上还存在一路同名但不同组的 I2C7 —— I2C7_SCL_M0 / I2C7_SDA_M0，它
+走的是 RK3588 的 F26 / F27，经板对板连接器引到底板，用于音频 codec（ES8388）与 MIPI DSI1
+触摸屏。该路与两颗芯片之间的互联无关，涉及命名时请分清 M0 组与 M2 组。
+
+2.3.5 FSPI 复用链路（默认给 eMMC）
+
+    RK3588 的 SDMMC / eMMC 控制器引脚同时复用了 FSPI 功能。核心板为这 6 个引脚各准备了
+两个 0 Ω 电阻位，通过贴装哪一侧来决定这组引脚归谁使用。
+
+（1）电路说明
+
+•   默认通路：R5 ~ R10（0 Ω，出厂贴装）→ 接板载 eMMC（U5），RK3588 由此从 eMMC 启动。
+•   备用通路：R16 ~ R21（0 Ω / DNI，出厂不贴装）→ 接 FPGA Bank B2。把这 6 只贴上、同时去
+    掉 R5 ~ R10，这组引脚即交由 FPGA 以 FSPI 方式使用。
+•   切换方式：板上没有模拟开关或多路复用器，因此切换只能通过改板焊接实现，软件无法切换。
+
+（2）管脚与信号对应
+
+                          表 2-3-5 FSPI 管脚与信号对应、切换电阻
+
+     信号名 FPGA      信号名        RK3588   FPGA 管脚   RK3588 管脚    切换    阻 默认贴            →可
+                                                                     改贴 FPGA
+    FSPI_D0        FSPI_D0               E21      FSPI_D0     R5（0 Ω）→ R1 （      I / 0 Ω）
+    FSPI_D1        FSPI_D1               D21      FSPI_D1     R6（0 Ω）→ R17（      I / 0 Ω）
+    FSPI_D2        FSPI_D2               E22      FSPI_D2     R7（0 Ω）→ R1 （      I / 0 Ω）
+    FSPI_D3        FSPI_D3               D22      FSPI_D3     R8（0 Ω）→ R1 （      I / 0 Ω）
+    FSPI_CS0       FSPI_CS0              F21      FSPI_CS0    R9（0 Ω）→ R20（      I / 0 Ω）
+    FSPI_CLK       FSPI_CLK              C18      FSPI_CLK    R10（0 Ω）→ R21（       I / 0 Ω）
+    这 6 个 RK3588 引脚在 eMMC 模式下的名称为 eMMC_D0 / eMMC_D1 / eMMC_D2 /
+eMMC_D3 / eMMC_D6(CS0) / eMMC_CMD，在 FSPI 模式下即为上表的 FSPI_D0~D3 / FSPI_CS0 /
+FSPI_CLK。FPGA 侧的 IO 位置名为 IOT138A / IOT138B / IOT140A / IOT140B / IOT142A（均为
+LVDS/DQ3）与 IOT115A（GCLKT_3）。
+（3）使用注意
+
+•   这 6 个引脚同属一个控制器，切换时必须成组操作。只贴其中一部分会导致 eMMC 与 FSPI 都
+    不能正常工作。
+•   切换到 FSPI 后，板载 eMMC 与 RK3588 断开，系统无法再从 eMMC 启动，需改用 SD 卡等其
+    他启动介质。
+
+2.3.6 复位与重配置链路
+
+    除数据链路外，两颗芯片还共享一条来自底板的复位链路：底板 S8 按键经双二极管 D56
+（BAV74）分出两个相互独立的信号，一次按下可同时复位两颗芯片，便于系统级恢复。
+
+                                  表 2-3-6 复位与重配置信号
+
+        信号名             来源                   去向         有效 平           作用
+    RESET_L      底板 S8 按键 + D56     RK3588 复位输入（NPOR）    低     复位整个 SoC
+    RECONFIG_N   底板 S8 按键 + D56     FPGA 重配置输入           低     触发 FPGA 重新从配置
+                                                               Flash 加载
+    两个信号在电气上互不牵连，因此除了按键触发，软件侧也可以各自单独控制：例如只重配置
+FPGA 而不复位 SoC，或以 GPIO 方式主动触发 RK3588 复位。
+
+
+
+
+                    图 2-3 S8 按键复位电路（RESET_L / RECONFIG_N）
+
+
+2.4 底板资源详解
+
+    本节按底板上的资源逐项说明：每个功能由板上哪颗器件、或主控内部哪组控制器实现，与主
+控之间怎样相连，使用时有哪些限制；每项后面给出实物位置图与管脚分配表。
+
+    【提示】接 FPGA 的信号给出 FPGA（GW5AT-LV60PG484A，U10）的 BGA 管脚；接主控的
+信号给出 RK3588（U1）的 RK3588 复用功能/信号。完整到物理引脚的连接器定义见【附录 A】，
+核心板-底板连接器对照见【附录 B】。
+
+2.4.1 板级供电与电源管理
+
+    底板只有一路 12V 输入。板上先把 12V 形成主 12V 域（并联瞬态抑制二极管做过压保护），
+再由一颗同步降压芯片把它降成 5V 主域；12V 域另外分出三条经保险丝的支路，分别供硬盘电源
+座、PCIe 插槽与 FMC 座使用。5V 主域受电源开关 S1 控制——S1 只切断 5V，12V 始终存在。
+  3.3V 不由底板产生：两路 3.3V 都由核心板的电源管理芯片供给，底板只负责把它们分配给各
+接口，其中 PCIe 插槽与 M.2 插槽各经一只磁珠隔离。此外底板还产生一路可调 IO 电压，档位由排
+针选择，供 FMC VADJ 及 FPGA Bank B4、B5、B8、B11 等相关 IO 电源使用。电源指示方面，5V
+域一只、两路 3.3V 各一只，其中 5V 那只接在开关之前，插入 12V 就会亮。
+
+  底板的供电走向见电源树图，电源输入与开关的实物位置见下图，板上与供电相关的器件与丝
+印见下表。
+
+                                电   电
+
+
+
+
+                                    电
+
+
+
+
+                         电
+
+
+
+
+                       图 2-4 ACG138 供电与电源树
+
+
+
+
+                     图 2-5 DC1 电源输入与 S1 电源开关
+                            表 2-4-1 底板供电相关器件与丝印
+
+      位号                  器件 / 丝印                         说明
+       DC1        DC-002 圆孔插座           12V 直流输入，内正外负
+       D16        SMCJ15CA              输入瞬 电压抑制（TVS）
+   F1 / F2 / F3   保险丝 2A / 2A / 3A      12V 域过流保护
+       U44        TPS548B28RWWR         主降压，12 → 5
+        F4        保险丝 3A                5V 域过流保护
+        S1        SS_12D0691P2T 拨动开关    ON / OFF， 制 5V 稳压器（U44）的使能
+     DC_5V        —                     U44 输出的 5V；电源指示灯 D21 接在此域
+  VCC5V0_SYS      —                     经 F4（3A）后的 5V 主域，经 P6 送至核心板
+  VCC12_PCIE      —                     PCIe 插槽专用 12V
+
+
+ 【注意】S1 控制 5V 稳压器（U44）的使能：拨到 OFF 后 12V 输入仍在板上，只是 5V 主域停
+ 止工作。测量或插拔底板外设前，请先断开 12V 适配器。
+
+2.4.2 调试、串口与下载
+
+USB 调试主口（J2）
+
+  FPGA 的调试要用到 JTAG 与串口，为了方便用户使用，底板上设计了一颗四端口 USB 集线器。
+该集线器用于将 USB 口 J2 扩展成四路，并使用其中的三路，分别接板载 USB-JTAG 下载器、一路
+USB 转串口（接 RK3588）与另一路 USB 转串口（接 FPGA）。这样一根数据线插到 PC 上就同时
+得到两个串口和一个下载器，不仅不需要外接下载器，也不用插接额外的串口线。
+
+
+
+
+                        图 2-6 J2（USB_Debug）内部 USB Hub 与串口电路
+
+
+  集线器与串口电路由 J2 侧的 USB 供电，因此底板即使不上电、只插 USB 线，PC 也能识别到
+它们。
+                              图 2-7 J2（USB_Debug）调试接口
+
+
+                    表 2-4-2 J2（USB_Debug）扩展出的三路设备
+
+           功能           外接口          识别名称                        说明
+       FPGA 调试接口   J2           USB Serial Converter   板载 USB-JTAG 下载器（U13，
+                                                       JTAG18M02HS2），Gowin
+                                                       Programmer 通过它完成 FPGA 配
+                                                       置与在线调试
+       FPGA 串口     J2           CH340E                 CH340E（U15），FPGA 侧调试
+                                                       串口
+       RK3588 串口   J2           CH9102F                CH9102F（U45），RK3588 侧调
+                                                       试串口
+
+FPGA 外部 JTAG（P8）
+
+   P8 是 FPGA 的外部 JTAG 口，与板载下载器共用同一条 JTAG 链。
+
+
+
+
+                              图 2-8 P8 FPGA JTAG 接口电路
+
+
+   座上有一根外部接入检测信号 EX_JTAG_detect：插入外部 JTAG 电缆时，板上的缓冲器与模
+拟开关会把链路自动让给外部接口，避免两个下载器互相冲突。
+                                 图 2-9 P8 FPGA JTAG 接口
+
+
+                         表 2-4-3 P8 FPGA JTAG 接口管脚分配
+
+      接口功能             信号名                   管脚分   FPGA             说明
+     JTAG 时钟    JTAG_TCK               V12                经 U1（SN74LVC125A）缓冲
+   JTAG 模式选择    JTAG_TMS               T13                经 U1（SN74LVC125A）缓冲
+   JTAG 数据输入    JTAG_TDI               R13                经 U1（SN74LVC125A）缓冲
+   JTAG 数据输出    JTAG_TDO               U13                FPGA → 下载器；U2 在 P8 与 FMC
+                                                          之间     TDO
+ 外部 JTAG 接入检测   EX_JTAG_detect         —                  检测到外部下载器即关闭板上 USB-
+                                                          JTAG 供电；U48（RT9193-33GB）
+                                                          使能脚
+   3.3V 参考电压    VCC3P3                 —                  为下载器提供参考电平
+
+
+
+
+下载器 SWD（P9）
+
+  P9 不是主控的调试口，而是板载 USB-JTAG 下载器自身的 SWD 口，用于给下载器烧写或升
+级固件，正常情况下不需要外接。
+
+
+
+
+                         图 2-10 P9 SWD 调试接口与板载下载器电路
+                              图 2-11 P9 SWD 调试接口
+
+
+                        表 2-4-4 P9 SWD 调试接口管脚分配
+
+     接口功能               信号名                 接去向                      说明
+     SWD 时钟      SWCLK             U13（板上 USB-JTAG）      板上下载器输出
+   SWD 向数据       SWDIO             U13（板上 USB-JTAG）      板上下载器 向数据
+   SWD 参考电平      JTAG_3P3          经 FB3 磁珠自 VCC3P3      给外部 SWD 下载器提供参考电压
+
+
+
+
+SoC JTAG 调试（P11）
+
+   P11 引出了 RK3588 的 JTAG 信号 JTAG_TCK_M0 与 JTAG_TMS_M0 ，可用于 SoC 侧的底层
+调试。由于信号与 MicroSD 卡座的 DAT2、DAT3 复用，使用时需统一管脚复用配置。
+
+
+
+
+              图 2-12 P11 ARM JTAG 接口电路（与 MicroSD 的 DAT2 / DAT3 复用）
+                                图 2-13 P11 ARM JTAG 接口
+
+
+                        表 2-4-5 P11 ARM JTAG 接口管脚分配
+
+     接口功能                信号名             管脚分      RK3588              说明
+   ARM JTAG 时钟    JTAG_TCK_M0         JTAG_TCK_M0          与 MicroSD DAT2 复用；经 R252
+                                                           22Ω
+  ARM JTAG 模式选择   JTAG_TMS_M0         JTAG_TMS_M0          与 MicroSD DAT3 复用；经 R250
+                                                           22Ω
+
+
+
+
+2.4.3 存储（MicroSD / SATA / M.2）
+
+ 底板的存储资源有三块：MicroSD 卡座、SATA 硬盘口与 M.2 插槽，分别挂在 RK3588 的三个
+ 控制器上。核心板的板载 eMMC（U5，FEMDRM008G-58A39，8GB）不属于底板资源——它
+ 与 RK3588 的 SDMMC 控制器引脚复用为 FSPI，可用 0 Ω 电阻切换给 FPGA，详见 §2.3.5。
+
+MicroSD 存储（J1）
+
+   MicroSD 直接挂在 RK3588 的 SDMMC 控制器上，既可作为数据存储，也可作为系统启动介质。
+
+
+
+
+                                图 2-14 J1 MicroSD 卡座电路
+  卡座以 3.3V 供电，数据线 DAT2、DAT3 与 SoC 的 JTAG 是复用关系，两者不能同时使用。
+SD 卡座在开发板上的位置如下：
+
+
+
+
+                             图 2-15 J1 MicroSD 卡座
+
+
+                       表 2-4-6 J1 MicroSD 卡座管脚分配
+
+     接口功能              信号名          管脚分     RK3588             说明
+      SD 时钟     SD_CLK            SDMMC_CLK          —
+      SD 命令     SD_CMD            SDMMC_CMD          —
+     SD 数据 0    SD_DATA0          SDMMC_D0           —
+     SD 数据 1    SD_DATA1          SDMMC_D1           —
+     SD 数据 2    SD_DATA2          SDMMC_D2           与 JTAG_TCK_M0 复用
+     SD 数据 3    SD_DATA3          SDMMC_D3           与 JTAG_TMS_M0 复用
+   SD 卡插入检测     SD_CD             SDMMC_DET          低电平有效
+
+
+
+
+SATA 存储（CON1）
+
+  SATA 不需要额外的 SATA 芯片，用的是 RK3588 内部的三组可配置 SerDes 之一。这三组
+SerDes 每一组都能配成 PCIe 或 SATA，本板把它们分别给了 SATA 硬盘口、PCIe ×1 插槽和 USB
+3.0 口的超速对——也就是说 SATA 与 PCIe 是「同一套硬件、不同固件」，设备树里选成 PCIe，
+这个口就不认硬盘。
+                图 2-16 CON1 SATA 数据接口电路（含交流耦合电容）
+
+
+  信号从 RK3588 出来后经板对板连接器到底板，两端各串交流耦合电容后接到 CON1；硬盘所
+需的 12V 与 5V 则由旁边的 P14 单独提供。两块座子的实物位置见下。
+
+
+
+
+                           图 2-17 CON1 SATA 数据接口
+
+
+                   表 2-4-7 CON1 SATA 数据接口管脚分配
+
+               接口功能               信号名           管脚分        RK3588
+          SATA 发送 +（TX+）    STX_C_10048_P   PCIE20_0_TX_P/SATA30_0_TX_P
+          SATA 发送 −（TX−）    STX_C_10048_N   PCIE20_0_TX_P/SATA30_0_TX_N
+          SATA 接收 +（RX+）    SRX_C_10048_P   PCIE20_0_RX_P/SATA30_0_RX_P
+          SATA 接收 −（RX−）    SRX_C_10048_N   PCIE20_0_RX_P/SATA30_0_RX_N
+
+
+
+SATA 供电（P14）
+
+  P14 为板上 4 针辅助供电座，提供 12V、GND、GND、5V；接硬盘须用匹配线束，并按实际
+线序核对。
+
+
+
+
+                           图 2-18 P14 SATA 电源接口
+                          表 2-4-8 P14 SATA 电源接口管脚分配
+
+       接口功能                 信号名                       接去向                        说明
+    SATA 12V 供电     NetC8_2                经 F1（2A 保险丝）               取自 VCC12
+     SATA 5V 供电     VCC5V0_SYS             主 5V 电源域                   S1 电源开关之后
+
+
+
+
+M.2 存储（U20）
+
+    M.2 插槽走 RK3588 的 PCIE30_PORT1（PCIe 3.0 ×2），底板上没有桥片。它的参考时钟没有
+用 SoC 内部时钟，而是由底板上一颗专用 100MHz 差分晶振提供；复位、时钟请求与唤醒信号回
+到 RK3588 控制。插槽为 Key-M 缺口，只支持 NVMe 模块，SATA 协议的模块插上不识别；长度
+支持 2230 / 2242 / 2260 / 2280 四种。
+
+
+
+
+                                   图 2-19 U20 M.2 Key-M 插槽
+
+
+                          表 2-4-9 U20 M.2 Key-M 插槽管脚分配
+
+                   接口功能                    信号名                 管脚分       RK3588
+             PCIe 3.0 发送 0（+）     PCIE30_PORT1_TX0_P         PCIE30_PORT1_TX0P
+             PCIe 3.0 发送 0（−）     PCIE30_PORT1_TX0_N         PCIE30_PORT1_TX0N
+             PCIe 3.0 接收 0（+）     PCIE30_PORT1_RX0_P         PCIE30_PORT1_RX0P
+             PCIe 3.0 接收 0（−）     PCIE30_PORT1_RX0_N         PCIE30_PORT1_RX0N
+             PCIe 3.0 发送 1（+）     PCIE30_PORT1_TX1_P         PCIE30_PORT1_TX1P
+             PCIe 3.0 发送 1（−）     PCIE30_PORT1_TX1_N         PCIE30_PORT1_TX1N
+             PCIe 3.0 接收 1（+）     PCIE30_PORT1_RX1_P         PCIE30_PORT1_RX1P
+             PCIe 3.0 接收 1（−）     PCIE30_PORT1_RX1_N         PCIE30_PORT1_RX1N
+               PCIe 参考时钟 +        PCIE30_PORT1_REFCLK_IN_P   PCIE30_PORT1_REF_CLKP
+               PCIe 参考时钟 −        PCIE30_PORT1_REFCLK_IN_N   PCIE30_PORT1_REF_CLKN
+              PCIe 复位 PERST#      PCIE30X2_PERSTn            PCIE30X2_PERSTN_M1
+                PCIe 时钟请求         PCIE30X2_CLKREQn           PCIE30X2_CLKREQN_M1
+                   CLKREQ#
+              PCIe 唤醒 WAKE#       PCIE30X2_WAKEn             PCIE30X2_WAKEN_M1
+
+
+
+
+2.4.4 网络（千兆以太网 / SFP）
+
+底板的网络资源分两类：一路千兆有线网口走 RK3588，两个光模块口走 FPGA。
+千兆以太网（J3）
+
+  板载千兆网口由 RK3588 的以太网 MAC 和外置 PHY 共同实现：两者通过 RGMII 传输数据，
+通过 MDIO 管理总线配置和读取 PHY 寄存器。PHY 再经 RJ45 座内置的网络变压器连接网线，
+Link/Act 指示灯也由 PHY 直接驱动。由于该网口的信号链路未经过 FPGA，因此由 RK3588 控制，
+FPGA 不能直接接管。
+
+  千兆以太网在开发板上的位置如下：
+
+
+
+
+                        图 2-20 J3 千兆以太网 RJ45 接口
+
+
+                       表 2-4-10 J3 千兆以太网管脚分配
+
+             信号名           管脚 RK3588                 说明
+      ENET0_TX_DATA0      GMAC0_TXD0      RGMII 发送数据 0
+      ENET0_TX_DATA1      GMAC0_TXD1      RGMII 发送数据 1
+      ENET0_TX_DATA2      GMAC0_TXD2      RGMII 发送数据 2
+      ENET0_TX_DATA3      GMAC0_TXD3      RGMII 发送数据 3
+      ENET0_TX_EN         GMAC0_TXEN      发送使能
+      ENET0_GTX_CLK       GMAC0_TXCLK     125 MHz 发送时钟
+      ENET0_RX_DATA0      GMAC0_RXD0      RGMII 接收数据 0
+      ENET0_RX_DATA1      GMAC0_RXD1      RGMII 接收数据 1
+      ENET0_RX_DATA2      GMAC0_RXD2      RGMII 接收数据 2
+      ENET0_RX_DATA3      GMAC0_RXD3      RGMII 接收数据 3，复位时兼作 PHY
+                                          地址配置
+      ENET0_RX_DV        GMAC0_RXDV_CRS   接收数据有效
+      ENET0_RX_CLK        GMAC0_RXCLK     125 MHz 接收时钟，延时由 PHY 内部
+                                          提供
+      ENET0_MDC           GMAC0_MDC       管理时钟
+      ENET0_MDIO          GMAC0_MDIO      管理数据
+      ENET0_RESET          GPIO3_B2_d     以太网复位
+SFP 光模块（U22 / U55）
+
+   板上两个 SFP 笼位分别连接 FPGA 的 MGT2、MGT3 硬核收发器，高速数据不经过 RK3588；
+TX_DIS 发送禁止信号和 TX_LOS 无光告警信号也接入 FPGA。板上预留了 125 MHz 参考时钟器件
+位（U56），默认不贴装。使用 SFP 功能时，应结合 FPGA 设计和实际装配，确认收发器参考时钟、
+模块速率及控制信号配置。
+
+
+
+
+                              图 2-21 SFP 光模块接口电路
+
+
+两个光口在开发板上的位置如下：
+
+
+
+
+                             图 2-22 SFP1 / SFP2 光模块接口
+
+
+                           表 2-4-11 SFP 光模块接口管脚分配
+
+              信号名    SFP             FPGA 管脚            说明
+           SFP1_TX_P                        B6         SFP1 发送数据 +（经交流耦合）
+           SFP1_TX_N                        A6         SFP1 发送数据 −
+           SFP1_RX_P                        B10        SFP1 接收数据 +
+           SFP1_RX_N                        A10        SFP1 接收数据 −
+           SFP1_TX_DIS                      C14        发送关闭，高电平有效
+           SFP1_TX_LOS                      C15        收端无光告警，高电平有效
+           SFP2_TX_P                        D7         SFP2 发送数据 +（经交流耦合）
+           SFP2_TX_N                        C7         SFP2 发送数据 −
+           SFP2_RX_P                        D9         SFP2 接收数据 +
+           SFP2_RX_N                        C9         SFP2 接收数据 −
+           SFP2_TX_DIS                      A13        发送关闭，高电平有效
+           SFP2_TX_LOS                      A14        收端无光告警，高电平有效
+
+
+
+
+2.4.5 显示（HDMI / MIPI DSI）
+
+   底板的显示资源分两类：三路 HDMI 与两路 MIPI DSI，全部由 RK3588 驱动。
+
+
+
+HDMI 显示（J5 / J6 / J7）
+
+   ACG138 开发板上设计有两路 HDMI 输出与 1 路 HDMI 输入。其中，J5、J6 接 RK3588 两路
+HDMI 发送资源，J7 接 HDMI 接收资源，因此 J7 不能用作普通显示器输出。
+
+
+
+
+                                 图 2-23 J5 / J6 / J7 HDMI 接口
+
+
+   三路 HDMI 全部使用 RK3588 自身的 HDMI / eDP PHY 实现，其中 HDMI0_TX 与 eDP0 共用
+RK3588 的一组高速 PHY 管脚，使用时需注意软件选择。
+
+                              表 2-4-12 三路 HDMI 接口与管脚分配
+
+   位号                    丝印                 方向                    来源
+     J5      HDMI（HDMI0_TX）                       输出           RK3588 HDMI0_TX（与 eDP0 复用）
+     J6      HDMI（HDMI1_TX）                       输出           RK3588 HDMI1_TX
+     J7      HDMI（HDMI0_RX）                       输入           RK3588 HDMI0_RX
+    接口功能            J5 HDMI0_TX            管脚      J6 HDMI1_TX            管脚     J7 HDMI0_RX            管脚
+ TMDS 数据 3 P / N   HDMI_TX0_D3P/ HDMI_TX0_D3N     HDMI_TX1_D3P/ HDMI_TX1_D3N     —（HDMI 输入无第 4 对数据
+                                                                                 线）
+ TMDS 数据 2 P / N   HDMI_TX0_D2P/ HDMI_TX0_D2N     HDMI_TX1_D2P/ HDMI_TX1_D2N     HDMI_RX_D2P/ HDMI_RX_D2N
+ TMDS 数据 1 P / N   HDMI_TX0_D1P/ HDMI_TX0_D1N     HDMI_TX1_D1P/ HDMI_TX1_D1N     HDMI_RX_D1P/ HDMI_RX_D1N
+ TMDS 数据 0 P / N   HDMI_TX0_D0P/ HDMI_TX0_D0N     HDMI_TX1_D0P/ HDMI_TX1_D0N     HDMI_RX_D0P/ HDMI_RX_D0N
+ TMDS 时钟           同 TMDS 数据 3（D3 即时钟）            同 TMDS 数据 3（D3 即时钟）            HDMI_RX_CLKP/ HDMI_RX_CLKN
+ SBD               HDMI_TX0_SBDP/ HDMI_TX0_SBDN   HDMI_TX1_SBDP/ HDMI_TX1_SBDN   —（HDMI 输入无 SBD / eARC）
+ CEC 制             HDMI_TX0_CEC_M0                HDMI_TX1_CEC_M2                HDMI_RX_CEC_M2
+ DDC 时钟 SCL        HDMI_TX0_SCL_M2                HDMI_TX1_SCL_M1                HDMI_RX_SCL_M2
+ DDC 数据 SDA        HDMI_TX0_SDA_M2                HDMI_TX1_SDA_M1                HDMI_RX_SDA_M2
+ 热插拔检测 HPD         HDMI_TX0_HPD_M1                HDMI_TX1_HPD_M1                HDMI_RX_HPDOUT_M2
+    【说明】RK3588 的 HDMI 发送通道中，第 4 对差分线（D3）即 TMDS 时钟通道，因此 J5 / J6
+的时钟与「TMDS 数据 3」为同一对信号；HDMI 输入（J7）的时钟为独立的一对
+（HDMI_RX_CLKP / HDMI_RX_CLKN）。
+
+
+
+MIPI DSI 显示（FPC3 / FPC6）
+
+    两路 MIPI DSI 直接接 RK3588 的 DSI0 / DSI1，每路四条数据 lane 加一条时钟 lane；屏复位与
+触摸复位经电平转换后由主控驱动，触摸 I²C 也经电平转换后接到主控。
+
+
+
+
+                                   图 2-24 FPC3 / FPC6 MIPI DSI 显示接口
+
+
+                               表 2-4-13 FPC3 / FPC6 MIPI DSI 管脚分配
+
+       接口功能                    FPC3 MIPI DSI0           管脚               FPC6 MIPI DSI1           管脚
+     数据 lane 3 P / N      MIPI_DPHY0_TX_D3P/ MIPI_DPHY0_TX_D3N      MIPI_DPHY1_TX_D3P/MIPI_DPHY1_TX_D3N
+     数据 lane 2 P / N      MIPI_DPHY0_TX_D2P/ MIPI_DPHY0_TX_D2N      MIPI_DPHY1_TX_D2P/MIPI_DPHY1_TX_D2N
+     数据 lane 1 P / N      MIPI_DPHY0_TX_D1P/ MIPI_DPHY0_TX_D1N      MIPI_DPHY1_TX_D1P/MIPI_DPHY1_TX_D1N
+     数据 lane 0 P / N      MIPI_DPHY0_TX_D0P/ MIPI_DPHY0_TX_D0N      MIPI_DPHY1_TX_D0P/MIPI_DPHY1_TX_D0N
+     时钟 lane P / N        MIPI_DPHY0_TX_CLKP/ MIPI_DPHY0_TX_CLKN    MIPI_DPHY1_TX_CLKP/MIPI_DPHY1_TX_CLKN
+        屏复位               GPIO1_A6_d                                GPIO1_C6_d
+       触摸复位               GPIO1_B4_u                                GPIO2_B5_u
+       背光使能               GPIO4_B4_u                                GPIO4_B6_d
+       触摸中断            GPIO0_D4_u                           GPIO0_D5_u
+      触摸 I C SCL       I2C1_SCL_M4                          I2C7_SCL_M0
+      触摸 I C SDA       I2C1_SDA_M4                          I2C7_SDA_M0
+   【说明】两路 DSI 的屏复位与触摸复位均经电平转换器（DSI0 用 U35、DSI1 用 U36）由
+RK3588 GPIO 驱动；触摸 I²C 分别经 U54 / U53（PCA9306）做 1.8V↔3.3V 电平转换。
+
+
+
+2.4.6 摄像       入（MIPI CSI）
+
+   四路 MIPI CSI 都接 RK3588 的 MIPI D-PHY——本板的 FPGA 封装没有 MIPI 硬核，所以不走
+FPGA。四路都采用 24pin、0.5mm 间距的 FPC 座（FPC-05F-H20），每路四条数据 lane 加一条时
+钟 lane，并带独立的使能、复位与 I²C 控制。
+
+   使用上最需要注意的是 I²C：四路摄像头并不各占一条总线，而是经一颗四通道 I²C 切换器挂
+到同一条总线上，由主控选择通道——通道选错，就读不到对应的摄像头。各路摄像头的使能与复
+位等控制信号中，前两路由连接器直接引出，后两路经电平转换。
+
+
+
+
+                         图 2-25 FPC1 / FPC2 / FPC4 / FPC5 MIPI CSI 摄像接口
+
+
+                            表 2-4-14 四路 MIPI CSI 接口与 I²C 通道
+
+     接口           位号             应通道                    I² 通道                  使能 / 制信号
+   MIPI_CSI0    FPC2     MIPI_DPHY0_RX          CSI0_I2C（U17 ch0）         CSI0_PWDN、
+                                                                          MIPI_CSI0_TRI0/TRI1
+   MIPI_CSI1    FPC1     MIPI_DPHY1_RX          CSI1_I2C（U17 ch1）         CSI1_PWDN、
+                                                                          MIPI_CSI1_TRI0/TRI1
+   MIPI_CSI2    FPC5     MIPI_DPHY2_RX          CSI2_I2C（U17 ch2）         CSI2_PWDN、
+                                                                          MIPI_CSI2_TRI0/TRI1
+   MIPI_CSI3    FPC4     MIPI_DPHY3_RX          CSI3_I2C（U17 ch3）         CSI3_PWDN、
+                                                                          MIPI_CSI3_TRI0/TRI1
+
+
+   各接口引脚定义：
+                              表 2-4-15 MIPI CSI 管脚分配
+
+                  接口功能                   信号名              管脚分       RK3588
+            摄像头 I C 时钟         CSI_I2C_SCL               GPIO4_A4_d
+            摄像头 I C 数据         CSI_I2C_SDA               GPIO4_A5_d
+            FPC2 接口
+            数据 lane 0 P / N    MIPI_DPHY0_RX_D0_P / N    MIPI_DPHY0_RX_D0_P/N
+            数据 lane 1 P / N    MIPI_DPHY0_RX_D1_P / N    MIPI_DPHY0_RX_D1_P/N
+            数据 lane 2 P / N    MIPI_DPHY0_RX_D2_P / N    MIPI_DPHY0_RX_D2_P/N
+            数据 lane 3 P / N    MIPI_DPHY0_RX_D3_P / N    MIPI_DPHY0_RX_D3_P/N
+            时钟 lane P / N      MIPI_DPHY0_RX_CLK0_P /N   MIPI_DPHY0_RX_CLKP/N
+            使能 PWDN            CSI0_PWDN                 GPIO4_B5_d
+            辅助 制 TRI0          MIPI_CSI0_TRI0            GPIO1_A3_d
+            辅助 制 TRI1          MIPI_CSI0_TRI1            GPIO1_B0_u
+            FPC1 接口
+            数据 lane 0 P / N    MIPI_DPHY1_RX_D0_P / N    MIPI_DPHY1_RX_D0_P/N
+            数据 lane 1 P / N    MIPI_DPHY1_RX_D1_P / N    MIPI_DPHY1_RX_D1_P/N
+            数据 lane 2 P / N    MIPI_DPHY1_RX_D2_P / N    MIPI_DPHY1_RX_D2_P/N
+            数据 lane 3 P / N    MIPI_DPHY1_RX_D3_P / N    MIPI_DPHY1_RX_D3_P/N
+            使能 PWDN            CSI1_PWDN                 GPIO4_B1_u
+            辅助 制 TRI0          MIPI_CSI1_TRI0            GPIO1_B2_d
+            辅助 制 TRI1          MIPI_CSI1_TRI1            GPIO1_B3_d
+            FPC5 接口
+            数据 lane 0 P / N    MIPI_DPHY2_RX_D0_P / N    MIPI_DPHY2_RX_D0_P/N
+            数据 lane 1 P / N    MIPI_DPHY2_RX_D1_P / N    MIPI_DPHY2_RX_D1_P/N
+            数据 lane 2 P / N    MIPI_DPHY2_RX_D2_P / N    MIPI_DPHY2_RX_D2_P/N
+            数据 lane 3 P / N    MIPI_DPHY2_RX_D3_P / N    MIPI_DPHY2_RX_D3_P/N
+            FPC5 使能 PWDN       CSI2_PWDN                 GPIO1_B1_d
+            FPC5 辅助 制 TRI0     MIPI_CSI2_TRI0            GPIO1_A7_u
+            FPC5 辅助 制 TRI1     MIPI_CSI2_TRI1            GPIO1_A4_d
+            FPC4 接口
+            数据 lane 0 P / N    MIPI_DPHY3_RX_D0_P / N    MIPI_DPHY3_RX_D0_P/N
+            数据 lane 1 P / N    MIPI_DPHY3_RX_D1_P / N    MIPI_DPHY3_RX_D1_P/N
+            数据 lane 2 P / N    MIPI_DPHY3_RX_D2_P / N    MIPI_DPHY3_RX_D2_P/N
+            数据 lane 3 P / N    MIPI_DPHY3_RX_D3_P / N    MIPI_DPHY3_RX_D3_P/N
+            FPC4 使能 PWDN       CSI3_PWDN                 GPIO1_C4_d
+            FPC4 辅助 制 TRI0     MIPI_CSI3_TRI0            GPIO1_A2_d
+            FPC4 辅助 制 TRI1     MIPI_CSI3_TRI1            GPIO1_A5_d
+   【说明】四路 CSI 的命名规则一致，仅通道号不同：CSI1 用 MIPI_DPHY1_RX_*（FPC1）、
+CSI2 用 MIPI_DPHY2_RX_*（FPC5）、CSI3 用 MIPI_DPHY3_RX_*（FPC4）。其中 CSI0 / CSI1
+的 PWDN 由 RK3588 GPIO 直接引出，CSI2 / CSI3 的 PWDN 分别经 U35 / U36 电平转换。
+
+2.4.7 USB
+
+   底板提供四个通用 USB 接口：J8（USB 3.0 Type-A）、USB_HOST1（USB 2.0 Type-A），以
+及 USB0、USB1 两个 Type-C，均连接 RK3588。另有一个调试专用 Type-C 接口 J2，其实现见 §
+2.4.2。
+                     图 2-26 USB 接口组（J8 / USB_HOST1 / USB0 / USB1 / J2）
+
+
+                                   表 2-4-16 USB 接口一览
+
+  位号                 丝印 / 形态                协议                            来源与说明
+   J8       USB_3.0_HOST（Type-A 蓝口）   USB 3.0            RK3588 组合 PHY；USB 2.0 通 ；USB 3.x 超
+                                                         速通 与 PCIE20_2 复用
+USB_HOST1   USB_2.0_HOST（Type-A）      USB 2.0            RK3588 USB2.0 HOST1
+  USB0      Type-C（位号 / 丝印 USB0）      USB 3.1 + DP Alt   RK3588 TYPEC0，支持正反插、PD（FUSB302B）
+                                                         与 SBU/AUX
+  USB1      Type-C（位号 / 丝印 USB1）      USB 3.1 + DP Alt   RK3588 TYPEC1，支持正反插、PD（FUSB302B）
+   J2       USB_Debug（Type-C）         USB 2.0            调试口，接板上 Hub（SL2.1S）
+
+
+
+   J8 的 USB 2.0 信号与超速信号分别来自 RK3588 的相应通道；USB_HOST1 仅使用 USB 2.0 通
+道。两个 Type-C 则分别使用 RK3588 的 TYPEC0、TYPEC1 资源。
+
+   两个 Type-C 口各配有一颗 FUSB302B（U33、U39），负责 CC 检测并提供 USB PD 通信所需
+的硬件接口；RK3588 通过 I²C 和中断信号与其配合，由软件按连接状态和电源角色控制各自的
+VBUS 负载开关（U34、U38）。两个 Type-A 口的 VBUS 开关（U41、U42）为固定使能，主 5 V
+电源建立后即可向接口供电。
+
+
+
+
+                图 2-27 USB0 / USB1 Type-C 接口电路（含 PD 控制器与 VBUS 负载开关）
+
+
+   使用高速功能时还需注意复用关系：J8 的超速信号与 RK3588 的 PCIE20_2 复用；若该资源配
+置为 PCIe，J8 仍可使用独立的 USB 2.0 信号，但不能使用 USB 3.0 超速功能。两个 Type-C 口的高
+速通道与 DP Alt Mode 复用，USB 3.x 和 DP 的实际可用组合取决于通道分配及驱动配置，不能简
+单概括为“只能二选一”。
+
+                                    表 2-4-17 USB 管脚分配
+
+  接口 / 功能             信号名                 管脚分      RK3588                说明
+                 TYPEC0_SSTX1_P/N          TYPEC0_SSTX1P/N        超速发送 lane 1，经交流耦合电
+                                                                              容
+                 TYPEC0_SSRX1_P/N          TYPEC0_SSRX1P/N        超速接收 lane 1，经交流耦合电
+                                                                              容
+                 TYPEC0_SSRX2_P/N          TYPEC0_SSRX2P/N        超速接收 lane 2，经交流耦合电
+                                                                              容
+                 TYPEC0_SSTX2_P/N          TYPEC0_SSTX2P/N        超速发送 lane 2，经交流耦合电
+                                                                              容
+    USB0
+              TYPEC0_USB20_OTG_D_P/N    TYPEC0_USB20_OTG_DP/DM   USB 2.0 差分对（正反插均 用）
+                      USB_EN0                  GPIO3_B6_d          VBUS 负载开关（U34）使能
+                    TYPEC0_SBU1               TYPEC0_SBU1         Sideband 通 1（正反插各一
+                                                                             路）
+                   TYPEC0_SBU2               TYPEC0_SBU2          Sideband 通 2（正反插各一
+                                                                             路）
+                   B6_GPIO4_A0               GPIO4_A0_d          经板对板连接器引出的通用 GPIO
+                   B6_GPIO4_A1               GPIO4_A1_d          经板对板连接器引出的通用 GPIO
+                 TYPEC1_SSTX1_P/N          TYPEC1_SSTX1P/N        超速发送 lane 1，经交流耦合电
+                                                                              容
+                 TYPEC1_SSRX1_P/N          TYPEC1_SSRX1P/N        超速接收 lane 1，经交流耦合电
+                                                                              容
+                 TYPEC1_SSRX2_P/N          TYPEC1_SSRX2P/N        超速接收 lane 2，经交流耦合电
+                                                                              容
+                 TYPEC1_SSTX2_P/N          TYPEC1_SSTX2P/N        超速发送 lane 2，经交流耦合电
+                                                                              容
+    USB1
+              TYPEC1_USB20_OTG_D_P/N    TYPEC1_USB20_OTG_DP/DM   USB 2.0 差分对（正反插均 用）
+                      USB_EN1                  GPIO3_D1_d          VBUS 负载开关（U38）使能
+                    TYPEC1_SBU1               TYPEC1_SBU1         Sideband 通 1（正反插各一
+                                                                             路）
+                   TYPEC1_SBU2               TYPEC1_SBU2          Sideband 通 2（正反插各一
+                                                                             路）
+                   B6_GPIO4_A2                GPIO4_A2_d         经板对板连接器引出的通用 GPIO
+                   B6_GPIO4_A7                GPIO4_A7_d         经板对板连接器引出的通用 GPIO
+  USB_HOST1     USB20_HOST1_D_P/N         USB20_HOST1_DP/DM            仅使用 USB 2.0 通
+                USB20_HOST0_D_P/N         USB20_HOST0_DP/DM               USB 2.0 通
+     J8          PCIE20_2_RX_P/N           USB30_2_SSRXP/N        超速接收对，与 PCIE20_2 复用
+                  PCIE20_2_TX_P/N           USB30_2_SSTXP/N       超速发送对，与 PCIE20_2 复用
+
+
+2.4.8 音频
+
+   底板采用 ES8388 音频编解码器（U46）完成模拟音频与 RK3588 数字音频之间的转换。音频
+数据通过 I²S0 传输，编解码器寄存器通过 I2C7 配置；
+                          图 2-28 音频编解码器（ES8388）电路
+
+
+  这条 I²C 总线还连接 DSI1 显示接口的触摸控制通路，接入触摸屏时应核对器件地址。麦克风
+插座 IN1 和耳机插座 OUT1 分别经外围模拟电路连接 ES8388 的输入、输出端，模拟音频信号不直
+接连接 RK3588。音频电路使用局部 I2S_GND 网络，并经磁珠 FB10 与系统 GND 相连，以抑制高
+频干扰。
+
+
+
+
+                       图 2-29 音频接口（IN1 麦克风 / OUT1 耳机）
+
+
+                            表 2-4-18 音频接口管脚分配
+
+      接口功能              信号名         管脚分      RK3588              说明
+ I S 主时钟 MCLK    I2S0_MCLK        GPIO1_C2_d            经 R305（33Ω）串
+ I S 位时钟 SCLK    I2S0_SCLK_TX     GPIO1_C3_d            —
+ I S 帧时钟 LRCK    I2S0_LRCK_TX     GPIO1_C5_d            —
+ I S 发送数据 SDO0   I2S0_SDO0        GPIO1_C7_d            —
+ I S 接收数据 SDI1   I2S0_SDI1        GPIO1_D4_d            —
+ I²C 控制时钟 SCL    I2C7_SCL_M0      GPIO1_D0_d            配置 ES8388 寄存器；与
+                                                        DSI1 触摸控制共用同一条
+                                                           总线
+ I²C 控制数据 SDA     I2C7_SDA_M0          GPIO1_D1_d          同上
+
+
+
+2.4.9 扩展与配置
+
+底板的扩展资源包括一个 FMC 座、三排扩展排针，以及几处跳线配置与风扇接口。
+
+FMC LPC 扩展（P16）
+
+   底板 P16 采用 Samtec ASP-134603-01 标准 FMC LPC 连接器（160 触点）。其用户 I/O 及相关
+时钟信号连接 FPGA 的 Bank B4、B5、B8，不直接连接 RK3588；需要由主控访问子卡时，应通过
+FPGA 实现相应的数据与控制通路。
+
+
+
+
+                                图 2-30 P16 FMC LPC 扩展座电路
+
+
+   FMC 的 JTAG 信号经板上缓冲和切换电路接入下载链路，子卡在位信号参与链路控制。连接
+器的 12 V 电源由底板 VCC12 经保险丝 F3 提供，另提供 3.3 V 和可调的 VADJ；VADJ 由 U23 产生，
+通过 P20 跳线选择档位。安装子卡前，应断电核对其供电要求、VADJ 档位，以及所用 FPGA Bank
+的实际 I/O 电压和约束，不能只凭 VADJ 档位判断所有信号都兼容。
+
+   FMC LPC 在开发板上的位置如下：
+                                 图 2-31 P16 FMC LPC 扩展座
+
+
+                          表 2-4-19 P16 FMC LPC 信号组分配
+
+信号组       差分   数量                             典型信号名                                      接器区域
+ B4     8对             B4_R20 / R22 / R24 / R26 / R30 / R32 / R34 / R36           P16 的 D、G、H 行
+ B5     16 对           B5_B39 / B41 / B43 / B45 / B48 / B50 / B52 / B54 / B57 /   P16 的 C、D、G、H 行
+                       B59 / B61 / B63 / B66 / B68 / B70 / B72
+ B8     12 对           B8_B75 / B77 / B79 / B81 / B85 / B87 / B89 / B91 / B93 /   P16 的 C、D、G、H 行
+                       B95 / B97 / B99
+
+
+                            表 2-4-20 P16 FMC LPC 管脚分配
+
+FMC 标 信号名                    信号名                        信号组            管脚分配（FPGA）
+LA00_P_CC/ LA00_N_CC         B8_B93_P/ B8_B93_N         Bank 8         W19/ W20
+LA01_P_CC/ LA01_N_CC         B5_B61_P/ B5_B61_N         Bank 5         L19/ L20
+LA02_P/ LA02_N               B8_B85_P/ B8_B85_N         Bank 8         AA19/ AB20
+LA03_P/ LA03_N               B5_B52_P/ B5_B52_N         Bank 5         M15/ M16
+LA04_P/ LA04_N               B8_B97_P/ B8_B97_N         Bank 8         AB21/ AB22
+LA05_P/ LA05_N               B4_R34_P/ B4_R34_N         Bank 4         L16/ K16
+LA06_P/ LA06_N               B5_B68_P/ B5_B68_N         Bank 5         M21/ L21
+LA07_P/ LA07_N               B8_B99_P/ B8_B99_N         Bank 8         Y21/ Y22
+LA08_P/ LA08_N               B5_B63_P/ B5_B63_N         Bank 5         N22/ M22
+LA09_P/ LA09_N               B4_R24_P/ B4_R24_N         Bank 4         G15/ G16
+LA10_P/ LA10_N               B5_B59_P/ B5_B59_N         Bank 5         K21/ K22
+LA11_P/ LA11_N               B5_B45_P/ B5_B45_N         Bank 5         J22/ H22
+LA12_P/ LA12_N               B4_R30_P/ B4_R30_N         Bank 4         G17/ G18
+LA13_P/ LA13_N               B4_R32_P/ B4_R32_N         Bank 4         H17/ H18
+LA14_P/ LA14_N               B5_B72_P/ B5_B72_N         Bank 5         N18/ N19
+LA15_P/ LA15_N               B4_R22_P/ B4_R22_N         Bank 4         J15/ H15
+LA16_P/ LA16_N               B5_B43_P/ B5_B43_N         Bank 5         H20/ G20
+LA17_P_CC/ LA17_N_CC         B8_B81_P/ B8_B81_N         Bank 8         V18/ V19
+LA18_P_CC/ LA18_N_CC         B8_B95_P/ B8_B95_N         Bank 8         U20/ V20
+LA19_P/ LA19_N               B4_R26_P/ B4_R26_N         Bank 4         J14/ H14
+LA20_P/ LA20_N               B5_B66_P/ B5_B66_N         Bank 5         M18/ L18
+LA21_P/ LA21_N               B8_B75_P/ B8_B75_N         Bank 8         U17/ U18
+LA22_P/ LA22_N               B5_B50_P/ B5_B50_N         Bank 5         M13/ L13
+LA23_P/ LA23_N               B4_R20_P/ B4_R20_N         Bank 4         H13/ G13
+   LA24_P/ LA24_P             B8_B79_P/ B8_B79_N   Bank 8    V17/ W17
+   LA25_P/ LA25_N             B5_B57_P/ B5_B57_N   Bank 5    K18/ K19
+   LA26_P/ LA26_N             B4_R36_P/ B4_R36_P   Bank 4    K13/ K14
+   LA27_P/ LA27_N             B5_B70_P/ B5_B70_N   Bank 5    N20/ M20
+   LA28_P/ LA28_N             B8_B77_P/ B8_B77_N   Bank 8    AA18/ AB18
+   LA29_P/ LA29_N             B5_B39_P/ B5_B39_N   Bank 5    K17/ J17
+   LA30_P/ LA30_N             B8_B89_P/ B8_B89_N   Bank 8    AB15/ AA14
+   LA31_P/ LA31_N             B5_B41_P/ B5_B41_N   Bank 5    J19/ H19
+   LA32_P/ LA32_N             B8_B91_P/ B8_B91_N   Bank 8    W14/ V14
+   LA33_P/ LA33_N             B5_B48_P/ B5_B48_N   Bank 5    L14/ L15
+   CLK0_NM2C_P/ CLK0_NM2C_N   B5_B54_P/ B5_B54_N   Bank 5    J20/ J21
+   CLK1_NM2C_P/ CLK1_NM2C_N   B8_B87_P/ B8_B87_N   Bank 8    Y18/ Y19
+
+
+
+LVDS / GPIO 扩展（P7，2×20）
+
+   P7 为 2×20 扩展排针，引出了 FPGA Bank B6、B7 的 18 对差分 I/O，共 36 路信号。各路信号
+经串联电阻连接至排针，可根据设计需求配置为 LVDS 差分信号或普通 GPIO。使用时应按所选
+I/O 标准设置 FPGA 管脚约束，并确认接口电平匹配。
+
+
+
+
+                              图 2-32 P7 LVDS / GPIO 扩展排针电路
+
+
+   该接口在开发板上的位置如下
+                 图 2-33 P7 LVDS / GPIO 扩展排针
+
+
+          表 2-4-21 P7 LVDS / GPIO 扩展排针管脚分配
+
+接口功能            信号名（FPGA）              管脚分配     说明
+                                       （FPGA）
+GPIO0（差分对正端）    IOB130A/LVDS           V15      Bank B6
+GPIO1（差分对负端）    IOB130B/LVDS           U15      Bank B6
+GPIO2（差分对正端）    IOB132A/LVDS           T15      Bank B6
+GPIO3（差分对负端）    IOB132B/LVDS           T14      Bank B6
+GPIO4（差分对正端）    IOB134A/LVDS           U16      Bank B6
+GPIO5（差分对负端）    IOB134B/LVDS           N15      Bank B6
+GPIO6（差分对正端）    IOB136A/LVDS           P16      Bank B6
+GPIO7（差分对负端）    IOB136B/LVDS           R17      Bank B6
+GPIO8（差分对正端）    IOB144A/LVDS           R18      Bank B6
+GPIO9（差分对负端）    IOB144B/LVDS           T18      Bank B6
+GPIO10（差分对正端）   IOB138A/LVDS           N13      Bank B6
+GPIO11（差分对负端）   IOB138B/LVDS           N14      Bank B6
+GPIO12（差分对正端）   IOB146A/LVDS           P14      Bank B6
+GPIO13（差分对负端）   IOB146B/LVDS           R14      Bank B6
+GPIO14（差分对正端）   IOB142A/LVDS           P15      Bank B6
+GPIO15（差分对负端）   IOB142B/LVDS           R16      Bank B6
+GPIO16（差分对正端）   IOB140A/LVDS           N17      Bank B6
+GPIO17（差分对负端）   IOB140B/LVDS           P17      Bank B6
+GPIO18（差分对正端）   IOB124A/LVDS/DQ6       P20      Bank B7
+GPIO19（差分对负端）   IOB124B/LVDS/DQ6       V13      Bank B7
+GPIO20（差分对正端）   IOB113A/D06/LVDS/DQ6   P19      Bank B7
+GPIO21（差分对负端）   IOB113B/D07/LVDS/DQ6   R19      Bank B7
+GPIO22（差分对正端）   IOB115A/D04/LVDS/DQ6   T21      Bank B7
+GPIO23（差分对负端）   IOB115B/D05/LVDS/DQ6   U21      Bank B7
+GPIO24（差分对正端）   IOB126A/LVDS/DQ6       W16      Bank B7
+GPIO25（差分对负端）   IOB126B/LVDS/DQ6       W15      Bank B7
+GPIO26（差分对正端）   IOB104A/D09/LVDS/DQ7   W21      Bank B7
+GPIO27（差分对负端）   IOB104B/D10/LVDS/DQ7   W22      Bank B7
+GPIO28（差分对正端）   IOB122A/LVDS/DQ6       Y17      Bank B7
+GPIO29（差分对负端）   IOB122B/LVDS/DQ6       Y16      Bank B7
+GPIO30（差分对正端）   IOB102A/D11/LVDS/DQ7   AA20     Bank B7
+GPIO31（差分对负端）   IOB102B/D12/LVDS/DQ7   AA21     Bank B7
+GPIO32（差分对正端）   IOB106A/LVDS/DQ7       AA16     Bank B7
+GPIO33（差分对负端）   IOB106B/LVDS/DQ7       AA15     Bank B7
+GPIO34（差分对正端）   IOB108A/LVDS/DQ7       AB17     Bank B7
+     GPIO35（差分对负端）      IOB108B/LVDS/DQ7      AB16             Bank B7
+
+
+
+差分扩展（P10，2×12）
+
+  P10 为 2×12 差分扩展排针，主要引出 FPGA Bank B1、B2、B11 的 9 对差分 I/O，并提供 3.3V
+电源和地引脚。
+
+
+
+
+                           图 2-34 P10 差分扩展排针电路
+
+
+  这些信号同样可按 FPGA 管脚约束配置为受支持的差分信号或普通 GPIO；使用前应核对相应
+Bank 的 I/O 电压与外接设备的电平要求。该接口在开发板上的位置如下：
+
+
+
+
+                             图 2-35 P10 差分扩展排针
+
+
+                     表 2-4-22 P10 差分扩展排针管脚分配
+
+        接口功能            信号名 FPGA            管脚分        FPGA         说明
+      差分对 1（B1）    B1_T87_P/ B1_T87_N      E16 / D16          Bank B1
+      差分对 2（B1）    B1_T89_P/ B1_T89_N      F16 / E17          Bank B1
+      差分对 3（B1）    B1_T99_P/ B1_T99_N      A15 / A16          Bank B1
+      单端信号（B1）     B1_T80_N                F14                Bank B1
+      差分对 4（B2）    B2_T144_P/ B2_T144_N    G21 / G22          Bank B2
+      差分对 5（B11）   B11_L27_P/ B11_L27_N    E1 / D1            Bank B11
+      差分对 6（B11）   B11_L39_P/ B11_L39_N    K2 / J2            Bank B11
+      差分对 7（B11）   B11_L31_P/ B11_L31_N    G1 / F1            Bank B11
+      差分对 8（B11）   B11_L23_P/ B11_L23_N    B1 / A1            Bank B11
+      差分对 9（B11）   B11_L37_P/ B11_L37_N    H2/ G2             Bank B11
+混合信号扩展（P19，2×15）
+
+  P19 为混合信号扩展排针，集中引出两个 Type-C 口的 USB 2.0 OTG ID 信号、两组 PCIe 2.0 参
+考时钟、MIPI D-PHY2/3 各一组 CLK1 接收时钟差分信号，以及 I²C2 的时钟与数据线、I²C4 的数
+据线和两路 RK3588 GPIO。该拓展在开发板上的位置如下图：
+
+
+
+
+                              图 2-36 P19 混合扩展排针
+
+
+  接口各信号的用途和连接限制应以管脚表及原理图为准：
+
+
+
+
+                             图 2-37 P19 混合扩展排针电路
+
+
+                      表 2-4-23 P19 混合扩展排针管脚分配
+
+                接口功能                   信号名             管脚分      RK3588
+         Type-C0 OTG 检测 ID   TYPEC0_USB20_OTG_ID   TYPEC0_USB20_OTG_ID
+         Type-C1 OTG 检测 ID   TYPEC1_USB20_OTG_ID   TYPEC1_USB20_OTG_ID
+      PCIe 2.0 参考时钟 +（组 0）   PCIE20_0_REFCLK_P     PCIE20_0_REFCLKP
+      PCIe 2.0 参考时钟 −（组 0）   PCIE20_0_REFCLK_N     PCIE20_0_REFCLKN
+      PCIe 2.0 参考时钟 +（组 2）   PCIE20_2_REFCLKP      PCIE20_2_REFCLKP
+      PCIe 2.0 参考时钟 −（组 2）   PCIE20_2_REFCLKN      PCIE20_2_REFCLKN
+             MIPI CSI2 时钟 lane +     MIPI_DPHY2_RX_CLK1_P       MIPI_CSI0_CLK1P
+             MIPI CSI2 时钟 lane −     MIPI_DPHY2_RX_CLK1_N       MIPI_CSI0_CLK1N
+             MIPI CSI3 时钟 lane +     MIPI_DPHY3_RX_CLK1_P       MIPI_CSI1_CLK1P
+             MIPI CSI3 时钟 lane −     MIPI_DPHY3_RX_CLK1_N       MIPI_CSI1_CLK1N
+              RK3588 侧 GPIO 1        B4_GPIO1_B5                GPIO1_B5_u
+              RK3588 侧 GPIO 2        B5_GPIO3_D5                GPIO3_D5_d
+               I C2 时钟 / 数据          B4_GPIO1_A1/ B4_GPIO1_A0   I2C2_SCL_M4 / I2C2_SDA_M4
+                   I C4 数据           B3_GPIO2_B4                I2C4_SDA_M1
+
+
+
+SARADC    入（P13，1×6）
+
+   P13 引出了 RK3588 的 5 路 SARADC 输入（IN2、IN3、IN4、IN6、IN7），并提供一个 GND
+引脚。外接模拟信号时，应遵守 RK3588 数据手册规定的输入电压范围。
+
+
+
+
+                                   图 2-38 P13 SARADC 输入排针电路
+
+
+   该接口在开发板上的位置如下：
+
+
+
+
+                                    图 2-39 P13 SARADC 输入排针
+
+
+                            表 2-4-24 P13 SARADC 输入排针管脚分配
+
+             接口功能               信号名           管脚分      RK3588                说明
+         SARADC 输入通    2    SARADC_IN2       SARADC_IN2            RK3588 内部 ADC 输入
+         SARADC 输入通    3    SARADC_IN3       SARADC_IN3            RK3588 内部 ADC 输入
+     SARADC 输入通   4   SARADC_IN4      SARADC_IN4         RK3588 内部 ADC 输入
+     SARADC 输入通   6   SARADC_IN6      SARADC_IN6         RK3588 内部 ADC 输入
+     SARADC 输入通   7   SARADC_IN7      SARADC_IN7         RK3588 内部 ADC 输入
+
+
+
+
+VCCADJ 电 配置（P20，2×4）
+
+  P20 用于选择可调 I/O 电源 VCCADJ 的输出电压，其电路如下图所示：
+
+
+
+
+                           图 2-40 P20 VCCADJ 电压配置电路
+
+
+  通过调整跳线帽位置，可在 1.2V、1.8V、2.5V 和 3.3V 四个档位之间选择为 FMC 接口的
+VADJ 及 FPGA Bank B4、B5、B8、B11 提供匹配的 I/O 电压。更改 P20 跳线前应关闭板卡电源，
+并确认所选电压与 FMC 子卡及 FPGA 管脚约束一致。
+
+  该接口在开发板上的位置以及跳线帽设置方式如下：
+
+
+
+
+                             图 2-41 P20 VCCADJ 配置排针
+
+
+                          表 2-4-25 P20 VCCADJ 电压设置
+
+                          压设                       接方式
+                      VCCADJ = 1.2V    短接 1-2 脚
+                      VCCADJ = 1.8V    短接 3-4 脚
+                      VCCADJ = 2.5V    短接 5-6 脚
+                VCCADJ = 3.3V   短接 7-8 脚
+
+
+
+风扇控制（P15，1×2）
+
+  P15 是两线制风扇接口，风扇由板上 12V 电源供电，负极通过 MOS 管控制，并设有续流二极
+管。该接口电路如下：
+
+
+
+
+                         图 2-42 P15 风扇接口电路
+
+
+  控制信号 FAN_PWM 来自 RK3588，可由软件控制风扇启停或输出 PWM 信号调节转速；由于
+是两线制风扇，所以 P15 未提供转速检测引脚。该接口在开发板中的位置，以及控制信号的管脚如
+下：
+
+
+
+
+                           图 2-43 P15 风扇接口
+
+
+                    表 2-4-26 P15 风扇接口管脚分配
+
+                  信号名               管脚分      RK3588
+                 FAN_PWM        GPIO0_C6_u
+2.4.10 用户交互
+
+底板的交互资源分四类：按键、拨码开关、LED 指示与声音 / 红外，其中大部分接 FPGA，少部分
+接电源管理芯片与 RK3588。
+
+按键
+
+  用户按键与红外接收器的输出都送到 FPGA（按键与红外各经一次电平转换），具体功能在
+FPGA 工程里自行定义；另有几个系统按键接电源管理芯片与 RK3588，分别用于复位、Recovery
+与启动模式选择。其中复位键同时产生两路独立信号，按一次可同时复位 RK3588 并重配置 FPGA。
+
+
+
+
+                         图 2-44 用户按键与系统按键
+
+
+                         表 2-4-27 按键与管脚分配
+
+           位号      类型           信号              管脚分          管脚分
+                                                  FPGA       RK3588
+           S3    轻触按键   KeyIN0                 H4        —
+           S4    轻触按键   KeyIN1                 G4        —
+           S5    轻触按键   KeyIN2                 E2        —
+           S6    轻触按键   KeyIN3                 D2        —
+           S7    轻触按键   KeyIN4                 F3        —
+           S8    轻触按键   RECONFIG_N / RESET_L   N12       M31
+           S9    轻触按键   PMU1_GPIO_A0           —         GPIO0_A0_d
+           S10   轻触按键   PMU1_GPIO_B0           —         GPIO0_B0_z
+           S11   轻触按键   SARADC_IN0_BOOT        —         SARADC_IN0_BOOT
+           S12   轻触按键   RECOVERY_KEY           —         SARADC_IN1
+           S13   轻触按键   RK_KEY0                —         GPIO3_C0_d
+
+
+
+DIP 拨码开关
+
+  S2 为 8 位拨码开关，对应 8 路 FPGA Bank B11 输入，该接口的电路如下：
+                           图 2-45 S2 拨码开关电路
+
+
+  每路信号通过上拉电阻保持高电平，并经串联电阻接入 FPGA；开关拨至 ON 时信号接地，此
+时读入低电平。该拨码开关在开发板上位置以及对应管脚如下：
+
+
+
+
+                            图 2-46 S2 拨码开关
+
+
+                        表 2-4-28 S2 拨码开关管脚分配
+
+                  开关位              信号   管脚分    FPGA
+                  SW7      SWIN7        K1
+                  SW6      SWIN6        J1
+                  SW5      SWIN5        J5
+                  SW4      SWIN4        H5
+                  SW3      SWIN3        H3
+                  SW2      SWIN2        G3
+                  SW1      SWIN1        C2
+                  SW0      SWIN0        B2
+
+
+
+用户 LED 指示灯
+
+  开发板上的 LED 按用途分为用户指示、串口活动和状态指示三类。D0～D7 是 8 只黄色用户
+LED，可由 FPGA 逻辑控制；红色的 D22/D23 和 D76/D77 分别连接 FPGA 与 RK3588 的串口收发
+信号，用于指示串口活动。其余 LED 用于显示 RK3588 GPIO 状态或板上电源状态。电源指示灯的
+对应关系见 §2.4.1。
+  8 个用户 LED 在开发板上的位置以及对应管脚如下：
+
+
+
+
+                            图 2-47 LED 指示灯
+
+
+                       表 2-4-29 用户 LED 管脚分配
+
+           用   LED     颜色   管脚分     FPGA          含义
+           LED0        黄色   E13              FPGA 用户指示灯
+           LED1        黄色   E14              FPGA 用户指示灯
+           LED2        黄色   D14              FPGA 用户指示灯
+           LED3        黄色   D15              FPGA 用户指示灯
+           LED4        黄色   B17              FPGA 用户指示灯
+           LED5        黄色   B18              FPGA 用户指示灯
+           LED6        黄色   B15              FPGA 用户指示灯
+           LED7        黄色   B16              FPGA 用户指示灯
+
+
+
+蜂鸣器与红外接收
+
+  板载蜂鸣器由 RK3588 的 GPIO 信号经三极管驱动，可由软件产生提示音或报警音。红外接收
+器将接收到的遥控信号转换为脉冲输出，经电平转换后送入 FPGA Bank B11；用户可在 FPGA 中实
+现相应的红外遥控协议解码。二者详细信息如下：
+
+
+
+
+                     图 2-48 红外接收（左）与蜂鸣器（右）电路
+                                    图 2-49 蜂鸣器与红外接收
+
+
+                             表 2-4-30 蜂鸣器与红外接收管脚分配
+
+                      信号                管脚分                  说明
+                      BEEP         GPIO4_C3_d           RK3588 器 制信号
+                      IRIN         E3                   FPGA 外接收信号
+
+
+
+2.4.11 RTC 与 EEPROM
+
+   底板设有 RTC 和 EEPROM，两者共用 I²C 总线，经电平转换后连接核心板的 RK3588。RTC
+配有 32.768kHz 晶振和纽扣电池座；主电源断开后，在电池已安装且电量充足的条件下，RTC 可继
+续计时。EEPROM 用于保存配置等非易失性数据，其掉电保存不依赖纽扣电池。RTC、EEPROM
+以及电池座在开发板上所处位置如下：
+
+
+
+
+                               图 2-50 RTC / EEPROM 与电池座电路
+
+
+                              表 2-4-31 RTC / EEPROM 管脚分配
+
+      位号        器件               管脚分        RK3588                   说明
+      U50   BM8563T          I2C1_SCL_M4/ I2C1_SDA_M4   实时时钟（RTC）
+      BT1   CR1220 电池座       —                          为 RTC 提供掉电保持电源
+      U49   24LC64           I2C1_SCL_M4/ I2C1_SDA_M4    4   I C PROM， 用于保存板卡信息
+2.5 电气特性与使用注意
+
+                           表 2-5-1 电气特性与使用注意
+
+        项目                                       参数
+      供电输入       DC 12V（DC-002 圆孔，内正外负）
+      输入保护       SMCJ15CA TVS + F1/F2/F3 保险丝（2A/2A/3A）
+     5V 主域限流     F4 = 3A
+      对外供电       P7 第 11 脚 5V、第 29 脚 3.3V；P10 第 22/24 脚 3.3V；FPC 显示接口 5V；CSI 接口
+                 3.3V；HDMI 接口 5V；PCIe 插槽 12V / 3.3V
+    FPGA IO 电平   由 VCCADJ 与各 Bank 的 VCCIO 决定，需与原理图及约束文件一致
+       安装孔       底板与核心板各 4 个 φ4mm 通孔（位号 E1~E4）
+      工作温度       取决于所选用器件等级，请以各器件数据手册为
+
+
+•   严禁带电插拔板对板连接器、FPC 排线、M.2 模块与 SFP 模块；
+•   FPC 排线插拔前请先松开锁扣，避免损伤插座；
+•   使用外部电源时务必确认极性，反接会直接损坏 12V 域电路；
+•   MIPI 与 HDMI 差分信号对走线敏感，扩展排线不宜过长，建议不超过 20cm 并选用阻抗匹配的
+    线材；
+•   FMC 子卡的 VADJ 必须与 P20 配置的 VCCADJ 电压一致，否则可能损坏器件；
+•   在散热条件不足时长期满载运行，请加装散热片或风扇（可接 P15 风扇接口）。
+【第三部分】系统启动与默认系统
+
+3.1 启动方式与启动介质
+
+  ACG138 的系统运行在 RK3588 上，可用的启动介质包括核心板板载 eMMC（FEMDRM008G-
+58A39，8GB）、底板 MicroSD 卡（J1）以及通过 USB 的 MASKROM 下载模式。
+
+     启动方式                   触发条件                        说明
+  eMMC 启动（默认）       上电即启动                 系统烧写在板载 8GB eMMC（FEMDRM008G-
+                                          58A39）中，出厂默认方式
+     SD 卡启动         插入已制作好的启动 SD 卡        SD 卡优先级高于 eMMC
+ MASKROM / 下载模式     按住 S11（BOOT）后上电，或使    通过 USB 与 PC 端工具（RKDevTool）通信，
+                    用 S12（RECOVERY）       用于烧写固件或救砖
+
+
+ 【提示】RK3588 的 SARADC_IN0_BOOT（A11 键）与 RECOVERY_KEY（S12 键）的具体生效
+ 方式取决于 U-Boot 与固件配置，请以随板固件说明为准。
+
+
+3.2 串口控制台
+
+  系统控制台默认输出到 RK3588 的调试 UART，经底板 CH9102F（U45）转换为 USB，从 J2
+（USB_Debug）输出。使用串口终端连接后即可看到完整的启动日志、登录提示以及命令行界面。
+
+  FPGA 侧另有独立的调试串口（CH340E U15），可自行在 FPGA 工程中实现打印功能。
+
+
+3.3 上电自检与状态指示
+
+           现象                                  含义
+         D21 点亮         5V 主电源域正常（S1 已拨到 ON）
+   D47 / D48 / D75 点亮   3.3V 电源域正常
+      D76 / D77 闪烁      RK3588 串口有数据收发
+      D22 / D23 闪烁      FPGA 串口有数据收发
+ D0 ~ D7 受 FPGA 逻辑 制    需在 FPGA 工程中自行定义其含义
+【第四部分】开发与调试
+
+4.1 FPGA 开发流程（Gowin EDA）
+
+     GW5AT-60K 使用高云官方的 Gowin EDA（云源软件）进行开发，基本流程如下：
+
+•    新建工程，器件选择 GW5AT-LV60PG484A（注意选择正确的速度等级与封装）；
+•    编写 RTL 代码（Verilog / VHDL）或使用 IP Core Generator 生成 IP；
+•    编写物理约束文件（.cst），把设计端口绑定到本手册附录中给出的 FPGA IO 名称（形如
+     IOT144A/LVDS/DQ3、IOB130A/LVDS 等）；
+•    综合（Synthesize）→ 布局布线（Place & Route）→ 生成比特流（.fs）；
+•    通过 Gowin Programmer 连接板上 USB-JTAG（J2 口）或外部 JTAG（P8）下载到 FPGA 内部
+     SRAM；
+•    需要固化时，把比特流写入配置 Flash（U13，W25Q128JVSIQ）。
+    【重要】由于本板采用“SoC + FPGA”结构，FPGA 工程中的时钟资源主要来自：CLK_50MHz
+    （50MHz 有源晶振）、PL_CLK_P/N（200MHz 差分）、以及由 RK3588 提供的 MGT_CLK0
+    （100MHz，用于收发器）。PL 端可用 PLL 最多 8 个。
+
+
+4.2 FPGA 配置与固化
+     GW5AT-60K 支持多种配置模式，本板的相关引脚连接如下：
+
+            模式引脚                     FPGA 引脚                     说明
+     MODE0 / MODE1 / MODE2      U10-U11 / U10-U10 /   配置模式选择
+                                U10-U9
+            PUDC_B              U10-U22               上电期间 IO 上拉 制
+          RECONFIG_N            U10-N12               低电平触发重新配置（底板 S8 按键   触发）
+             RESET_L            经连接器来自底板 S8           FPGA 复位
+              DONE              U10-G11               配置完成指示
+             READY              U10-U12               配置就绪指示
+     MSPI_CLK / CS_N / MOSI /   U10 多个引脚              连接配置 Flash（U13）
+       MISO / WP / HOLD
+
+
+
+
+4.3 RK3588 侧开发与固件烧录
+
+     RK3588 侧的开发与常见的 Rockchip 平台一致：
+
+•    使用官方 Linux SDK 编译 U-Boot、Kernel、Rootfs；
+•    常用调试手段：串口控制台、ADB / SSH、以及通过 Type-C 或 USB 的固件烧写；
+•    烧写工具：Rockchip 的 RKDevTool（Windows）或 upgrade_tool（Linux）；
+•    PCIe、USB、HDMI、MIPI 等接口的设备树配置需与板上实际连接一致，特别是 PCIe 控制器与
+     收发器的映射关系。
+【提示】当 FPGA 未加载工程时，RK3588 的 PCIE30_PORT0 链路（连接 FPGA）不会枚举到设
+备，此时系统日志中可能出现 PCIe 链路训练失败的提示，属于正常现象。
+
+
+4.4 联调与故障排查
+
+        问题                                排查方向
+    FPGA 无法下载    确认 JTAG 链路选择（板载 / 外部）；确认 FPGA 供电与时钟；确认器件型号选择
+ FPGA 下载成功但无功能   确认 MGT_CLK0 参考时钟是否存在；确认约束文件中 IO 电平标 与 VCCIO /
+                 VCCADJ 匹配
+   PCIe 链路不建     确认 FPGA 端 PCIe IP 已加载；确认两侧参考时钟与复位时序；检查 AC 耦合电容
+                 是否焊接
+  MIPI 摄像头无图像    确认 PCA9546A 的 I C 通 选择；确认 CSIx_PWDN 已在 FPGA 中拉高；确认时钟
+                 lane 极性
+   LVDS 屏无显示     确认 P7 的 GPIO 配对与 LVDS 差分对定义；确认 VCCADJ 电压与屏要求一致
+      SFP 无光     确认 FPGA 收发器配置速率与光模块匹配；确认 TX_DIS 电平；确认参考时钟
+     以太网不通       确认 PHY 复位时序；确认 RGMII 时延配置；确认 25MHz 晶振工作正常
+【第五部分】接口引脚定义总表
+
+    本部分给出全部对外连接器的逐引脚定义。其中：
+
+•   “信号”列为原理图/网表上的设计网络名；
+•   GND 类引脚在表格中保留，便于核对；
+•   核心板-底板连接器的对照表同时给出核心板侧与底板侧的设计网络名，由于两块板卡为独立设
+    计，同一物理引脚在两侧可能使用不同的网络名。
+
+
+附录 A 底板连接器引脚定义
+
+A.1 J1 —— MicroSD 卡座
+
+    引脚              信号         FPGA /    管脚                    说明
+     1    JTAG_TCK_M0         RK3588 AF2      RK3588 JTAG 时钟（与 SD DAT2 复用）
+     2    JTAG_TMS_M0         RK3588 AF1      RK3588 JTAG 模式选择（与 SD DAT3 复用）
+     3    SD_CMD              RK3588 AE2      SD 命令
+     4    VCC3P3              —               +3.3V 电源
+     5    SD_CLK              RK3588 AE1      SD 时钟
+     6    GND                 —               地
+     7    SD_DATA0            RK3588 AD2      SD 数据 0
+     8    SD_DATA1            RK3588 AD1      SD 数据 1
+     9    SD_CD               RK3588 P31      SD 卡插入检测
+    10    GND                 —               地
+    11    GND                 —               地
+    12    GND                 —               地
+    13    GND                 —               地
+
+
+
+
+A.2 J2 —— USB_Debug（Type-C）
+
+    引脚                   信号                               说明
+    A1      GND                      地
+    A4      USB_VBUS                 USB 供电（由 PC 侧提供）
+    A5      NetJ2_A5                 TYPE-C CC 检测，5.1 kΩ Rd 下拉（设备端）
+    A6      USB_Debug_D_P            调试 USB 数据 D+
+    A7      USB_Debug_D_N            调试 USB 数据 D−
+    A9      USB_VBUS                 USB 供电（由 PC 侧提供）
+    A12     GND                      地
+    B1      GND                      地
+    B4      USB_VBUS                 USB 供电（由 PC 侧提供）
+    B5      NetJ2_B5                 TYPE-C CC 检测，5.1 kΩ Rd 下拉（设备端）
+    B6      USB_Debug_D_P            调试 USB 数据 D+
+    B7      USB_Debug_D_N            调试 USB 数据 D−
+    B9      USB_VBUS                 USB 供电（由 PC 侧提供）
+    B12     GND                      地
+     1      SHIELD                   屏蔽地（外壳）
+     2      SHIELD                   屏蔽地（外壳）
+     3      SHIELD                   屏蔽地（外壳）
+     4      SHIELD                   屏蔽地（外壳）
+A.3 J3 —— 千兆以太网 RJ45
+
+    引脚                  信号                                    说明
+     1     NetC48_2                  变压器中心抽头电源
+     2     ETH0_MDI_TR0_P            千兆网差分对（经变压器）
+     3     ETH0_MDI_TR0_N            千兆网差分对（经变压器）
+     4     ETH0_MDI_TR1_P            千兆网差分对（经变压器）
+     5     ETH0_MDI_TR2_P            千兆网差分对（经变压器）
+     6     ETH0_MDI_TR2_N            千兆网差分对（经变压器）
+     7     ETH0_MDI_TR1_N            千兆网差分对（经变压器）
+     8     ETH0_MDI_TR3_P            千兆网差分对（经变压器）
+     9     ETH0_MDI_TR3_N            千兆网差分对（经变压器）
+    10     SHIELD                    屏蔽地（外壳）
+    11     ETH0_PHY_LED1             网络       指示灯（PHY LED1）
+    12     GND                       地
+    13     ETH0_PHY_LED2             网络       指示灯（PHY LED2）
+    14     NetJ3_14                  RJ45 内部保 引脚
+    15     SHIELD                    屏蔽地（外壳）
+    16     SHIELD                    屏蔽地（外壳）
+
+
+
+
+A.4 J4 —— PCIe ×1 插槽
+
+   引脚               信号        FPGA /     管脚                         说明
+   A1    NetJ4_A1            —                       （未使用）
+   A2    VCC12_PCIE          —                   +12V 电源（PCIe 插槽）
+   A3    VCC12_PCIE          —                   +12V 电源（PCIe 插槽）
+   A4    GND                 —                   地
+   A5    NetJ4_A5            —                       （未使用）
+   A6    NetJ4_A6            —                       （未使用）
+   A7    NetJ4_A7            —                       （未使用）
+   A8    NetJ4_A8            —                       （未使用）
+   A9    VCC_3V3_PCIE        —                   +3.3V 电源（PCIe 插槽）
+   A10   VCC_3V3_PCIE        —                   +3.3V 电源（PCIe 插槽）
+   A11   PCIE_PERST          RK3588 Y27（经        PCIe 复位（低有效，由 RK3588 侧 制）
+                             U14）
+   A12   GND                 —                   地
+   A13   PCIE_CLK_P          RK3588 H32          PCIe 参考时钟（+）
+   A14   PCIE_CLK_N          RK3588 H33          PCIe 参考时钟（−）
+   A15   GND                 —                   地
+   A16   NetC86_2            RK3588 J33（经        PCIe 接收差分对（经 AC 耦合电容）
+                             C86）
+   A17   NetC87_2            RK3588 J34（经        PCIe 接收差分对（经 AC 耦合电容）
+                             C87）
+   A18   GND                 —                   地
+   B1    VCC12_PCIE          —                   +12V 电源（PCIe 插槽）
+   B2    VCC12_PCIE          —                   +12V 电源（PCIe 插槽）
+   B3    VCC12_PCIE          —                   +12V 电源（PCIe 插槽）
+   B4    GND                 —                   地
+   B5    I2C3_SCL_M2         RK3588 AL28         PCIe 插槽 SMBus 时钟（I²C3）
+   B6    I2C3_SDA_M2         RK3588 AK27         PCIe 插槽 SMBus 数据（I²C3）
+   B7    GND                 —                   地
+   B8    VCC_3V3_PCIE        —                   +3.3V 电源（PCIe 插槽）
+   B9    NetJ4_B9            —                       （未使用）
+   B10   VCC_3V3_PCIE        —                   +3.3V 电源（PCIe 插槽）
+   B11   PCIE_WAKEn          RK3588 AJ25         PCIe 唤醒（低有效）
+   B12   PCIE_CLKREQn        RK3588 AJ28         PCIe 时钟请求（低有效）
+   B13   GND                 —                   地
+   B14      NetC84_1              RK3588 K33（经    PCIe 发送差分对（经 AC 耦合电容）
+                                  C84）
+   B15      NetC85_1              RK3588 K34（经    PCIe 发送差分对（经 AC 耦合电容）
+                                  C85）
+   B16      GND                   —               地
+   B17      NetJ4_B17             —               插槽在位检测（PRSNT2）
+   B18      GND                   —               地
+
+
+
+
+A.5 J5 —— HDMI0_TX           出接口（J6 为 HDMI1_TX，命名规则一致）
+
+    引脚                    J5 信号                             说明
+    G1        SHIELD                      屏蔽地（接连接器外壳）
+    G2        SHIELD                      屏蔽地（接连接器外壳）
+    G3        SHIELD                      屏蔽地（接连接器外壳）
+    G4        SHIELD                      屏蔽地（接连接器外壳）
+        1     HDMI0_TX2P_PORT             HDMI0_TX 的 TMDS 数据 2 +
+        2     GND                         地
+        3     HDMI0_TX2N_PORT             HDMI0_TX 的 TMDS 数据 2 −
+        4     HDMI0_TX1P_PORT             HDMI0_TX 的 TMDS 数据 1 +
+        5     GND                         地
+        6     HDMI0_TX1N_PORT             HDMI0_TX 的 TMDS 数据 1 −
+        7     HDMI0_TX0P_PORT             HDMI0_TX 的 TMDS 数据 0 +
+        8     GND                         地
+        9     HDMI0_TX0N_PORT             HDMI0_TX 的 TMDS 数据 0 −
+    10        HDMI0_TX3P_PORT             HDMI0_TX 的 TMDS 时钟 +
+    11        GND                         地
+    12        HDMI0_TX3N_PORT             HDMI0_TX 的 TMDS 时钟 −
+    13        HDMI0_TX_CEC_PORT           HDMI0_TX 的 CEC 控制
+    14        HDMI0_eARC_P                HDMI0_TX 的 eARC +
+    15        HDMI0_TX_SCL_PORT           HDMI0_TX 的 DDC 时钟 SCL
+    16        HDMI0_TX_SDA_PORT           HDMI0_TX 的 DDC 数据 SDA
+    17        GND                         地
+    18        HDMI0_5V                    HDMI0_TX 的 +5V 输出
+    19        HDMI0_eARC_N                HDMI0_TX 的 eARC −
+
+
+
+A.6 J7 —— HDMI          入（HDMI0_RX）
+
+   引脚                信号             FPGA /   管脚                  说明
+   G1       SHIELD                —               屏蔽地（外壳）
+   G2       SHIELD                —               屏蔽地（外壳）
+   G3       SHIELD                —               屏蔽地（外壳）
+   G4       SHIELD                —               屏蔽地（外壳）
+    1       HDMI0_RX2P_PORT       RK3588 AJ5（经    HDMI0 输入数据差分对 2
+                                  R140）
+    2       GND                   —               地
+    3       HDMI0_RX2N_PORT       RK3588 AJ4（经    HDMI0 输入数据差分对 2
+                                  R141）
+    4       HDMI0_RX1P_PORT       RK3588 AH6（经    HDMI0 输入数据差分对 1
+                                  R142）
+    5       GND                   —               地
+    6       HDMI0_RX1N_PORT       RK3588 AH5（经    HDMI0 输入数据差分对 1
+                               R143）
+    7     HDMI0_RX0P_PORT      RK3588 AG5（经     HDMI0 输入数据差分对 0
+                               R144）
+    8     GND                  —                地
+    9     HDMI0_RX0N_PORT      RK3588 AG4（经     HDMI0 输入数据差分对 0
+                               R145）
+    10    HDMI0_RX_CLKP_PORT   RK3588 AF6（经     HDMI0 输入时钟差分对
+                               R146）
+    11    GND                  —                地
+    12    HDMI0_RX_CLKN_PORT   RK3588 AF5（经     HDMI0 输入时钟差分对
+                               R147）
+    13    HDMI0_RX_CEC_PORT    —                HDMI0 输入 CEC   制
+    15    HDMI0_RX_SCL_PORT    —                HDMI0 输入 DDC 时钟
+    16    HDMI0_RX_SDA_PORT    —                HDMI0 输入 DDC 数据
+    17    GND                  —                地
+    18    HDMI0_RX_PORT_5V     —                HDMI0 输入 +5V
+    19    HDMI0_RX_HPD_PORT    —                HDMI0 输入热插拔检测（HPD）
+
+
+
+
+A.7 J8 —— USB 3.0 Type-A
+   引脚                信号         FPGA /    管脚                          说明
+    1     USB_VBUS3            —                USB 供电（USB 3.0-A）
+    2     USB20_HOST0_D_N      RK3588 AL6       USB 2.0 HOST0 数据 D−
+    3     USB20_HOST0_D_P      RK3588 AK6       USB 2.0 HOST0 数据 D+
+    4     GND                  —                地
+    5     PCIE20_2_RX_N        RK3588 J30       USB 3.0 超速接收差分对（−）
+    6     PCIE20_2_RX_P        RK3588 J31       USB 3.0 超速接收差分对（+）
+    7     GND                  —                地
+    8     StdA_SSTX_N          RK3588 H29（经     USB 3.0 超速发送差分对（−）
+                               C143）
+    9     StdA_SSTX_P          RK3588 H30（经     USB 3.0 超速发送差分对（+）
+                               C144）
+    10    SHIELD               —                屏蔽地（外壳）
+    11    SHIELD               —                屏蔽地（外壳）
+    12    SHIELD               —                屏蔽地（外壳）
+    13    SHIELD               —                屏蔽地（外壳）
+
+
+
+
+A.8 USB0 —— Type-C（TYPEC0）
+
+   引脚               信号           FPGA /    管脚                         说明
+   A1     GND                  —                地
+   A2     TYPEC0_SSTX1_P       RK3588 AP14（经    TYPE-C 信号
+                               C130）
+    A3    TYPEC0_SSTX1_N       RK3588 AN14（经    TYPE-C 信号
+                               C131）
+    A4    USB_VBUS1            —                USB 供电（TYPEC0）
+    A5    TYPEC0_CC1           —                TYPE-C 信号
+    A6    TYPEC0_OTG_P         RK3588 AL12（经    TYPE-C 信号
+                               R179）
+    A7    TYPEC0_OTG_N         RK3588 AM12（经    TYPE-C 信号
+                               R180）
+    A8    TYPEC0_SBU1          RK3588 AL15（经    TYPE-C 信号
+                               C134）
+   A9     USB_VBUS1            —                USB 供电（TYPEC0）
+   A10    TYPEC0_SSRX2_N       RK3588 AP15（经    TYPE-C 信号
+                               R175）
+   A11   TYPEC0_SSRX2_P      RK3588 AN15（经    TYPE-C 信号
+                             R176）
+   A12   GND                 —                地
+   B1    GND                 —                地
+   B2    TYPEC0_SSTX2_P      RK3588 AP16（经    TYPE-C 信号
+                             C133）
+   B3    TYPEC0_SSTX2_N      RK3588 AN16（经    TYPE-C 信号
+                             C132）
+   B4    USB_VBUS1           —                USB 供电（TYPEC0）
+   B5    TYPEC0_CC2          —                TYPE-C 信号
+   B6    TYPEC0_OTG_P        RK3588 AL12（经    TYPE-C 信号
+                             R179）
+   B7    TYPEC0_OTG_N        RK3588 AM12（经    TYPE-C 信号
+                             R180）
+   B8    TYPEC0_SBU2         RK3588 AM15（经    TYPE-C 信号
+                             C135）
+   B9    USB_VBUS1           —                USB 供电（TYPEC0）
+   B10   TYPEC0_SSRX1_N      RK3588 AP13（经    TYPE-C 信号
+                             R173）
+   B11   TYPEC0_SSRX1_P      RK3588 AN13（经    TYPE-C 信号
+                             R172）
+   B12   GND                 —                地
+    25   SHIELD              —                屏蔽地（外壳）
+    26   SHIELD              —                屏蔽地（外壳）
+    27   SHIELD              —                屏蔽地（外壳）
+    28   SHIELD              —                屏蔽地（外壳）
+
+
+
+
+A.9 USB1 —— Type-C（TYPEC1）
+
+   引脚              信号          FPGA /    管脚                    说明
+   A1    GND                 —                地
+   A2    TYPEC1_SSTX1_P      RK3588 AP9（经     TYPE-C 信号
+                             C136）
+   A3    TYPEC1_SSTX1_N      RK3588 AN9（经     TYPE-C 信号
+                             C137）
+   A4    USB_VBUS2           —                USB 供电（TYPEC1）
+   A5    TYPEC1_CC1          —                TYPE-C 信号
+   A6    TYPEC1_OTG_P        RK3588 AK9（经     TYPE-C 信号
+                             R190）
+   A7    TYPEC1_OTG_N        RK3588 AL9（经     TYPE-C 信号
+                             R191）
+   A8    TYPEC1_SBU1         RK3588 AL10（经    TYPE-C 信号
+                             C140）
+   A9    USB_VBUS2           —                USB 供电（TYPEC1）
+   A10   TYPEC1_SSRX2_N      RK3588 AP10（经    TYPE-C 信号
+                             R246）
+   A11   TYPEC1_SSRX2_P      RK3588 AN10（经    TYPE-C 信号
+                             R247）
+   A12   GND                 —                地
+   B1    GND                 —                地
+   B2    TYPEC1_SSTX2_P      RK3588 AP11（经    TYPE-C 信号
+                             C139）
+   B3    TYPEC1_SSTX2_N      RK3588 AN11（经    TYPE-C 信号
+                             C138）
+   B4    USB_VBUS2           —                USB 供电（TYPEC1）
+   B5    TYPEC1_CC2          —                TYPE-C 信号
+   B6    TYPEC1_OTG_P        RK3588 AK9（经     TYPE-C 信号
+                             R190）
+    B7   TYPEC1_OTG_N          RK3588 AL9（经     TYPE-C 信号
+                               R191）
+    B8   TYPEC1_SBU2           RK3588 AM10（经    TYPE-C 信号
+                               C141）
+   B9    USB_VBUS2             —                USB 供电（TYPEC1）
+   B10   TYPEC1_SSRX1_N        RK3588 AP8（经     TYPE-C 信号
+                               R245）
+   B11   TYPEC1_SSRX1_P        RK3588 AN8（经     TYPE-C 信号
+                               R215）
+   B12   GND                   —                地
+    25   SHIELD                —                屏蔽地（外壳）
+    26   SHIELD                —                屏蔽地（外壳）
+    27   SHIELD                —                屏蔽地（外壳）
+    28   SHIELD                —                屏蔽地（外壳）
+
+
+
+
+A.10 USB_HOST1 —— USB 2.0 Type-A
+   引脚              信号           FPGA /    管脚                          说明
+    1    USB_VBUS4             —                USB 供电（USB 2.0-A）
+    2    USB20_HOST1_D_N       RK3588 AM7       USB 2.0 HOST1 数据 D−
+    3    USB20_HOST1_D_P       RK3588 AL7       USB 2.0 HOST1 数据 D+
+    4    GND                   —                地
+    5    SHIELD                —                屏蔽地（外壳）
+    6    SHIELD                —                屏蔽地（外壳）
+    7    SHIELD                —                屏蔽地（外壳）
+    8    SHIELD                —                屏蔽地（外壳）
+
+
+
+
+A.11 CON1 —— SATA 数据接口
+
+   引脚              信号           FPGA /    管脚                          说明
+    1    GND                   —                地
+    2    STX_C_10048_P         RK3588 M34（经     SATA 发送差分对（+）
+                               C96）
+    3    STX_C_10048_N         RK3588 M33（经     SATA 发送差分对（−）
+                               C101）
+    4    GND                   —                地
+    5    SRX_C_10048_N         RK3588 N34（经     SATA 接收差分对（−）
+                               C102）
+    6    SRX_C_10048_P         RK3588 N33（经     SATA 接收差分对（+）
+                               C103）
+    7    GND                   —                地
+    8    GND                   —                地
+    9    GND                   —                地
+
+
+
+
+A.12 P14 —— SATA 电源接口
+
+    引脚                    信号                                 说明
+     1     NetC8_2                    +12V 电源（经 F1 保险丝）
+     2     GND                        地
+     3     GND                        地
+     4     VCC5V0_SYS                 +5V 主电源
+A.13 P15 —— 风扇接口
+
+      引脚                    信号                                           说明
+       1      NetD53_1                           风扇电源（+12V，经 R265）
+       2      NetD53_2                           风扇负端（接 Q26 漏极）
+
+
+
+
+A.14 P16 —— FMC LPC 扩展座（已省略 GND 引脚）
+
+引脚                             信号                             FPGA /    管脚              说明
+C10    IOR68A/LVDS/DQ5                                       FPGA M21         FPGA Bank B5 差分 IO（P 端）
+C11    IOR68B/LVDS/DQ5                                       FPGA L21         FPGA Bank B5 差分 IO（N 端）
+C14    IOR59A/LVDS/DQ5                                       FPGA K21         FPGA Bank B5 差分 IO（P 端）
+C15    IOR59B/LVDS/DQ5                                       FPGA K22         FPGA Bank B5 差分 IO（N 端）
+C18    IOR72A/RPLL1_T_IN0/LVDS/DQ5                           FPGA N18         FPGA Bank B5 差分 IO（P 端）
+C19    IOR72B/RPLL1_C_IN0/LVDS/DQ5                           FPGA N19         FPGA Bank B5 差分 IO（N 端）
+C22    IOB95A/GCLKT_8/LVDS/DQ7                               FPGA U20         FPGA Bank B8 差分 IO（P 端）
+C23    IOB95B/GCLKC_8/LVDS/DQ7                               FPGA V20         FPGA Bank B8 差分 IO（N 端）
+C26    IOR70A/SSPI_WPN/SSI2/LVDS/DQ5                         FPGA N20         FPGA Bank B5 差分 IO（P 端）
+C27    IOR70B/CLKHOLD_N/SSI3/LVDS/DQ5                        FPGA M20         FPGA Bank B5 差分 IO（N 端）
+C35    NetF3_2                                               —                +12V 电源（经 F3 保险丝）
+C37    NetF3_2                                               —                +12V 电源（经 F3 保险丝）
+C39    VCC3P3                                                —                +3.3V 电源
+D8     IOR61A/SDA/GCLKT_4/RPLL1_T_IN2/RPLL1_T_FB0/LVDS/DQ5   FPGA L19         FPGA Bank B5 差分 IO（P 端）
+D9     IOR61B/SCL/GCLKC_4/RPLL1_C_IN2/RPLL1_C_FB0/LVDS/DQ5   FPGA L20         FPGA Bank B5 差分 IO（N 端）
+D11    IOR34A/LVDS/DQ4                                       FPGA L16         FPGA Bank B4 差分 IO（P 端）
+D12    IOR34B/LVDS/DQ4                                       FPGA K16         FPGA Bank B4 差分 IO（N 端）
+D14    IOR24A/LVDS/DQ4                                       FPGA G15         FPGA Bank B4 差分 IO（P 端）
+D15    IOR24B/LVDS/DQ4                                       FPGA G16         FPGA Bank B4 差分 IO（N 端）
+D17    IOR32A/LVDS/DQ4                                       FPGA H17         FPGA Bank B4 差分 IO（P 端）
+D18    IOR32B/LVDS/DQ4                                       FPGA H18         FPGA Bank B4 差分 IO（N 端）
+D20    IOB81A/GCLKT_11/LVDS/DQ8                              FPGA V18         FPGA Bank B8 差分 IO（P 端）
+D21    IOB81B/GCLKC_11/LVDS/DQ8                              FPGA V19         FPGA Bank B8 差分 IO（N 端）
+D23    IOR20A/LVDS/DQ4                                       FPGA H13         FPGA Bank B4 差分 IO（P 端）
+D24    IOR20B/LVDS/DQ4                                       FPGA G13         FPGA Bank B4 差分 IO（N 端）
+D26    IOR36A/RPLL0_T_IN1/RPLL0_C_FB0/LVDS/DQ4               FPGA K13         FPGA Bank B4 差分 IO（P 端）
+D27    IOR36B/RPLL0_C_IN1/RPLL0_C_FB0/LVDS/DQ4               FPGA K14         FPGA Bank B4 差分 IO（N 端）
+D29    FMC_TCK                                               —                FMC JTAG 时钟（经缓冲器 U1）
+D30    FMC_TDI                                               —                FMC JTAG 数据输入（经缓冲器
+                                                                              U1）
+D31    FMC_TDO                                               —                FMC JTAG 数据输出（经缓冲器
+                                                                              U2）
+D32    VCC3P3                                                —                +3.3V 电源
+D33    FMC_TMS                                               —                FMC JTAG 模式选择（经缓冲器
+                                                                              U1）
+D36    VCC3P3                                                —                +3.3V 电源
+D38    VCC3P3                                                —                +3.3V 电源
+D40    VCC3P3                                                —                +3.3V 电源
+G2     IOB87A/GCLKT_10/LVDS/DQ8                              FPGA Y18         FPGA Bank B8 差分 IO（P 端）
+G3     IOB87B/GCLKC_10/LVDS/DQ8                              FPGA Y19         FPGA Bank B8 差分 IO（N 端）
+G6     IOB93A/GCLKT_9/LVDS/DQ7                               FPGA W19         FPGA Bank B8 差分 IO（P 端）
+G7     IOB93B/GCLKC_9/LVDS/DQ7                               FPGA W20         FPGA Bank B8 差分 IO（N 端）
+G9     IOR52A/LVDS                                           FPGA M15         FPGA Bank B5 差分 IO（P 端）
+G10    IOR52B/LVDS                                           FPGA M16         FPGA Bank B5 差分 IO（N 端）
+G12    IOR63A/SI/SSI0/LVDS/DQS5                              FPGA N22         FPGA Bank B5 差分 IO（P 端）
+G13    IOR63B/SSPI_CS_N/LVDS/DQS5                            FPGA M22         FPGA Bank B5 差分 IO（N 端）
+G15    IOR30A/LVDS/DQ4                                       FPGA G17         FPGA Bank B4 差分 IO（P 端）
+G16    IOR30B/LVDS/DQ4                                       FPGA G18         FPGA Bank B4 差分 IO（N 端）
+G18    IOR43A/LVDS                                           FPGA H20         FPGA Bank B5 差分 IO（P 端）
+G19    IOR43B/LVDS                                           FPGA G20         FPGA Bank B5 差分 IO（N 端）
+G21       IOR66A/SO/SSI1/RPLL1_T_IN1/RPLL1_T_FB1/LVDS/DQ5    FPGA M18         FPGA Bank B5 差分 IO（P 端）
+G22       IOR66B/SSPI_CLK/RPLL1_C_IN1/RPLL1_C_FB1/LVDS/DQ5   FPGA L18         FPGA Bank B5 差分 IO（N 端）
+G24       IOR50A/LVDS                                        FPGA M13         FPGA Bank B5 差分 IO（P 端）
+G25       IOR50B/LVDS                                        FPGA L13         FPGA Bank B5 差分 IO（N 端）
+G27       IOR57A/GCLKT_6/LVDS/DQ5                            FPGA K18         FPGA Bank B5 差分 IO（P 端）
+G28       IOR57B/GCLKC_6/LVDS/DQ5                            FPGA K19         FPGA Bank B5 差分 IO（N 端）
+G30       IOR39A/RPLL0_T_IN0/RPLL0_T_FB1/LVDS                FPGA K17         FPGA Bank B5 差分 IO（P 端）
+G31       IOR39B/RPLL0_C_IN0/RPLL0_C_FB1/LVDS                FPGA J17         FPGA Bank B5 差分 IO（N 端）
+G33       IOR41A/GCLKT_7/LVDS                                FPGA J19         FPGA Bank B5 差分 IO（P 端）
+G34       IOR41B/GCLKC_7/LVDS                                FPGA H19         FPGA Bank B5 差分 IO（N 端）
+G36       IOR48A/LVDS                                        FPGA L14         FPGA Bank B5 差分 IO（P 端）
+G37       IOR48B/LVDS                                        FPGA L15         FPGA Bank B5 差分 IO（N 端）
+G39       VCCADJ                                             —                  调 IO 电源（VADJ）
+H1        NetC206_1                                          —                   （未使用）
+H2        FMC-PRSNT                                          —                FMC 子卡在位检测
+H4        IOR54A/GCLKT_5/LVDS                                FPGA J20         FPGA Bank B5 差分 IO（P 端）
+H5        IOR54B/GCLKC_5/LVDS                                FPGA J21         FPGA Bank B5 差分 IO（N 端）
+H7        IOB85A/RDWR_B/LVDS/DQS8                            FPGA AA19        FPGA Bank B8 差分 IO（P 端）
+H8        IOB85B/CSO_B/DOUT/LVDS/DQS8                        FPGA AB20        FPGA Bank B8 差分 IO（N 端）
+H10       IOB97A/D14/LVDS/DQ7                                FPGA AB21        FPGA Bank B8 差分 IO（P 端）
+H11       IOB97B/D15/LVDS/DQ7                                FPGA AB22        FPGA Bank B8 差分 IO（N 端）
+H13       IOB99A/LVDS/DQS7                                   FPGA Y21         FPGA Bank B8 差分 IO（P 端）
+H14       IOB99B/D13/LVDS/DQS7                               FPGA Y22         FPGA Bank B8 差分 IO（N 端）
+H16       IOR45A/LVDS                                        FPGA J22         FPGA Bank B5 差分 IO（P 端）
+H17       IOR45B/LVDS                                        FPGA H22         FPGA Bank B5 差分 IO（N 端）
+H19       IOR22A/LVDS/DQ4                                    FPGA J15         FPGA Bank B4 差分 IO（P 端）
+H20       IOR22B/LVDS/DQ4                                    FPGA H15         FPGA Bank B4 差分 IO（N 端）
+H22       IOR26A/LVDS/DQS4                                   FPGA J14         FPGA Bank B4 差分 IO（P 端）
+H23       IOR26B/LVDS/DQS4                                   FPGA H14         FPGA Bank B4 差分 IO（N 端）
+H25       IOB75A/LVDS/DQ8                                    FPGA U17         FPGA Bank B8 差分 IO（P 端）
+H26       IOB75B/LVDS/DQ8                                    FPGA U18         FPGA Bank B8 差分 IO（N 端）
+H28       IOB79A/CSI_B/LVDS/DQ8                              FPGA V17         FPGA Bank B8 差分 IO（P 端）
+H29       IOB79B/LVDS/DQ8                                    FPGA W17         FPGA Bank B8 差分 IO（N 端）
+H31       IOB77A/BPLL1_T_IN2/BPLL1_C_FB0/LVDS/DQ8            FPGA AA18        FPGA Bank B8 差分 IO（P 端）
+H32       IOB77B/BPLL1_C_IN2/BPLL1_C_FB0/LVDS/DQ8            FPGA AB18        FPGA Bank B8 差分 IO（N 端）
+H34       IOB89A/LVDS/DQ8                                    FPGA AB15        FPGA Bank B8 差分 IO（P 端）
+H35       IOB89B/LVDS/DQ8                                    FPGA AA14        FPGA Bank B8 差分 IO（N 端）
+H37       IOB91A/LVDS/DQ8                                    FPGA W14         FPGA Bank B8 差分 IO（P 端）
+H38       IOB91B/LVDS/DQ8                                    FPGA V14         FPGA Bank B8 差分 IO（N 端）
+H40       VCCADJ                                             —                  调 IO 电源（VADJ）
+
+
+
+
+A.15 P7 —— LVDS / GPIO 扩展排针（2×20）
+
+      引脚                       信号                                        说明
+       1         GPIO0                               B6 LVDS 差分对（正端 P）
+      2          GPIO1                               B6 LVDS 差分对（负端 N）
+      3          GPIO2                               B6 LVDS 差分对（正端 P）
+      4          GPIO3                               B6 LVDS 差分对（负端 N）
+      5          GPIO4                               B6 LVDS 差分对（正端 P）
+      6          GPIO5                               B6 LVDS 差分对（负端 N）
+      7          GPIO6                               B6 LVDS 差分对（正端 P）
+      8          GPIO7                               B6 LVDS 差分对（负端 N）
+      9          GPIO8                               B6 LVDS 差分对（正端 P）
+      10         GPIO9                               B6 LVDS 差分对（负端 N）
+      11         VCC5V0_SYS                          +5V 主电源（来自核心板）
+      12         GND                                 地
+      13         GPIO10                              B6 LVDS 差分对（正端 P）
+     14         GPIO11                              B6 LVDS 差分对（负端 N）
+     15         GPIO12                              B6 LVDS 差分对（正端 P）
+     16         GPIO13                              B6 LVDS 差分对（负端 N）
+     17         GPIO14                              B6 LVDS 差分对（正端 P）
+     18         GPIO15                              B6 LVDS 差分对（负端 N）
+     19         GPIO16                              B6 LVDS 差分对（正端 P）
+     20         GPIO17                              B6 LVDS 差分对（负端 N）
+     21         GPIO18                              B7 LVDS 差分对（正端 P）
+     22         GPIO19                              B7 LVDS 差分对（负端 N）
+     23         GPIO20                              B7 LVDS 差分对（正端 P）
+     24         GPIO21                              B7 LVDS 差分对（负端 N）
+     25         GPIO22                              B7 LVDS 差分对（正端 P）
+     26         GPIO23                              B7 LVDS 差分对（负端 N）
+     27         GPIO24                              B7 LVDS 差分对（正端 P）
+     28         GPIO25                              B7 LVDS 差分对（负端 N）
+     29         VCC3P3                              +3.3V 电源
+     30         GND                                 地
+     31         GPIO26                              B7 LVDS 差分对（正端 P）
+     32         GPIO27                              B7 LVDS 差分对（负端 N）
+     33         GPIO28                              B7 LVDS 差分对（正端 P）
+     34         GPIO29                              B7 LVDS 差分对（负端 N）
+     35         GPIO30                              B7 LVDS 差分对（正端 P）
+     36         GPIO31                              B7 LVDS 差分对（负端 N）
+     37         GPIO32                              B7 LVDS 差分对（正端 P）
+     38         GPIO33                              B7 LVDS 差分对（负端 N）
+     39         GPIO34                              B7 LVDS 差分对（正端 P）
+     40         GPIO35                              B7 LVDS 差分对（负端 N）
+
+
+
+A.16 P10 —— 差分扩展排针（2×12）
+
+引脚                          信号                         FPGA /   管脚                说明
+ 1        IOT87B/LVDS/DQ0                            FPGA D16        FPGA Bank B1 差分 IO（N 端）
+ 2        IOT87A/LVDS/DQ0                            FPGA E16        FPGA Bank B1 差分 IO（P 端）
+ 3        IOT89B/LVDS/DQ0                            FPGA E17        FPGA Bank B1 差分 IO（N 端）
+ 4        IOT89A/SERDES_Q0CLKIN0/LVDS/DQ0            FPGA F16        FPGA Bank B1 差分 IO（P 端）
+ 5        IOT99B/LVDS/DQS1                           FPGA A16        FPGA Bank B1 差分 IO（N 端）
+ 6        IOT99A/LVDS/DQS1                           FPGA A15        FPGA Bank B1 差分 IO（P 端）
+ 7        IOT80B/TPLL0_C_IN1/TPLL0_C_FB1/LVDS/DQ0    FPGA F14        FPGA Bank B1 差分 IO（N 端）
+ 9        IOT144B/LVDS/DQ3                           FPGA G22        FPGA Bank B2 差分 IO（N 端）
+10        IOT144A/LVDS/DQ3                           FPGA G21        FPGA Bank B2 差分 IO（P 端）
+11        IOL27B/LVDS                                FPGA D1         FPGA Bank B11 差分 IO（N 端）
+12        IOL27A/LVDS                                FPGA E1         FPGA Bank B11 差分 IO（P 端）
+13        IOL39B/LVDS                                FPGA J2         FPGA Bank B11 差分 IO（N 端）
+14        IOL39A/LVDS                                FPGA K2         FPGA Bank B11 差分 IO（P 端）
+15        IOL31B/LVDS                                FPGA F1         FPGA Bank B11 差分 IO（N 端）
+16        IOL31A/LVDS                                FPGA G1         FPGA Bank B11 差分 IO（P 端）
+17        IOL23B/LVDS                                FPGA A1         FPGA Bank B11 差分 IO（N 端）
+18        IOL23A/LVDS                                FPGA B1         FPGA Bank B11 差分 IO（P 端）
+19        IOL37B/LVDS                                FPGA G2         FPGA Bank B11 差分 IO（N 端）
+20        IOL37A/LVDS                                FPGA H2         FPGA Bank B11 差分 IO（P 端）
+21        GND                                        —               地
+22        VCC3P3                                     —               +3.3V 电源
+ 23        GND                                —                     地
+ 24        VCC3P3                             —                     +3.3V 电源
+
+
+
+
+A.17 P13 —— SARADC            入排针
+
+      引脚               信号             FPGA /     管脚                          说明
+       1      SARADC_IN2             RK3588 AK16      RK3588 SARADC 输入通
+       2      SARADC_IN3             RK3588 AN17      RK3588 SARADC 输入通
+       3      SARADC_IN4             RK3588 AM17      RK3588 SARADC 输入通
+       4      SARADC_IN6             RK3588 AL17      RK3588 SARADC 输入通
+       5      SARADC_IN7             RK3588 AK17      RK3588 SARADC 输入通
+       6      GND                    —                地
+
+
+
+
+A.18 P19 —— 混合扩展排针（2×15，已省略 GND）
+
+      引脚                 信号           FPGA /     管脚                          说明
+       1      TYPEC1_USB20_OTG_ID    RK3588 AK8       TYPEC1 OTG ID 检测
+       2      TYPEC0_USB20_OTG_ID    RK3588 AL14      TYPEC0 OTG ID 检测
+       5      PCIE20_2_REFCLKP       RK3588 G31       PCIe 参考时钟（+）
+       6      PCIE20_2_REFCLKN       RK3588 G30       PCIe 参考时钟（−）
+       9      PCIE20_0_REFCLK_P      RK3588 L32       PCIe 参考时钟（+）
+      10      PCIE20_0_REFCLK_N      RK3588 L33       PCIe 参考时钟（−）
+      13      MIPI_DPHY3_RX_CLK1_P   RK3588 AM31      MIPI 第二时钟 lane（+）
+      14      MIPI_DPHY3_RX_CLK1_N   RK3588 AM32      MIPI 第二时钟 lane（−）
+      17      MIPI_DPHY2_RX_CLK1_P   RK3588 AM33      MIPI 第二时钟 lane（+）
+      18      MIPI_DPHY2_RX_CLK1_N   RK3588 AM34      MIPI 第二时钟 lane（−）
+      21      I2C4_SDA_M1            RK3588 AB31      I²C4 数据
+      22      B4_GPIO1_B5            RK3588 E25       FPGA Bank B4 IO
+      25      I2C2_SCL_M4            RK3588 A25       I²C2 时钟
+      26      I2C2_SDA_M4            RK3588 A24       I²C2 数据
+      29      B5_GPIO3_D5            RK3588 AB28      FPGA Bank B5 IO
+
+
+
+
+A.19 P20 —— VCCADJ 配置排针
+
+      引脚                      信号                                        说明
+       1        NetP20_1                     VCCADJ 反馈公共端（接 U23 ADJ）
+       2        NetP20_2                     VCCADJ 档位接入点
+       3        NetP20_1                     VCCADJ 反馈公共端（接 U23 ADJ）
+       4        NetP20_4                     VCCADJ 档位接入点
+       5        NetP20_1                     VCCADJ 反馈公共端（接 U23 ADJ）
+       6        NetP20_6                     VCCADJ 档位接入点
+       7        NetP20_1                     VCCADJ 反馈公共端（接 U23 ADJ）
+       8        NetP20_8                     VCCADJ 档位接入点
+
+
+
+
+A.20 P11 —— ARM JTAG 接口
+
+      引脚                 信号            FPGA /   管脚                           说明
+       1      VCC_3V3                —                +3.3V 电源
+       2      NetD46_2               RK3588 AF1（经     ARM JTAG 信号（经 22Ω 串         R252）
+                                     R250）
+      3       NetD45_2               RK3588 AF2（经     ARM JTAG 信号（经 22Ω 串         R250）
+                              R252）
+    4   GND                   —                   地
+
+
+
+
+A.21 P8 —— FPGA JTAG 接口
+
+   引脚             信号            FPGA /       管脚                       说明
+    1   JTAG_TCK              FPGA V12            FPGA JTAG 时钟
+    2   EX_JTAG_detect        —                   外部 JTAG 接入检测
+    3   JTAG_TDO              —                   FPGA JTAG 数据输出（FPGA→下载器）
+    4   VCC3P3                —                   +3.3V 电源
+    5   JTAG_TMS              FPGA T13            FPGA JTAG 模式选择
+    9   JTAG_TDI              FPGA R13            FPGA JTAG 数据输入（下载器→FPGA）
+   10   GND                   —                   地
+
+
+
+
+A.22 P9 —— SWD 调试接口
+
+   引脚                    信号                                      说明
+    1     SWCLK                          板载下载器 SWD 时钟
+    2     SWDIO                          板载下载器 SWD    向数据
+    3     GND                            地
+    4     JTAG_3P3                       +3.3V 参考电压
+
+
+
+
+A.23 U20 —— M.2 Key-M 插槽
+
+   引脚             信号           FPGA /    管脚                           说明
+    1   GND                   —                   地
+    2   VCC3P3_M.2            —                   +3.3V 电源（M.2 插槽）
+    3   GND                   —                   地
+    4   VCC3P3_M.2            —                   +3.3V 电源（M.2 插槽）
+    9   GND                   —                   地
+   12   VCC3P3_M.2            —                   +3.3V 电源（M.2 插槽）
+   14   VCC3P3_M.2            —                   +3.3V 电源（M.2 插槽）
+   15   GND                   —                   地
+   16   VCC3P3_M.2            —                   +3.3V 电源（M.2 插槽）
+   18   VCC3P3_M.2            —                   +3.3V 电源（M.2 插槽）
+   21   GND                   —                   地
+   27   GND                   —                   地
+   29   PCIE30_PORT1_RX1_N    RK3588 B31          PCIe 3.0 ×2 差分对（至 M.2 插槽）
+   31   PCIE30_PORT1_RX1_P    RK3588 C31          PCIe 3.0 ×2 差分对（至 M.2 插槽）
+   33   GND                   —                   地
+   35   NetC72_1              RK3588 B29（经        PCIe 3.0 发送 1（−）
+                              C72）
+   37   NetC73_1              RK3588 C29（经        PCIe 3.0 发送 1（+）
+                              C73）
+   38   NetR85_2              —                   模块配置脚
+   39   GND                   —                   地
+   41   PCIE30_PORT1_RX0_N    RK3588 A32          PCIe 3.0 ×2 差分对（至 M.2 插槽）
+   43   PCIE30_PORT1_RX0_P    RK3588 B32          PCIe 3.0 ×2 差分对（至 M.2 插槽）
+   45   GND                   —                   地
+   47   NetC74_1              RK3588 A30（经        PCIe 3.0 发送 0（−）
+                              C74）
+   49   NetC75_1              RK3588 B30（经        PCIe 3.0 发送 0（+）
+                              C75）
+   50   NetR86_2              RK3588 AK26（经       PCIe 复位 PERST#
+                             R86）
+   51   GND                  —                 地
+   52   NetR87_2             RK3588 AL27（经     PCIe 时钟请求 CLKREQ#
+                             R87）
+   53   NetR88_1             RK3588 B28（经      PCIe 参考时钟 −
+                             R88）
+   54   NetR89_2             RK3588 AM27（经     PCIe 唤醒 WAKE#
+                             R89）
+   55   NetR90_1             RK3588 A28（经      PCIe 参考时钟 +
+                             R90）
+   57   GND                  —                 地
+   70   VCC3P3_M.2           —                 +3.3V 电源（M.2 插槽）
+   71   GND                  —                 地
+   72   VCC3P3_M.2           —                 +3.3V 电源（M.2 插槽）
+   73   GND                  —                 地
+   74   VCC3P3_M.2           —                 +3.3V 电源（M.2 插槽）
+   75   GND                  —                 地
+   76   GND                  —                 地
+   77   GND                  —                 地
+   78   GND                  —                 地
+   79   GND                  —                 地
+   80   GND                  —                 地
+
+
+
+
+A.24 S2 —— 8 位拨码开关
+
+   引脚              信号          FPGA /   管脚                        说明
+    1   GND                  —                 地
+    2   GND                  —                 地
+    3   GND                  —                 地
+    4   GND                  —                 地
+    5   GND                  —                 地
+    6   GND                  —                 地
+    7   GND                  —                 地
+    8   GND                  —                 地
+    9   SWIN0                FPGA B2（经         拨码开关输入（经 33Ω 串 接 FPGA）
+                             R236）
+   10   SWIN1                FPGA C2（经         拨码开关输入（经 33Ω 串 接 FPGA）
+                             R235）
+   11   SWIN2                FPGA G3（经         拨码开关输入（经 33Ω 串 接 FPGA）
+                             R234）
+   12   SWIN3                FPGA H3（经         拨码开关输入（经 33Ω 串 接 FPGA）
+                             R233）
+   13   SWIN4                FPGA H5（经         拨码开关输入（经 33Ω 串 接 FPGA）
+                             R232）
+   14   SWIN5                FPGA J5（经 R231）   拨码开关输入（经 33Ω 串 接 FPGA）
+   15   SWIN6                FPGA J1（经 R229）   拨码开关输入（经 33Ω 串 接 FPGA）
+   16   SWIN7                FPGA K1（经 R227）   拨码开关输入（经 33Ω 串 接 FPGA）
+
+
+
+
+A.25 FPC1 —— MIPI CSI1 接口（24pin）
+
+   引脚             信号          FPGA /     管脚                       说明
+    1   VCC_3V3              —                 +3.3V 电源
+    2   VCC_3V3              —                 +3.3V 电源
+    3   CSI1_PWDN            RK3588 AL24       摄像头使能（RK3588 GPIO，直接引出）
+    6   MIPI_DPHY1_RX_D3_P   RK3588 AK22       数据 lane 3 差分对（P 端）
+    7   MIPI_DPHY1_RX_D3_N   RK3588 AL22       数据 lane 3 差分对（N 端）
+    9   MIPI_DPHY1_RX_D2_P       RK3588 AK21         数据 lane 2 差分对（P 端）
+   10   MIPI_DPHY1_RX_D2_N       RK3588 AL21         数据 lane 2 差分对（N 端）
+   12   MIPI_DPHY1_RX_CLK0_P     RK3588 AK20         时钟 lane 差分对（P 端）
+   13   MIPI_DPHY1_RX_CLK0_N     RK3588 AL20         时钟 lane 差分对（N 端）
+   15   MIPI_DPHY1_RX_D1_P       RK3588 AK19         数据 lane 1 差分对（P 端）
+   16   MIPI_DPHY1_RX_D1_N       RK3588 AL19         数据 lane 1 差分对（N 端）
+   18   MIPI_DPHY1_RX_D0_P       RK3588 AK18         数据 lane 0 差分对（P 端）
+   19   MIPI_DPHY1_RX_D0_N       RK3588 AL18         数据 lane 0 差分对（N 端）
+   21   CSI1_I2C_SCL             —                   摄像头 I²C 时钟（经 PCA9546A）
+   22   CSI1_I2C_SDA             —                   摄像头 I²C 数据（经 PCA9546A）
+   23   MIPI_CSI1_TRI1           RK3588 D27（经        辅助 制（RK3588 GPIO，经 U31 电平转 ）
+                                 U31）
+   24   MIPI_CSI1_TRI0           RK3588 D26（经        辅助 制（RK3588 GPIO，经 U31 电平转 ）
+                                 U31）
+
+
+
+A.26 FPC3 —— MIPI DSI0 接口（26pin）
+
+   引脚              信号             FPGA /     管脚                      说明
+    2   MIPI_DSI0_RESET          RK3588 C24（经        屏复位（RK3588 GPIO，经 U35 电平转   ）
+                                 U35）
+    4   MIPI_DPHY0_TX_D3_N       RK3588 AP28         数据 lane 3 差分对（N 端）
+    5   MIPI_DPHY0_TX_D3_P       RK3588 AN28         数据 lane 3 差分对（P 端）
+    7   MIPI_DPHY0_TX_D2_N       RK3588 AP27         数据 lane 2 差分对（N 端）
+    8   MIPI_DPHY0_TX_D2_P       RK3588 AN27         数据 lane 2 差分对（P 端）
+   10   MIPI_DPHY0_TX_D0_N       RK3588 AP24         数据 lane 0 差分对（N 端）
+   11   MIPI_DPHY0_TX_D0_P       RK3588 AN24         数据 lane 0 差分对（P 端）
+   13   MIPI_DPHY0_TX_CLK0_N     RK3588 AP26         时钟 lane 差分对（N 端）
+   14   MIPI_DPHY0_TX_CLK0_P     RK3588 AN26         时钟 lane 差分对（P 端）
+   16   MIPI_DPHY0_TX_D1_N       RK3588 AP25         数据 lane 1 差分对（N 端）
+   17   MIPI_DPHY0_TX_D1_P       RK3588 AN25         数据 lane 1 差分对（P 端）
+   20   DSI0_LCD_BL              RK3588 AL26         背光使能（RK3588 GPIO，直接引出）
+   21   DSI0_CT_RESET            RK3588 E24（经        触摸复位（RK3588 GPIO，经 U35 电平转 ）
+                                 U35）
+   22   DSI0_CT_SDA              —                   触摸 I²C 数据
+   23   DSI0_CT_SCL              —                   触摸 I²C 时钟
+   24   DSI0_CT_INT              RK3588 V29          触摸中断
+   25   VCC5V0_SYS               —                   +5V 主电源
+   26   VCC5V0_SYS               —                   +5V 主电源
+
+
+
+
+附录 B 核心板-底板 600pin 连接器引脚对照表
+
+   下表给出 6 个板对板连接器（P1 ~ P6，每只 100pin）的逐引脚对照。“核心板侧”列为核心板的
+设计网络名（即芯片侧的真实信号），“底板侧”列为底板的设计网络名（即底板上的功能信号）。
+GND 引脚已省略，请以原理图为准核对地网络。
+
+
+B.P1 连接器 P1（100pin）
+
+   引脚                      侧信号                                      侧信号
+    3   B7_B108_P                               B7_B108_P
+    4   B8_B85_P                                B8_B85_P
+    5   B7_B108_N                               B7_B108_N
+    6   B8_B85_N                                B8_B85_N
+    7   B7_B106_P                               B7_B106_P
+8    B8_B97_P    B8_B97_P
+9    B7_B106_N   B7_B106_N
+10   B8_B97_N    B8_B97_N
+11   B7_B102_P   B7_B102_P
+12   B8_B87_P    B8_B87_P
+13   B7_B102_N   B7_B102_N
+14   B8_B87_N    B8_B87_N
+15   B7_B122_P   B7_B122_P
+16   B8_B99_P    B8_B99_P
+17   B7_B122_N   B7_B122_N
+18   B8_B99_N    B8_B99_N
+21   B7_B104_P   B7_B104_P
+22   B8_B93_P    B8_B93_P
+23   B7_B104_N   B7_B104_N
+24   B8_B93_N    B8_B93_N
+25   B7_B126_P   B7_B126_P
+26   B8_B81_P    B8_B81_P
+27   B7_B126_N   B7_B126_N
+28   B8_B81_N    B8_B81_N
+29   B7_B115_P   B7_B115_P
+30   B8_B95_P    B8_B95_P
+31   B7_B115_N   B7_B115_N
+32   B8_B95_N    B8_B95_N
+33   B7_B113_P   B7_B113_P
+34   B8_B75_P    B8_B75_P
+35   B7_B113_N   B7_B113_N
+36   B8_B75_N    B8_B75_N
+39   B7_B124_P   B7_B124_P
+40   B6_B144_P   B6_B144_P
+41   B7_B124_N   B7_B124_N
+42   B6_B144_N   B6_B144_N
+43   B6_B140_P   B6_B140_P
+44   B6_B136_P   B6_B136_P
+45   B6_B140_N   B6_B140_N
+46   B6_B136_N   B6_B136_N
+47   B6_B142_P   B6_B142_P
+48   B6_B134_P   B6_B134_P
+49   B6_B142_N   B6_B142_N
+50   B6_B134_N   B6_B134_N
+51   B6_B146_P   B6_B146_P
+52   B6_B132_P   B6_B132_P
+53   B6_B146_N   B6_B146_N
+54   B6_B132_N   B6_B132_N
+55   B6_B138_P   B6_B138_P
+56   B6_B130_P   B6_B130_P
+57   B6_B138_N   B6_B138_N
+58   B6_B130_N   B6_B130_N
+61   B5_B52_P    B5_B52_P
+62   B5_B63_P    B5_B63_P
+63   B5_B52_N    B5_B52_N
+64   B5_B63_N    B5_B63_N
+65   B5_B72_P    B5_B72_P
+66   B5_B68_P    B5_B68_P
+67   B5_B72_N    B5_B72_N
+68   B5_B68_N    B5_B68_N
+69   B5_B70_P    B5_B70_P
+70   B5_B61_P    B5_B61_P
+71   B5_B70_N    B5_B70_N
+72   B5_B61_N    B5_B61_N
+73   B5_B66_P    B5_B66_P
+74   B5_B59_P    B5_B59_P
+75   B5_B66_N    B5_B66_N
+76   B5_B59_N    B5_B59_N
+79   B5_B50_P    B5_B50_P
+80   B5_B54_P    B5_B54_P
+81   B5_B50_N    B5_B50_N
+    82   B5_B54_N                      B5_B54_N
+    83   B5_B57_P                      B5_B57_P
+    84   B5_B45_P                      B5_B45_P
+    85   B5_B57_N                      B5_B57_N
+    86   B5_B45_N                      B5_B45_N
+    87   B5_B39_P                      B5_B39_P
+    88   B5_B43_P                      B5_B43_P
+    89   B5_B39_N                      B5_B39_N
+    90   B5_B43_N                      B5_B43_N
+    91   B5_B41_P                      B5_B41_P
+    93   B5_B41_N                      B5_B41_N
+    95   VCCADJ                        VCCADJ
+    96   VCCADJ                        VCCADJ
+    97   VCCADJ                        VCCADJ
+    98   VCCADJ                        VCCADJ
+    99   VCCADJ                        VCCADJ
+   100   VCCADJ                        VCCADJ
+
+
+
+
+B.P2 连接器 P2（100pin）
+
+  引脚                            侧信号                   侧信号
+   1     B5_B48_P                      B5_B48_P
+   2     B1_T80_N                      B1_T80_N
+   3     B5_B48_N                      B5_B48_N
+   4     B1_T87_P                      B1_T87_P
+   5     B2_T144_P                     B2_T144_P
+   6     B1_T87_N                      B1_T87_N
+   7     B2_T144_N                     B2_T144_N
+   8     B1_T78_P                      LED0
+  10     B1_T78_N                      LED1
+  11     B4_R34_P                      B4_R34_P
+  12     B1_T82_P                      LED2
+  13     B4_R34_N                      B4_R34_N
+  14     B1_T82_N                      LED3
+  15     B4_R24_P                      B4_R24_P
+  16     B1_T89_P                      B1_T89_P
+  17     B4_R24_N                      B4_R24_N
+  18     B1_T89_N                      B1_T89_N
+  19     B4_R30_P                      B4_R30_P
+  20     B1_T104_P                     LED4
+  21     B4_R30_N                      B4_R30_N
+  22     B1_T104_N                     LED5
+  25     B4_R32_P                      B4_R32_P
+  26     B1_T97_P                      LED6
+  27     B4_R32_N                      B4_R32_N
+  28     B1_T97_N                      LED7
+  29     B4_R22_P                      B4_R22_P
+  30     B1_T99_P                      B1_T99_P
+  31     B4_R22_N                      B4_R22_N
+  32     B1_T99_N                      B1_T99_N
+  33     B4_R26_P                      B4_R26_P
+  34     B1_T85_P                      SFP1_TX_DIS
+  35     B4_R26_N                      B4_R26_N
+  36     B1_T85_N                      SFP1_TX_LOS
+  37     B4_R20_P                      B4_R20_P
+  38     B1_T95_P                      SFP2_TX_DIS
+  39     B4_R20_N                      B4_R20_N
+  40     B1_T95_N                      SFP2_TX_LOS
+  41     B4_R36_P                      B4_R36_P
+  42     B1_T93_P                      FPGA_UART_TX
+  43     B4_R36_N                      B4_R36_N
+  44     B1_T93_N                      FPGA_UART_RX
+  47     PCIE20_0_RX_P/SATA30_0_RX_P   SATA_RX_P
+  48     PCIE20_0_TX_P/SATA30_0_TX_P   SATA_TX_P
+    49   PCIE20_0_RX_N/SATA30_0_RX_N   SATA_RX_N
+    50   PCIE20_0_TX_N/SATA30_0_TX_N   SATA_TX_N
+    53   PCIE20_0_REFCLK_P             PCIE20_0_REFCLK_P
+    54   PCIE20_2_RX_P                 PCIE20_2_RX_P
+    55   PCIE20_0_REFCLK_N             PCIE20_0_REFCLK_N
+    56   PCIE20_2_RX_N                 PCIE20_2_RX_N
+    59   PCIE20_2_TX_P                 PCIE20_2_TX_P
+    60   PCIE20_2_REFCLKP              PCIE20_2_REFCLKP
+    61   PCIE20_2_TX_N                 PCIE20_2_TX_N
+    62   PCIE20_2_REFCLKN              PCIE20_2_REFCLKN
+    65   PCIE20_1_TX_P/SATA30_1_TX_P   PCIE20_1_TX_P/SATA30_1_TX_P
+    66   PCIE20_1_RX_P/SATA30_1_RX_P   PCIE20_1_RX_P/SATA30_1_RX_P
+    67   PCIE20_1_TX_N/SATA30_1_TX_N   PCIE20_1_TX_N/SATA30_1_TX_N
+    68   PCIE20_1_RX_N/SATA30_1_RX_N   PCIE20_1_RX_N/SATA30_1_RX_N
+    71   PCIE20_1_REFCLK_P             PCIE_CLK_P
+    72   PCIE30_PORT1_RX0_P            PCIE30_PORT1_RX0_P
+    73   PCIE20_1_REFCLK_N             PCIE_CLK_N
+    74   PCIE30_PORT1_RX0_N            PCIE30_PORT1_RX0_N
+    77   PCIE30_PORT1_RX1_P            PCIE30_PORT1_RX1_P
+    78   PCIE30_PORT1_TX0_P            PCIE30_PORT1_TX0_P
+    79   PCIE30_PORT1_RX1_N            PCIE30_PORT1_RX1_N
+    80   PCIE30_PORT1_TX0_N            PCIE30_PORT1_TX0_N
+    83   PCIE30_PORT1_TX1_P            PCIE30_PORT1_TX1_P
+    84   PCIE30_PORT1_REFCLK_IN_P      PCIE30_PORT1_REFCLK_IN_P
+    85   PCIE30_PORT1_TX1_N            PCIE30_PORT1_TX1_N
+    86   PCIE30_PORT1_REFCLK_IN_N      PCIE30_PORT1_REFCLK_IN_N
+    89   VCC_3V3                       VCC_3V3
+    90   VCC3P3                        VCC3P3
+    91   VCC_3V3                       VCC_3V3
+    92   VCC3P3                        VCC3P3
+    93   VCC_3V3                       VCC_3V3
+    94   VCC3P3                        VCC3P3
+    95   VCC_3V3                       VCC_3V3
+    96   VCC3P3                        VCC3P3
+    97   VCC_3V3                       VCC_3V3
+    98   VCC3P3                        VCC3P3
+    99   VCC_3V3                       VCC_3V3
+   100   VCC3P3                        VCC3P3
+
+
+
+
+B.P3 连接器 P3（100pin）
+
+  引脚                          侧信号                               侧信号
+   1     B1_GPIO1_C2                   I2S0_MCLK
+   2     B1_GPIO1_C0                   B1_GPIO1_C0
+   3     B1_GPIO1_C3                   I2S0_SCLK_TX
+   4     B4_GPIO1_B7                   HDMI_RX_CEC_M2
+   5     B1_GPIO1_C4                   B1_GPIO1_C4
+   6     B4_GPIO1_B6                   HDMI_RX_HPDOUT_M2
+   7     B1_GPIO1_C5                   I2S0_LRCK_TX
+   8     B4_GPIO1_B3                   B4_GPIO1_B3
+   9     B1_GPIO1_C6                   B1_GPIO1_C6
+  10     B4_GPIO1_B2                   B4_GPIO1_B2
+  11     B1_GPIO1_C7                   I2S0_SDO0
+  12     B4_GPIO1_B0                   B4_GPIO1_B0
+  13     B1_GPIO1_D4                   I2S0_SDI1
+  14     B4_GPIO1_A3                   I2C4_SCL_M3
+  15     B1_GPIO1_D3                   I2C1_SDA_M4
+  16     B4_GPIO1_A5                   B4_GPIO1_A5
+  17     B1_GPIO1_D2                   I2C1_SCL_M4
+  18     B4_GPIO1_A2                   I2C4_SDA_M3
+  19     B1_GPIO1_D0                   I2C7_SCL_M0
+  21     B1_GPIO1_D1                   I2C7_SDA_M0
+  22     B4_GPIO1_A4                   B4_GPIO1_A4
+  23     B1_GPIO1_D5                   B1_GPIO1_D5
+    24   B4_GPIO1_A1                    I2C2_SCL_M4
+    25   B1_GPIO1_C1                    B1_GPIO1_C1
+    26   B4_GPIO1_A7                    B4_GPIO1_A7
+    28   B4_GPIO1_A0                    I2C2_SDA_M4
+    29   SDMMC_D0                       SD_DATA0
+    30   B4_GPIO1_A6                    B4_GPIO1_A6
+    31   SDMMC_D1                       SD_DATA1
+    32   B4_GPIO1_B1                    B4_GPIO1_B1
+    33   SDMMC_CLK                      SD_CLK
+    34   B4_GPIO1_B4                    B4_GPIO1_B4
+    35   SDMMC_CMD                      SD_CMD
+    36   B4_GPIO1_B5                    B4_GPIO1_B5
+    37   SDMMC_D3                       JTAG_TMS_M0
+    38   B4_GPIO1_D6                    HDMI_RX_SCL_M2
+    39   SDMMC_D2                       JTAG_TCK_M0
+    40   B4_GPIO1_D7                    HDMI_RX_SDA_M2
+    43   TYPEC1_SSRX1_P/DP0_TX0_P       TYPEC1_SSRX1_P/DP0_TX0_P
+    44   TYPEC1_SSTX1_P/DP0_TX1_P       TYPEC1_SSTX1_P/DP0_TX1_P
+    45   TYPEC1_SSRX1_N/DP0_TX0_N       TYPEC1_SSRX1_N/DP0_TX0_N
+    46   TYPEC1_SSTX1_N/DP0_TX1_N       TYPEC1_SSTX1_N/DP0_TX1_N
+    49   TYPEC1_SSRX2_P/DP0_TX2_P       TYPEC1_SSRX2_P/DP0_TX2_P
+    50   TYPEC1_SSTX2_P/DP0_TX3_P       TYPEC1_SSTX2_P/DP0_TX3_P
+    51   TYPEC1_SSRX2_N/DP0_TX2_N       TYPEC1_SSRX2_N/DP0_TX2_N
+    52   TYPEC1_SSTX2_N/DP0_TX3_N       TYPEC1_SSTX2_N/DP0_TX3_N
+    55   TYPEC0_SSRX1_P/DP0_TX0_P       TYPEC0_SSRX1_P/DP0_TX0_P
+    56   TYPEC0_SSTX1_P/DP0_TX1_P       TYPEC0_SSTX1_P/DP0_TX1_P
+    57   TYPEC0_SSRX1_N/DP0_TX0_N       TYPEC0_SSRX1_N/DP0_TX0_N
+    58   TYPEC0_SSTX1_N/DP0_TX1_N       TYPEC0_SSTX1_N/DP0_TX1_N
+    61   TYPEC0_SSRX2_P/DP0_TX2_P       TYPEC0_SSRX2_P/DP0_TX2_P
+    62   TYPEC0_SSTX2_P/DP0_TX3_P       TYPEC0_SSTX2_P/DP0_TX3_P
+    63   TYPEC0_SSRX2_N/DP0_TX2_N       TYPEC0_SSRX2_N/DP0_TX2_N
+    64   TYPEC0_SSTX2_N/DP0_TX3_N       TYPEC0_SSTX2_N/DP0_TX3_N
+    67   TYPEC0_SBU1/DP0_AUX_P          TYPEC0_SBU1/DP0_AUX_P
+    68   TYPEC0_USB20_OTG_D_P           TYPEC0_USB20_OTG_D_P
+    69   TYPEC0_SBU2/DP0_AUX_N          TYPEC0_SBU2/DP0_AUX_N
+    70   TYPEC0_USB20_OTG_D_N           TYPEC0_USB20_OTG_D_N
+    73   TYPEC1_SBU1/DP0_AUX_P          TYPEC1_SBU1/DP0_AUX_P
+    74   TYPEC1_USB20_OTG_D_P           TYPEC1_USB20_OTG_D_P
+    75   TYPEC1_SBU2/DP0_AUX_N          TYPEC1_SBU2/DP0_AUX_N
+    76   TYPEC1_USB20_OTG_D_N           TYPEC1_USB20_OTG_D_N
+    79   TYPEC0_USB20_OTG_ID            TYPEC0_USB20_OTG_ID
+    80   TYPEC1_USB20_OTG_ID            TYPEC1_USB20_OTG_ID
+    83   RK_VCCIO5                      RK_VCCIO5
+    85   RK_VCCIO5                      RK_VCCIO5
+    89   RK_VCCIO4                      RK_VCCIO4
+    90   RK_VCCIO6                      RK_VCCIO6
+    91   RK_VCCIO4                      RK_VCCIO4
+    92   RK_VCCIO6                      RK_VCCIO6
+    95   VCC_1V8                        VCC_1V8
+    96   VCC_1V8                        VCC_1V8
+    97   VCC_1V8                        VCC_1V8
+    98   VCC_1V8                        VCC_1V8
+    99   VCC_1V8                        VCC_1V8
+   100   VCC_1V8                        VCC_1V8
+
+
+
+
+B.P4 连接器 P4（100pin）
+
+  引脚                          侧信号                               侧信号
+   1     HDMI_TX0_SBD_P/EDP_TX0_AUX_P   HDMI_TX0_SBD_P/EDP_TX0_AUX_P
+   2     HDMI_TX1_SBDP/EDP_TX1_AUXP     HDMI_TX1_SBDP/EDP_TX1_AUX_P
+   3     HDMI_TX0_SBD_N/EDP_TX0_AUX_N   HDMI_TX0_SBD_N/EDP_TX0_AUX_N
+   4     HDMI_TX1_SBDN/EDP_TX1_AUXN     HDMI_TX1_SBDN/EDP_TX1_AUX_N
+   7     HDMI0_TX3P_PORT/eDP0_TX_D3P    HDMI0_TX3P_PORT/eDP0_TX_D3_P
+   8     HDMI1_TX3P_PORT/eDP0_TX_D3P    HDMI1_TX3P_PORT/eDP0_TX_D3_P
+9    HDMI0_TX3N_PORT/eDP0_TX_D3N   HDMI0_TX3N_PORT/eDP0_TX_D3_N
+10   HDMI1_TX3N_PORT/eDP0_TX_D3N   HDMI1_TX3N_PORT/eDP0_TX_D3_N
+13   HDMI0_TX0P_PORT/eDP0_TX_D0P   HDMI0_TX0P_PORT/eDP0_TX_D0_P
+14   HDMI1_TX0P_PORT/eDP0_TX_D0P   HDMI1_TX0P_PORT/eDP0_TX_D0_P
+15   HDMI0_TX0N_PORT/eDP0_TX_D0N   HDMI0_TX0N_PORT/eDP0_TX_D0_N
+16   HDMI1_TX0N_PORT/eDP0_TX_D0N   HDMI1_TX0N_PORT/eDP0_TX_D0_N
+19   HDMI0_TX1P_PORT/eDP0_TX_D1P   HDMI0_TX1P_PORT/eDP0_TX_D1_P
+20   HDMI1_TX1P_PORT/eDP0_TX_D1P   HDMI1_TX1P_PORT/eDP0_TX_D1_P
+21   HDMI0_TX1N_PORT/eDP0_TX_D1N   HDMI0_TX1N_PORT/eDP0_TX_D1_N
+22   HDMI1_TX1N_PORT/eDP0_TX_D1N   HDMI1_TX1N_PORT/eDP0_TX_D1_N
+25   HDMI0_TX2P_PORT/eDP0_TX_D2P   HDMI0_TX2P_PORT/eDP0_TX_D2_P
+26   HDMI1_TX2P_PORT/eDP0_TX_D2P   HDMI1_TX2P_PORT/eDP0_TX_D2_P
+27   HDMI0_TX2N_PORT/eDP0_TX_D2N   HDMI0_TX2N_PORT/eDP0_TX_D2_N
+28   HDMI1_TX2N_PORT/eDP0_TX_D2N   HDMI1_TX2N_PORT/eDP0_TX_D2_N
+31   HDMI0_RX_CLK_P                HDMI0_RX_CLK_P
+32   HDMI0_RX1_P                   HDMI0_RX1_P
+33   HDMI0_RX_CLK_N                HDMI0_RX_CLK_N
+34   HDMI0_RX1_N                   HDMI0_RX1_N
+37   HDMI0_RX0_P                   HDMI0_RX0_P
+38   HDMI0_RX2_P                   HDMI0_RX2_P
+39   HDMI0_RX0_N                   HDMI0_RX0_N
+40   HDMI0_RX2_N                   HDMI0_RX2_N
+43   MIPI_DPHY1_RX_D0_P            MIPI_DPHY1_RX_D0_P
+44   MIPI_DPHY1_TX_D0_P            MIPI_DPHY1_TX_D0_P
+45   MIPI_DPHY1_RX_D0_N            MIPI_DPHY1_RX_D0_N
+46   MIPI_DPHY1_TX_D0_N            MIPI_DPHY1_TX_D0_N
+49   MIPI_DPHY1_RX_D1_P            MIPI_DPHY1_RX_D1_P
+50   MIPI_DPHY1_TX_D1_P            MIPI_DPHY1_TX_D1_P
+51   MIPI_DPHY1_RX_D1_N            MIPI_DPHY1_RX_D1_N
+52   MIPI_DPHY1_TX_D1_N            MIPI_DPHY1_TX_D1_N
+55   MIPI_DPHY1_RX_CLK0_P          MIPI_DPHY1_RX_CLK0_P
+56   MIPI_DPHY1_TX_CLK0_P          MIPI_DPHY1_TX_CLK0_P
+57   MIPI_DPHY1_RX_CLK0_N          MIPI_DPHY1_RX_CLK0_N
+58   MIPI_DPHY1_TX_CLK0_N          MIPI_DPHY1_TX_CLK0_N
+61   MIPI_DPHY1_RX_D2_P            MIPI_DPHY1_RX_D2_P
+62   MIPI_DPHY1_TX_D2_P            MIPI_DPHY1_TX_D2_P
+63   MIPI_DPHY1_RX_D2_N            MIPI_DPHY1_RX_D2_N
+64   MIPI_DPHY1_TX_D2_N            MIPI_DPHY1_TX_D2_N
+67   MIPI_DPHY1_RX_D3_P            MIPI_DPHY1_RX_D3_P
+68   MIPI_DPHY1_TX_D3_P            MIPI_DPHY1_TX_D3_P
+69   MIPI_DPHY1_RX_D3_N            MIPI_DPHY1_RX_D3_N
+70   MIPI_DPHY1_TX_D3_N            MIPI_DPHY1_TX_D3_N
+73   SARADC_IN5                    SARADC_VIN5_HW_ID
+74   B5_GPIO3_C1                   B5_GPIO3_C1
+75   SARADC_IN2                    SARADC_IN2
+76   B5_GPIO3_D4                   HDMI_TX1_HPD_M0
+77   SARADC_IN1                    RECOVERY_KEY
+78   B5_GPIO3_B2                   ENET0_RESET
+79   SARADC_IN0_BOOT               SARADC_IN0_BOOT
+80   B5_GPIO3_B6                   B5_GPIO3_B6
+81   SARADC_IN3                    SARADC_IN3
+82   B5_GPIO3_D1                   B5_GPIO3_D1
+83   SARADC_IN4                    SARADC_IN4
+84   B5_GPIO3_D0                   HDMI_TX1_SDA_M0
+85   SARADC_IN6                    SARADC_IN6
+86   B5_GPIO3_C7                   HDMI_TX1_SCL_M0
+87   SARADC_IN7                    SARADC_IN7
+90   B5_GPIO3_C5                   HDMI1_TX_SDA_M1
+91   USB20_HOST1_D_P               USB20_HOST1_D_P
+92   B5_GPIO3_C4                   HDMI1_TX_CEC_M1
+93   USB20_HOST1_D_N               USB20_HOST1_D_N
+94   B5_GPIO3_C6                   HDMI1_TX_SCL_M1
+96   B5_GPIO3_D5                   B5_GPIO3_D5
+97   USB20_HOST0_D_P               USB20_HOST0_D_P
+98   B5_GPIO3_B7                   HDMI1_TX_HPDIN_M1
+99   USB20_HOST0_D_N               USB20_HOST0_D_N
+   100   B5_GPIO3_C0                  B5_GPIO3_C0
+
+
+
+
+B.P5 连接器 P5（100pin）
+
+  引脚                            侧信号                          侧信号
+   3     MIPI_DPHY0_RX_D0_P           MIPI_DPHY0_RX_D0_P
+   4     MIPI_DPHY0_TX_D0_P           MIPI_DPHY0_TX_D0_P
+   5     MIPI_DPHY0_RX_D0_N           MIPI_DPHY0_RX_D0_N
+   6     MIPI_DPHY0_TX_D0_N           MIPI_DPHY0_TX_D0_N
+   9     MIPI_DPHY0_RX_D1_P           MIPI_DPHY0_RX_D1_P
+  10     MIPI_DPHY0_TX_D1_P           MIPI_DPHY0_TX_D1_P
+  11     MIPI_DPHY0_RX_D1_N           MIPI_DPHY0_RX_D1_N
+  12     MIPI_DPHY0_TX_D1_N           MIPI_DPHY0_TX_D1_N
+  15     MIPI_DPHY0_RX_CLK0_P         MIPI_DPHY0_RX_CLK0_P
+  16     MIPI_DPHY0_TX_CLK0_P         MIPI_DPHY0_TX_CLK0_P
+  17     MIPI_DPHY0_RX_CLK0_N         MIPI_DPHY0_RX_CLK0_N
+  18     MIPI_DPHY0_TX_CLK0_N         MIPI_DPHY0_TX_CLK0_N
+  21     MIPI_DPHY0_RX_D2_P           MIPI_DPHY0_RX_D2_P
+  22     MIPI_DPHY0_TX_D2_P           MIPI_DPHY0_TX_D2_P
+  23     MIPI_DPHY0_RX_D2_N           MIPI_DPHY0_RX_D2_N
+  24     MIPI_DPHY0_TX_D2_N           MIPI_DPHY0_TX_D2_N
+  27     MIPI_DPHY0_RX_D3_P           MIPI_DPHY0_RX_D3_P
+  28     MIPI_DPHY0_TX_D3_P           MIPI_DPHY0_TX_D3_P
+  29     MIPI_DPHY0_RX_D3_N           MIPI_DPHY0_RX_D3_N
+  30     MIPI_DPHY0_TX_D3_N           MIPI_DPHY0_TX_D3_N
+  33     MIPI_DPHY2_RX_CLK1_P         MIPI_DPHY2_RX_CLK1_P
+  34     MIPI_DPHY3_RX_CLK1_P         MIPI_DPHY3_RX_CLK1_P
+  35     MIPI_DPHY2_RX_CLK1_N         MIPI_DPHY2_RX_CLK1_N
+  36     MIPI_DPHY3_RX_CLK1_N         MIPI_DPHY3_RX_CLK1_N
+  39     MIPI_DPHY2_RX_D3_P           MIPI_DPHY2_RX_D3_P
+  40     MIPI_DPHY3_RX_D3_P           MIPI_DPHY3_RX_D3_P
+  41     MIPI_DPHY2_RX_D3_N           MIPI_DPHY2_RX_D3_N
+  42     MIPI_DPHY3_RX_D3_N           MIPI_DPHY3_RX_D3_N
+  45     MIPI_DPHY2_RX_D2_P           MIPI_DPHY2_RX_D2_P
+  46     MIPI_DPHY3_RX_D2_P           MIPI_DPHY3_RX_D2_P
+  47     MIPI_DPHY2_RX_D2_N           MIPI_DPHY2_RX_D2_N
+  48     MIPI_DPHY3_RX_D2_N           MIPI_DPHY3_RX_D2_N
+  51     MIPI_DPHY2_RX_CLK0_P         MIPI_DPHY2_RX_CLK0_P
+  52     MIPI_DPHY3_RX_CLK0_P         MIPI_DPHY3_RX_CLK0_P
+  53     MIPI_DPHY2_RX_CLK0_N         MIPI_DPHY2_RX_CLK0_N
+  54     MIPI_DPHY3_RX_CLK0_N         MIPI_DPHY3_RX_CLK0_N
+  57     MIPI_DPHY2_RX_D1_P           MIPI_DPHY2_RX_D1_P
+  58     MIPI_DPHY3_RX_D1_P           MIPI_DPHY3_RX_D1_P
+  59     MIPI_DPHY2_RX_D1_N           MIPI_DPHY2_RX_D1_N
+  60     MIPI_DPHY3_RX_D1_N           MIPI_DPHY3_RX_D1_N
+  63     MIPI_DPHY2_RX_D0_P           MIPI_DPHY2_RX_D0_P
+  64     MIPI_DPHY3_RX_D0_P           MIPI_DPHY3_RX_D0_P
+  65     MIPI_DPHY2_RX_D0_N           MIPI_DPHY2_RX_D0_N
+  66     MIPI_DPHY3_RX_D0_N           MIPI_DPHY3_RX_D0_N
+  69     ENET0_TX_DATA1               ENET0_TX_DATA1
+  70     ENET0_RX_DV                  ENET0_RX_DV
+  71     ENET0_TX_DATA2               ENET0_TX_DATA2
+  72     ENET0_RX_DATA0               ENET0_RX_DATA0
+  73     ENET0_GTX_CLK                ENET0_GTX_CLK
+  74     ENET0_RX_CLK                 ENET0_RX_CLK
+  75     ENET0_TX_DATA3               ENET0_TX_DATA3
+  76     ENET0_RX_DATA3               ENET0_RX_DATA3
+  77     ENET0_TX_EN                  ENET0_TX_EN
+  78     ENET0_RX_DATA1               ENET0_RX_DATA1
+  79     ENET0_TX_DATA0               ENET0_TX_DATA0
+  80     ENET0_RX_DATA2               ENET0_RX_DATA2
+  81     ENET0_MDC                    ENET0_MDC
+  83     ENET0_MDIO                   ENET0_MDIO
+  84     MGT_CLK1_P                   MGT_CLK1_P
+   85   ETH0_REFCLKO25M         ETH0_REFCLKO25M
+   86   MGT_CLK1_N              MGT_CLK1_N
+   89   MGT_RX3_P               SFP2_RX_P
+   90   MGT_RX2_P               SFP1_RX_P
+   91   MGT_RX3_N               SFP2_RX_N
+   92   MGT_RX2_N               SFP1_RX_N
+   95   MGT_TX3_P               SFP2_TX_P
+   96   MGT_TX2_P               SFP1_TX_P
+   97   MGT_TX3_N               SFP2_TX_N
+   98   MGT_TX2_N               SFP1_TX_N
+
+
+
+
+B.P6 连接器 P6（100pin）
+
+  引脚                      侧信号                      侧信号
+   3    B3_GPIO2_B4             I2C4_SDA_M1
+   4    B3_GPIO2_C5             B3_GPIO2_C5
+   5    B3_GPIO2_B5             I2C4_SCL_M1
+   6    B3_GPIO4_C3             BEEP
+   7    RESET_L                 RESET_L
+   8    B3_GPIO2_C4             HDMI0_RX_DET_L
+   9    PMU1_GPIO_A0            PMU1_GPIO_A0
+  10    PMU2_GPIO_C7            TYPEC0_SDA
+  11    PMU1_GPIO_B0            PMU1_GPIO_B0
+  12    PMU2_GPIO_D0            TYPEC0_SCL
+  13    PMU1_GPIO_B2            PMU1_GPIO_B2
+  14    PMU2_GPIO_D4            DSI0_CT_INT
+  15    PMU2_GPIO_C4            I2C4_SDA_M2
+  16    PMU2_GPIO_D5            DSI1_CT_INT
+  17    PMU2_GPIO_C5            I2C4_SCL_M2
+  18    PMU2_GPIO_D3            TYPEC0_INT_N
+  19    PMU2_GPIO_B5            UART2_TX_M0
+  20    PMU2_GPIO_C6            FAN_PWM
+  22    PMU2_GPIO_B6            UART2_RX_M0
+  23    B6_GPIO4_A5             I2C3_SDA_M2
+  24    B6_GPIO4_B5             CSI0_PWDN
+  25    B6_GPIO4_A4             I2C3_SCL_M2
+  26    B6_GPIO4_C1             HDMI_TX1_CEC_M0
+  27    B6_GPIO4_A7             PCIE30X2_WAKEn
+  28    B6_GPIO4_C0             PCIE_WAKEn
+  29    B6_GPIO4_A2             B6_GPIO4_A2
+  30    B6_GPIO4_B1             CSI1_PWDN
+  31    B6_GPIO4_A6             PCIE30X2_CLKREQn
+  32    B6_GPIO4_B2             HDMI1_TX_ON_H
+  33    B6_GPIO4_A3             TYPEC1_INT_N
+  34    B6_GPIO4_B3             HDMI0_TX_ON_H
+  35    B6_GPIO4_A1             B6_GPIO4_A1
+  36    B6_GPIO4_B0             PCIE30X2_PERSTn
+  37    B6_GPIO4_A0             B6_GPIO4_A0
+  38    B6_GPIO4_B4             DSI0_LCD_BL
+  39    B6_GPIO4_B7             PCIE_CLKREQn
+  40    B6_GPIO4_B6             DSI1_LCD_BL
+  43    B11_L23_N               B11_L23_N
+  44    B11_L25_N               B11_L25_N
+  45    B11_L23_P               B11_L23_P
+  46    B11_L25_P               B11_L25_P
+  47    B11_L27_N               B11_L27_N
+  48    B11_L33_N               IR
+  49    B11_L27_P               B11_L27_P
+  50    B11_L33_P               S4
+  51    B11_L31_N               B11_L31_N
+  52    B11_L29_N               S3
+  53    B11_L31_P               B11_L31_P
+  54    B11_L29_P               S2
+  55    B11_L43_N               B11_L43_N
+   56   B11_L45_N                 S1
+   57   B11_L43_P                 B11_L43_P
+   58   B11_L45_P                 S0
+   59   B11_L41_N                 B11_L41_N
+   60   B11_L37_N                 B11_L37_N
+   61   B11_L41_P                 B11_L41_P
+   62   B11_L37_P                 B11_L37_P
+   65   B11_L35_N                 B11_L35_N
+   66   B8_B91_N                  B8_B91_N
+   67   B11_L35_P                 B11_L35_P
+   68   B8_B91_P                  B8_B91_P
+   69   B11_L39_N                 B11_L39_N
+   70   B8_B89_N                  B8_B89_N
+   71   B11_L39_P                 B11_L39_P
+   72   B8_B89_P                  B8_B89_P
+   73   B8_B79_N                  B8_B79_N
+   74   B8_B77_N                  B8_B77_N
+   75   B8_B79_P                  B8_B79_P
+   76   B8_B77_P                  B8_B77_P
+   79   FPGA_TMS                  JTAG_TMS
+   80   FPGA_TCK                  JTAG_TCK
+   81   FPGA_TDO                  FPGA_TDO
+   82   FPGA_TDI                  JTAG_TDI
+   85   SDMMC_DET                 SD_CD
+   86   RECONFIG_N                RECONFIG_N
+   93   VCC5V0_SYS                VCC5V0_SYS
+   94   VCC5V0_SYS                VCC5V0_SYS
+   95   VCC5V0_SYS                VCC5V0_SYS
+   96   VCC5V0_SYS                VCC5V0_SYS
+   97   VCC5V0_SYS                VCC5V0_SYS
+   98   VCC5V0_SYS                VCC5V0_SYS
+   99   VCC5V0_SYS                VCC5V0_SYS
+  100   VCC5V0_SYS                VCC5V0_SYS
+
+
+
+
+附录 C 主要器件清单（BOM 摘要）
+
+  以下为主要功能器件的位号与型号，供维修与替代选型参考。
+
+C.1 核心板主要器件
+  位号                    型号 / 说明                          封装
+  P1      AXK500137YG               conn-smd_100p_axk500137yg
+  P2      AXK500137YG               conn-smd_100p_axk500137yg
+  P3      AXK500137YG               conn-smd_100p_axk500137yg
+  P4      AXK500137YG               conn-smd_100p_axk500137yg
+  P5      AXK500137YG               conn-smd_100p_axk500137yg
+  P6      AXK500137YG               conn-smd_100p_axk500137yg
+  U1      RK3588                    BGA1088_23R00X23R00X2R00
+  U2      SiT9121-100M              TCXO3225_6P
+  U3      K4F8E3S4HD-GHCL           BGA200_15R00X10R00X0R90
+  U4      K4F8E3S4HD-GHCL           BGA200_15R00X10R00X0R90
+  U5      FEMDRM008G-58A39          fbga153
+  U6      ETA3409                   SOT-23-5
+  U7      RK860-2                   WLCSP-20
+  U8      RK860-3                   WLCSP-20
+  U9      RK860-2                   WLCSP-20
+  Y1      24M_passive               X4-3225
+  U10     GW5AT-LV60PG484A          FBGA-484
+  U11     SiT9121-200M              TCXO3225_6P
+  U12     50M_Active                X4-3225
+  U13   W25Q128JVSIQ              SO8W
+  U14   DNI/SiT9121-200M          TCXO3225_6P
+  U15   MT41K128M16T-125          BGA96-7r5x13r3mm
+  U16   MT41K128M16T-125          BGA96-7r5x13r3mm
+  U17   TPS51200DRCR              VSON10-050-0303
+  U18   TPS563201                 SOT-23-6
+  U19   TPS563201                 SOT-23-6
+  U20   TPS563201                 SOT-23-6
+  U21   TPS563201                 SOT-23-6
+  U22   TPS7A8400ARGRR            VQFN-20-EP-3_5X3_5
+  U23   TPS7A8400ARGRR            VQFN-20-EP-3_5X3_5
+  U24   TPS7A8400ARGRR            VQFN-20-EP-3_5X3_5
+  U25   RK806-1                   QFN68_7R00X7R00X0R80_T
+
+
+
+
+C.2 底板主要器件
+  位号                    型号 / 说明                        封装
+   J1   MicroSD_SOCKET            MicroSD_SOCKET
+   J2   KH-TYPE-C-16P             USB_Type-c
+   J3   RJ45_HR911130A            RJ45_HR911130C
+   J4   PCI X1 EXPRESS            CONN-TH_36P-P1_00-V_3183
+   J5   HDMI                      HDMI_A
+   J6   HDMI                      HDMI_A
+   J7   HDMI                      HDMI_A
+   J8   HC-USB3.0-L257-P          USB-3_0-A-TH_HC-ST-003-03-J-B
+   P1   AXK600337YG               conn-smd_100p_axk600337yg
+   P2   AXK600337YG               conn-smd_100p_axk600337yg
+   P3   AXK600337YG               conn-smd_100p_axk600337yg
+   P4   AXK600337YG               conn-smd_100p_axk600337yg
+   P5   AXK600337YG               conn-smd_100p_axk600337yg
+   P6   AXK600337YG               conn-smd_100p_axk600337yg
+   P7   Header 20X2               HDR2X20
+   P8   Header 5X2                HDR2X5
+   P9   Header 4                  hdr-th_4p-p1_27-v-f
+   S1   SS_12D0691P2T             3PINSWITCH
+   S2   NDI-08H-V                 sw-smd_16p-l21r8-w7-p2r54
+   S3   6*6*11                    SW-SMD_4P-L4_2-W3_3-P2_15
+   S4   6*6*11                    SW-SMD_4P-L4_2-W3_3-P2_15
+   S5   6*6*11                    SW-SMD_4P-L4_2-W3_3-P2_15
+   S6   6*6*11                    SW-SMD_4P-L4_2-W3_3-P2_15
+   S7   6*6*11                    SW-SMD_4P-L4_2-W3_3-P2_15
+   S8   SW-PB                     sw4-DIP
+   S9   SW-PB                     sw4-DIP
+   U1   SN74LVC125APWR            TSSOP-14
+   U2   SN74LVC1G3157DBVR         SOT-23-6
+   U3   SRV05-4                   SOT-23-6
+   U4   SRV05-4                   SOT-23-6
+   U5   SRV05-4                   SOT-23-6
+   U6   SRV05-4                   SOT-23-6
+   U7   SRV05-4                   SOT-23-6
+   U8   SRV05-4                   SOT-23-6
+   U9   SRV05-4                   SOT-23-6
+   Y1   12M_passive               X4-3225
+   Y2   8M_passive                X4-3225
+   Y3   25M_passive               X4-3225
+   Y4   32.768K                   MC-146
+  BT1   CR1220                    CR1220
+  DC1   DC-002-13A                DS-0205-2_0
+  IN1   LI                        PJ-315-Y
+  LS1   BUZZER2                   beep09x05
+  P10   Header 12X2               HDR2X12
+ P11   Header 4                    HDR1X4
+ P13   Header 6                    HDR1X6
+ P14   15-24-4449                  C5081WV-4P
+ P15   Header 2                    conn-th_2p-p2_50_hc-xh-2a-g
+ P16   ASP-134603-01               SAMTEC_ASP-134603-01
+ P17   Header 20                   46012-000001
+ P18   Header 20                   46012-000001
+ P19   Header 15X2                 HDR2X15
+ P20   A2005WV-2X4P                hdr-th_8p-p2_00-v-m-r2-c4-s2_00
+ S10   SW-PB                       sw4-DIP
+ S11   SW-PB                       sw4-DIP
+ S12   SW-PB                       sw4-DIP
+ S13   SW-PB                       sw4-DIP
+ U10   SRV05-4                     SOT-23-6
+ U11   SRV05-4                     SOT-23-6
+ U12   SL2.1S                      SSOP-16_L4_6-W2_6-P0_53-LS4_0
+ U13   JTAG18M02HS2                TSSOP20
+ U14   SN74AVC4T774PWR             TSSOP16-0R65-4R4MM
+ U15   CH340E                      msop-10
+ U16   SRV05-4                     SOT-23-6
+ U17   PCA9546APWR(UMW)            TSSOP-16
+ U18   XC6206P332MR                SOT-23
+ U19   YT8531C-CA                  qfn-40_l5_0-w5_0-p0_4-bl-ep
+ U20   M2_Mkey                     ngff_topmount_key_m_h3p2mm_2280
+ U21   SiT9121-100MHZ              TCXO3225_6P
+ U22   SFP Connector               1367073-1
+ U23   AP2127K-ADJ                 SOT23-5
+ U24   DNI/SG3225VAN 125MHZ KEGA   TCXO3225_6P
+ U25   SRV05-4                     SOT-23-6
+ U26   SRV05-4                     SOT-23-6
+ U27   SRV05-4                     SOT-23-6
+ U28   SRV05-4                     SOT-23-6
+ U29   SRV05-4                     SOT-23-6
+ U30   SRV05-4                     SOT-23-6
+ U31   SN74AVC4T774PWR             TSSOP16-0R65-4R4MM
+ U32   SN74AVC4T774PWR             TSSOP16-0R65-4R4MM
+ U33   FUSB302BMPX                 WFQFN-14-2_5x2_5
+ U34   DIO7002AST5                 SOT-23-5
+ U35   SN74AVC4T774PWR             TSSOP16-0R65-4R4MM
+ U36   SN74AVC4T774PWR             TSSOP16-0R65-4R4MM
+ U37   SRV05-4                     SOT-23-6
+ U38   DIO7002AST5                 SOT-23-5
+ U39   FUSB302BMPX                 WFQFN-14-2_5x2_5
+ U40   SRV05-4                     SOT-23-6
+ U41   DIO7002AST5                 SOT-23-5
+ U42   DIO7002AST5                 SOT-23-5
+ U43   SRV05-4                     SOT-23-6
+ U44   TPS548B28RWWR               TQFN-21_L4_0-W3_0-P0_40-TL
+ U46   ES8388                      QFN-28_L4_0-W4_0-P0_45-BL-EP
+ U47   SN74AVC8T245PWR             TSSOP-24_L7_8-W4_4-P0_65-BL
+ U48   RT9193-33GB                 SOT-23-5
+ U49   24LC64                      SOIC8
+ U50   BM8563T                     SOIC8
+ U51   SRV05-4                     SOT-23-6
+ U45   CH9102F                     QFN-24
+ U53   PCA9306DP1_125              TSSOP8
+ U54   PCA9306DP1_125              TSSOP8
+ U55   SFP Connector               1367073-1
+ U56   DNI/SG3225VAN 125MHZ        TCXO3225_6P
+CON1   SATA_CON_7P                 sata_7p_50_2hold_winwin_lf3
+FPC1   FPC 1*24                    FPC-SMD_24P-P0_50_FPC-05F-H20
+FPC2   FPC 1*24                    FPC-SMD_24P-P0_50_FPC-05F-H20
+    FPC3     AFC01-S26FCC-00                          FPC-SMD_AFC01-S26FCC-00
+    FPC4     FPC 1*24                                 FPC-SMD_24P-P0_50_FPC-05F-H20
+    FPC5     FPC 1*24                                 FPC-SMD_24P-P0_50_FPC-05F-H20
+    FPC6     AFC01-S26FCC-00                          FPC-SMD_AFC01-S26FCC-00
+   OUT1      LI                                       PJ-315-PK
+   USB0      GT-USB-7001B                             USB-C-SMD_GT-USB-7001B
+   USB1      GT-USB-7001B                             USB-C-SMD_GT-USB-7001B
+ USB_HOST1   USB                                      usb-a_s_e
+
+
+
+
+附录 D 术语与缩写
+
+       缩写                                                   全称 / 含义
+      SOM            System On Module，核心板
+        CB           Carrier Board，底板 / 载板
+      FPGA           Field Programmable Gate Array，现场 编程门阵列
+      PMIC           Power Management IC，电源管理芯片
+      PMU            Power Management Unit
+      RGMII          Reduced Gigabit Media Independent Interface，精简千兆媒体             接口
+      MGT            Multi-Gigabit Transceiver（本文中指标 FPGA 的硬核收发器通 ）
+  BSRAM / SSRAM      Block SRAM（块 SRAM）/ Shadow SRAM（分布式 SRAM）
+       DSP           Digital Signal Processing Block，数字信号处理单元
+       LUT           Look-Up Table，查找表，FPGA 的基本逻辑单元
+      LVDS           Low-Voltage Differential Signaling，低压差分信号
+     DSI / CSI       Display Serial Interface / Camera Serial Interface（MIPI 显示 / 摄像接口）
+     FMC LPC         FPGA Mezzanine Card，Low Pin Count 版本，标 FPGA 子卡接口
+  VADJ / VCCADJ      FMC 子卡 调 IO 供电电压，本板由 U23 生
+      MSPI           Master SPI，FPGA 从串行 Flash 加载配置的模式
+       DNI           Do Not Install，默认不贴装
+      NVMe           Non-Volatile Memory express，基于 PCIe 的固 存储协议
+       SFP           Small Form-factor Pluggable，小型 插拔光模块接口
+       HPD           Hot Plug Detect，热插拔检测
+        PD           USB Power Delivery，USB 供电协议
+
+
+
+
+                                        —— 全文完 ——
+

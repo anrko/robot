@@ -14,6 +14,8 @@ def capture(port: str, destination: Path, scale: int) -> None:
             line = link.readline().strip()
             if line.startswith(b"CAL="):
                 print(line.decode("ascii", errors="replace"))
+            if line.startswith(b"BUS "):
+                print(line.decode("ascii", errors="replace"))
             if line == b"FRAME 64 64 RGB565":
                 break
 

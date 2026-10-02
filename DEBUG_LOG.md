@@ -407,6 +407,76 @@ specific failing DDR signal or calibration stage.
   and synchronization must be checked before declaring the full video path
   pixel-accurate.
 
+## 2026-09-29: Frame-geometry correction candidate
+
+- Created Git repository and committed the last hardware-proven DDR state as
+  `f3183f8` (`baseline: DDR3 calibration and UART frame capture working`).
+  Gowin implementation output and regenerable IP/temp files are ignored.
+- Reviewed IPUG769-2.1E and Gowin's current official VFB DDR3 reference design.
+  The VFB does not have an image-resolution setting; frame length is inferred
+  from continuous input/output DE and VS. The manual requires active-low VS,
+  continuous DE within each line, and states that `O_vout0_den/data` are two
+  `I_vout0_clk` cycles behind `I_vout0_de`.
+- The previous design used the same 75 MHz clock and phase-related timing for
+  both producer and consumer. Gowin's DDR3 VFB reference instead generates the
+  input test pattern from the board input clock and reads it with a separate
+  pixel PLL clock. Changed the producer to 50 MHz (`clk`) while retaining the
+  75 MHz output clock. This also tests the asynchronous line FIFOs as intended
+  and avoids simultaneous frame-boundary pointer activity.
+- Delayed the debug/center-probe X/Y coordinates by two output clocks to match
+  VFB's documented `O_vout0_den/data` latency. Expanded the timing generator's
+  coordinates from 10 to 11 bits so all 1280 horizontal positions are
+  representable. Added explicit arithmetic widths and connected unused DDR
+  self-refresh/refresh acknowledgements to named wires, removing all synthesis
+  warnings from project RTL.
+- Updated the UART simulation for the extended diagnostic status line. Icarus
+  simulation passes with 4096 RGB565 pixels and 16,653 UART bytes.
+- Final Gowin V1.9.12.03 build completed synthesis, placement, routing, timing
+  analysis, and bitstream generation at 2026-09-29 22:51:08. Synthesis reports
+  no RTL warnings. Existing PnR warnings `TA1132` and `PR1014` remain. Output:
+  `impl/pnr/gowin.fs`, 19,479,211 bytes, SHA-256
+  `70A5F50C198EF737CF5C7DC4AC6B9F72A7807A5EB9155164B96086E392EC0B28`.
+
+### Hardware test and expected result
+
+1. Program the 22:51:07 `impl/pnr/gowin.fs`, fully power-cycle, then run
+   `python .\tools\capture_debug_frame.py COM14`.
+2. DDR must remain healthy: expect `CAL=1`, `COUNT=1000`, `PLL=1`, `PD=00`,
+   followed by a saved `debug_frame.png`.
+3. The source's mode 000 is eight vertical bars, each 160 pixels wide. The
+   64x64 crop covers x=608..671 and y=328..391, crossing the x=640 boundary.
+   The correct image is therefore a vertical split: left 32 columns green
+   (`07E0`), right 32 columns magenta (`F81F`), with no horizontal bands.
+4. If that exact split appears, commit this candidate as the video-geometry
+   fix. If horizontal bands remain, retain the raw image and checksum and move
+   to direct input-versus-output coordinate signatures; do not modify the
+   proven DDR PLL/PHY configuration.
+
+### 2026-09-29 repeated capture and FIFO diagnostic build
+
+- With the 22:51:07 candidate still programmed, captured three consecutive
+  crops directly from COM14 without resetting the board. DDR status was
+  identical and healthy each time (`CAL=1`, `COUNT=1000`, `PLL=1`, `PD=00`),
+  but checksums changed: `07D3`, `C7D2`, and `92AB`.
+- The three images contain different horizontal color regions and short
+  pixel/chunk-period patterns. This disproves a single fixed two-clock offset
+  as the whole cause. The failure is dynamic above the calibrated DDR PHY;
+  likely candidates are VFB input FIFO overflow, output FIFO underflow, frame
+  pointer switching, or memory-interface burst transfer loss.
+- Added saturating VFB event counters to the UART status:
+  `UF` counts output active-pixel requests made while `O_vout0_fifo_empty=1`;
+  `OF` counts valid input pixels arriving while `O_vin0_fifo_full=1`.
+  Both reset on board reset and saturate at `FFFF`.
+- UART regression passes with the expanded 127-character status line, 4096
+  RGB565 pixels, and 16,669 total bytes.
+- Diagnostic build completed at 2026-09-29 23:11:12. Output
+  `impl/pnr/gowin.fs`, 19,840,123 bytes, SHA-256
+  `B8A02764816C53A206487F64004040EC2ADFA5B7176FC94299759E1ABA35A94C`.
+  Program this image, fully power-cycle, and capture a line containing
+  `UF=xxxx OF=xxxx`. `UF>0,OF=0` identifies read starvation; `OF>0,UF=0`
+  identifies write-side backpressure loss; both zero moves the next test to
+  command/data beat accounting at the VFB-DDR interface.
+
 ## 2026-09-29: Two additional DDR3 reference projects reviewed
 
 - `C:\Users\HP\Desktop\gowin\gowin\ddr3_ctrl` has a project file targeting
@@ -478,3 +548,73 @@ specific failing DDR signal or calibration stage.
   provide new evidence that the present ACG138 calibration failure is caused
   by RTL versus pins, voltage, clock, or signal integrity. Continue using the
   ACG138 schematic and direct CK/DQS checks as the ground truth.
+
+## 2026-09-29 23:40: VFB-DDR bus-counter diagnostic build
+
+- After the user programmed and power-cycled, a COM14 capture still reported
+  `CAL=1 COUNT=1000 PLL=1 ... UF=FFFF OF=FFFF` and checksum `0B4E`, but no
+  `BUS` line. File timestamps and SHA-256 established that the programmed
+  image was the earlier 23:11 FIFO diagnostic build
+  (`B8A02764816C53A206487F64004040EC2ADFA5B7176FC94299759E1ABA35A94C`).
+  The user procedure was correct; the bus-counter source changes had not yet
+  been built into a bitstream.
+- Added six free-running counters at the VFB/DDR user interface: write command
+  requests/accepts (`WQ`/`WA`), read command requests/accepts (`RQ`/`RA`),
+  accepted write-data beats (`WD`), and returned read-data beats (`RD`). UART
+  emits them as a separate 77-byte line before each captured frame.
+- Extended the UART regression to verify every counter field and the shifted
+  frame payload. Icarus simulation passes with 16,746 UART bytes and all 4096
+  RGB565 pixels.
+- Full Gowin synthesis, placement, routing, timing analysis, and bitstream
+  generation completed successfully at 23:39:45. New output:
+  `impl/pnr/gowin.fs`, 19,840,123 bytes, SHA-256
+  `669042C9A71B2CEB7DC556B92A4E3B2EDC0DCB22298ADEAD2917622EB294A79A`.
+- The build has no errors. It retains `TA1132` for an internal DDR PHY divided
+  clock and `PR1014` for constrained signal `clk_d` using generic clock routing.
+  The report still has no user timing-constraint file; these are existing
+  timing-quality concerns, not blockers for this short hardware diagnostic.
+- Next hardware action: program the 23:39:44 `gowin.fs`, power-cycle, and run
+  `python .\\tools\\capture_debug_frame.py COM14 --output debug_bus_diag.png`.
+  Expected output includes a second line beginning `BUS WQ=`. Compare two
+  consecutive runs by counter deltas, because unsynchronized multi-bit samples
+  can occasionally tear while the counters are changing.
+
+## 2026-09-30 00:17: Invalid VFB burst lengths found and corrected
+
+- Confirmed the 23:39 bus-counter image was programmed: COM14 now emitted the
+  expected `BUS` line. Four captures retained healthy DDR PHY state
+  (`CAL=1`, `PLL=1`, `PD=00`, `RE=02`) but different frame checksums (`013A`,
+  `235E`, `936D`, `8FB7`) and saturated `UF=FFFF OF=FFFF`.
+- Between the first two coherent samples, counter deltas were:
+  `WQ=11,113,152`, `WA=11,112,480`, `RQ=14,121,405`,
+  `RA=14,114,065`, `WD=11,113,200`, `RD=99,709,397`.
+  Thus write commands/data and read command acceptance were active and nearly
+  one-to-one, while returned read-valid cycles were about 7.06 times accepted
+  read commands. This localized the fault above the calibrated DDR PHY.
+- IPUG281-2.2 confirms that a DDR3 1:4, BL8 user transaction uses one 256-bit
+  write-data cycle and a read result is returned in command order. It also
+  confirms `burst` only selects BC4/BL8 in 1:2 OTF mode, so the top-level
+  constant on this optimized-away input is not the cause.
+- IPUG769-2.0 lists DDR3 VFB `Write Burst Length` and `Read Burst Length` legal
+  values as 64 or 128. The project's VFB IPC was incorrectly generated with
+  both values set to 16. Gowin's DDR3 VFB reference uses 64/64. This is the
+  first configuration mismatch that directly explains simultaneous FIFO
+  overflow/underflow despite an active DDR user interface.
+- Changed `src/video_frame_buffer/video_frame_buffer.ipc` to 64/64 and made the
+  same change in the retained generator macro file. Re-ran the exact generated
+  `VFB.prj` with GowinSynthesis 1.9.12.03 for
+  `GW5AT-LV60PG484AC1/I0`, then installed the resulting VFB netlist. This does
+  not use the 138K reference netlist and does not modify the validated DDR3 IP.
+- VFB generation completed without errors. It retains vendor encrypted-core
+  warnings `EX3791`, `EX3670`, and unused `I_rd_data_end` warning `CV0016`.
+  The UART regression still passes all 16,746 bytes and 4096 RGB565 pixels.
+- Full top-level synthesis, place, route, timing analysis, and bitstream
+  generation completed at 00:16:44. New output:
+  `impl/pnr/gowin.fs`, 19,984,491 bytes, SHA-256
+  `9CAD756666C9AB5C2A12E953A2263822C2D047F9E51F0E19BF804D4FC79D6228`.
+  Existing `TA1132` and `PR1014` timing-quality warnings remain; there are no
+  build errors.
+- Hardware acceptance criteria for this candidate: after programming and a
+  full power cycle, `CAL` must remain 1; `UF`/`OF` should no longer rapidly
+  saturate; consecutive image checksums should become identical; and BUS
+  counter deltas should have `WQ~WA~WD` and `RQ~RA~RD`.

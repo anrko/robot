@@ -10,3 +10,4 @@ src/**/temp/
 # Local runtime caches
 __pycache__/
 *.pyc
+/tmp/

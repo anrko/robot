@@ -13,6 +13,14 @@ module frame_debug_uart #(
     input wire [15:0] dbg_vector2,
     input wire [11:0] dbg_vector3,
     input wire [31:0] dbg_vector4,
+    input wire [15:0] vfb_overflow_count,
+    input wire [15:0] vfb_underflow_count,
+    input wire [31:0] write_cmd_req_count,
+    input wire [31:0] write_cmd_accept_count,
+    input wire [31:0] read_cmd_req_count,
+    input wire [31:0] read_cmd_accept_count,
+    input wire [31:0] write_data_accept_count,
+    input wire [31:0] read_data_count,
     input wire frame_vs,
     input wire pixel_valid,
     input wire [9:0] pixel_x,
@@ -30,6 +38,7 @@ module frame_debug_uart #(
     localparam ROW_CR = 3'd4;
     localparam ROW_LF = 3'd5;
     localparam TRAILER = 3'd6;
+    localparam BUS_DIAG = 3'd7;
 
     reg [15:0] crop [0:4095];
     reg [15:0] read_pixel;
@@ -48,6 +57,11 @@ module frame_debug_uart #(
     reg [15:0] dbg2_meta, dbg2_sync;
     reg [11:0] dbg3_meta, dbg3_sync;
     reg [31:0] dbg4_meta, dbg4_sync;
+    reg [15:0] overflow_meta, overflow_sync;
+    reg [15:0] underflow_meta, underflow_sync;
+    reg [31:0] wcq_meta, wcq_sync, wca_meta, wca_sync;
+    reg [31:0] rcq_meta, rcq_sync, rca_meta, rca_sync;
+    reg [31:0] wda_meta, wda_sync, rdd_meta, rdd_sync;
     reg [31:0] second_counter;
     reg stop_prev;
     reg stop_low_seen;
@@ -68,6 +82,23 @@ module frame_debug_uart #(
         input [3:0] value;
         begin
             hex_char = value < 10 ? 8'h30 + value : 8'h41 + value - 10;
+        end
+    endfunction
+
+    function [7:0] hex32_char;
+        input [31:0] value;
+        input [2:0] digit;
+        begin
+            case (digit)
+                3'd0: hex32_char = hex_char(value[31:28]);
+                3'd1: hex32_char = hex_char(value[27:24]);
+                3'd2: hex32_char = hex_char(value[23:20]);
+                3'd3: hex32_char = hex_char(value[19:16]);
+                3'd4: hex32_char = hex_char(value[15:12]);
+                3'd5: hex32_char = hex_char(value[11:8]);
+                3'd6: hex32_char = hex_char(value[7:4]);
+                default: hex32_char = hex_char(value[3:0]);
+            endcase
         end
     endfunction
 
@@ -193,10 +224,53 @@ module frame_debug_uart #(
                 106: uart_data = "=";
                 107: uart_data = hex_char(drst_edges[7:4]);
                 108: uart_data = hex_char(drst_edges[3:0]);
-                109: uart_data = 8'h0d;
-                110: uart_data = 8'h0a;
+                109: uart_data = " ";
+                110: uart_data = "U";
+                111: uart_data = "F";
+                112: uart_data = "=";
+                113: uart_data = hex_char(underflow_sync[15:12]);
+                114: uart_data = hex_char(underflow_sync[11:8]);
+                115: uart_data = hex_char(underflow_sync[7:4]);
+                116: uart_data = hex_char(underflow_sync[3:0]);
+                117: uart_data = " ";
+                118: uart_data = "O";
+                119: uart_data = "F";
+                120: uart_data = "=";
+                121: uart_data = hex_char(overflow_sync[15:12]);
+                122: uart_data = hex_char(overflow_sync[11:8]);
+                123: uart_data = hex_char(overflow_sync[7:4]);
+                124: uart_data = hex_char(overflow_sync[3:0]);
+                125: uart_data = 8'h0d;
+                126: uart_data = 8'h0a;
                 default: uart_data = 8'h20;
             endcase
+            BUS_DIAG: begin
+                case (char_index)
+                    0: uart_data = "B"; 1: uart_data = "U"; 2: uart_data = "S";
+                    4: uart_data = "W"; 5: uart_data = "Q"; 6: uart_data = "=";
+                    16: uart_data = "W"; 17: uart_data = "A"; 18: uart_data = "=";
+                    28: uart_data = "R"; 29: uart_data = "Q"; 30: uart_data = "=";
+                    40: uart_data = "R"; 41: uart_data = "A"; 42: uart_data = "=";
+                    52: uart_data = "W"; 53: uart_data = "D"; 54: uart_data = "=";
+                    64: uart_data = "R"; 65: uart_data = "D"; 66: uart_data = "=";
+                    75: uart_data = 8'h0d;
+                    76: uart_data = 8'h0a;
+                    default: begin
+                        if (char_index >= 7 && char_index <= 14)
+                            uart_data = hex32_char(wcq_sync, char_index - 7);
+                        else if (char_index >= 19 && char_index <= 26)
+                            uart_data = hex32_char(wca_sync, char_index - 19);
+                        else if (char_index >= 31 && char_index <= 38)
+                            uart_data = hex32_char(rcq_sync, char_index - 31);
+                        else if (char_index >= 43 && char_index <= 50)
+                            uart_data = hex32_char(rca_sync, char_index - 43);
+                        else if (char_index >= 55 && char_index <= 62)
+                            uart_data = hex32_char(wda_sync, char_index - 55);
+                        else if (char_index >= 67 && char_index <= 74)
+                            uart_data = hex32_char(rdd_sync, char_index - 67);
+                    end
+                endcase
+            end
             HEADER: case (char_index)
                 0: uart_data = "F";
                 1: uart_data = "R";
@@ -276,6 +350,13 @@ module frame_debug_uart #(
             dbg3_sync <= 0;
             dbg4_meta <= 0;
             dbg4_sync <= 0;
+            overflow_meta <= 0;
+            overflow_sync <= 0;
+            underflow_meta <= 0;
+            underflow_sync <= 0;
+            wcq_meta <= 0; wcq_sync <= 0; wca_meta <= 0; wca_sync <= 0;
+            rcq_meta <= 0; rcq_sync <= 0; rca_meta <= 0; rca_sync <= 0;
+            wda_meta <= 0; wda_sync <= 0; rdd_meta <= 0; rdd_sync <= 0;
             stop_prev <= 0;
             stop_low_seen <= 0;
             stop_edges <= 0;
@@ -296,6 +377,16 @@ module frame_debug_uart #(
             dbg3_sync <= dbg3_meta;
             dbg4_meta <= dbg_vector4;
             dbg4_sync <= dbg4_meta;
+            overflow_meta <= vfb_overflow_count;
+            overflow_sync <= overflow_meta;
+            underflow_meta <= vfb_underflow_count;
+            underflow_sync <= underflow_meta;
+            wcq_meta <= write_cmd_req_count; wcq_sync <= wcq_meta;
+            wca_meta <= write_cmd_accept_count; wca_sync <= wca_meta;
+            rcq_meta <= read_cmd_req_count; rcq_sync <= rcq_meta;
+            rca_meta <= read_cmd_accept_count; rca_sync <= rca_meta;
+            wda_meta <= write_data_accept_count; wda_sync <= wda_meta;
+            rdd_meta <= read_data_count; rdd_sync <= rdd_meta;
             stop_prev <= diag_sync[1];
             pll_prev <= diag_sync[3];
             drst_prev <= diag_sync[0];
@@ -332,7 +423,11 @@ module frame_debug_uart #(
                 end
             end else if (uart_send) begin
                 case (state)
-                    STATUS: if (char_index == 110) begin
+                    STATUS: if (char_index == 126) begin
+                        char_index <= 0;
+                        state <= BUS_DIAG;
+                    end else char_index <= char_index + 1'b1;
+                    BUS_DIAG: if (char_index == 76) begin
                         char_index <= 0;
                         if (complete) state <= HEADER;
                         else state <= WAIT_FRAME;

@@ -9,6 +9,10 @@ module top #(
     // 状态指示灯
     output [7:0]           state_led,
     output                 uart_tx,
+    // FPGA -> RK3588 GMAC1, board-level RGMII connection (no cable needed)
+    output                 rgmii_tx_clk,
+    output [3:0]           rgmii_txd,
+    output                 rgmii_tx_ctl,
 
     // DDR3L 接口 (必须重新生成为 32-bit DDR3L)
     output [15-1:0]        ddr_addr,     // DDR address pins A[14:0]
@@ -119,7 +123,7 @@ module top #(
     wire [7:0]  tp0_data_b;
 
     testpattern testpattern_inst_1280 (
-        .I_pxl_clk   (video_clk),
+        .I_pxl_clk   (clk),
         .I_rst_n     (rst_n),
         .I_mode      (3'b000),      // 000 为彩条模式
         .I_single_r  (8'd255),
@@ -144,16 +148,32 @@ module top #(
     );
 
     // 封装写端数据：RGB565 格式
-    wire fb_vin_clk   = video_clk;
+    // Match Gowin's VFB reference topology: producer and consumer use
+    // independent clocks so their frame-pointer updates cannot be coincident.
+    wire fb_vin_clk   = clk;
     wire fb_vin_vsync = tp0_vs_in;
     wire fb_vin_de    = tp0_de_in;
     wire [15:0] fb_vin_data = {tp0_data_r[7:3], tp0_data_g[7:2], tp0_data_b[7:3]};
+
+    // First Ethernet bring-up intentionally bypasses DDR.  The sender buffers
+    // each RGB565 line in an asynchronous FIFO and emits one UDP packet/line.
+    rgb565_udp_sender rgb565_udp_sender_inst (
+        .clk50       (clk),
+        .rst_n       (rst_n),
+        .pixel_data  (fb_vin_data),
+        .pixel_valid (fb_vin_de),
+        .rgmii_tx_clk(rgmii_tx_clk),
+        .rgmii_txd   (rgmii_txd),
+        .rgmii_tx_ctl(rgmii_tx_ctl)
+    );
 
 
     // ==========================================
     // 3. 后端消费者：读时序发生器 (未来被 PCIe DMA 替代)
     // ==========================================
     wire [10:0]  lcd_x, lcd_y;
+    reg  [10:0]  lcd_x_d1, lcd_x_d2;
+    reg  [10:0]  lcd_y_d1, lcd_y_d2;
     wire        syn_off0_hs, syn_off0_vs;
     wire        out_de;
 
@@ -179,11 +199,31 @@ module top #(
         .de         (out_de)
     );
 
+    // VFB specifies O_vout0_den/data two clocks after I_vout0_de. Delay the
+    // requested coordinates by the same amount before probing returned data.
+    always @(posedge video_clk or negedge rst_n) begin
+        if (!rst_n) begin
+            lcd_x_d1 <= 11'd0;
+            lcd_x_d2 <= 11'd0;
+            lcd_y_d1 <= 11'd0;
+            lcd_y_d2 <= 11'd0;
+        end else begin
+            lcd_x_d1 <= lcd_x;
+            lcd_x_d2 <= lcd_x_d1;
+            lcd_y_d1 <= lcd_y;
+            lcd_y_d2 <= lcd_y_d1;
+        end
+    end
+
     // ==========================================
     // 4. 数据缓存中心 (Video Frame Buffer & DDR3L)
     // ==========================================
     wire        off0_syn_de;
     wire [15:0] off0_syn_data;
+    wire        vfb_vin_fifo_full;
+    wire        vfb_vout_fifo_empty;
+    reg  [15:0] vfb_overflow_count;
+    reg  [15:0] vfb_underflow_count;
     wire ddr_internal_rst;
     wire [7:0] ddr_dbg_vector1;
     wire [15:0] ddr_dbg_vector2;
@@ -192,14 +232,42 @@ module top #(
 
     // 连接 VFB 与 DDR3 的 AXI 握手信号
     wire        cmd_ready, cmd_en, wr_data_rdy, wr_data_en, wr_data_end, rd_data_valid, rd_data_end;
+    wire        ddr_sr_ack, ddr_ref_ack;
     wire [2:0]  cmd;
     wire [27:0] addr;
     wire [255:0] wr_data;  // 数据位宽依您生成的 DDR IP 而定，32位通常配 256
     wire [31:0]  wr_data_mask;
     wire [255:0] rd_data;
+    reg [31:0] write_cmd_req_count, write_cmd_accept_count;
+    reg [31:0] read_cmd_req_count, read_cmd_accept_count;
+    reg [31:0] write_data_accept_count, read_data_count;
     wire [13:0] ddr_addr_core;
     assign ddr_addr[13:0] = ddr_addr_core;
     assign ddr_addr[14] = 1'b0; // A14 is reserved for this x16 geometry; keep it defined.
+
+    always @(posedge dma_clk or negedge rst_n) begin
+        if (!rst_n) begin
+            write_cmd_req_count <= 32'd0;
+            write_cmd_accept_count <= 32'd0;
+            read_cmd_req_count <= 32'd0;
+            read_cmd_accept_count <= 32'd0;
+            write_data_accept_count <= 32'd0;
+            read_data_count <= 32'd0;
+        end else begin
+            if (cmd_en && !cmd[0])
+                write_cmd_req_count <= write_cmd_req_count + 32'd1;
+            if (cmd_en && cmd_ready && !cmd[0])
+                write_cmd_accept_count <= write_cmd_accept_count + 32'd1;
+            if (cmd_en && cmd[0])
+                read_cmd_req_count <= read_cmd_req_count + 32'd1;
+            if (cmd_en && cmd_ready && cmd[0])
+                read_cmd_accept_count <= read_cmd_accept_count + 32'd1;
+            if (wr_data_en && wr_data_rdy)
+                write_data_accept_count <= write_data_accept_count + 32'd1;
+            if (rd_data_valid)
+                read_data_count <= read_data_count + 32'd1;
+        end
+    end
 
     Video_Frame_Buffer_Top Video_Frame_Buffer_Top_inst ( 
         .I_rst_n              (init_calib_complete),
@@ -212,7 +280,7 @@ module top #(
         .I_vin0_vs_n          (~fb_vin_vsync),
         .I_vin0_de            (fb_vin_de),
         .I_vin0_data          (fb_vin_data),
-        .O_vin0_fifo_full     (),
+        .O_vin0_fifo_full     (vfb_vin_fifo_full),
 
         // 读端口 (消费者)           
         .I_vout0_clk          (video_clk),
@@ -220,7 +288,7 @@ module top #(
         .I_vout0_de           (out_de),
         .O_vout0_den          (off0_syn_de),
         .O_vout0_data         (off0_syn_data),
-        .O_vout0_fifo_empty   (),
+        .O_vout0_fifo_empty   (vfb_vout_fifo_empty),
 
         // 与 DDR3 握手
         .I_cmd_ready          (cmd_ready),
@@ -238,6 +306,20 @@ module top #(
         .I_init_calib_complete(init_calib_complete)
     ); 
 
+    always @(posedge fb_vin_clk or negedge rst_n) begin
+        if (!rst_n)
+            vfb_overflow_count <= 16'd0;
+        else if (fb_vin_de && vfb_vin_fifo_full && vfb_overflow_count != 16'hffff)
+            vfb_overflow_count <= vfb_overflow_count + 16'd1;
+    end
+
+    always @(posedge video_clk or negedge rst_n) begin
+        if (!rst_n)
+            vfb_underflow_count <= 16'd0;
+        else if (out_de && vfb_vout_fifo_empty && vfb_underflow_count != 16'hffff)
+            vfb_underflow_count <= vfb_underflow_count + 16'd1;
+    end
+
     // Capture only the DDR readback, never the test pattern's input stream.
     frame_debug_uart #(.CLOCK_HZ(75000000), .BAUD(115200)) frame_debug_inst (
         .clk(video_clk), .rst_n(rst_n),
@@ -246,9 +328,17 @@ module top #(
         .ddr_rst(ddr_internal_rst),
         .dbg_vector1(ddr_dbg_vector1), .dbg_vector2(ddr_dbg_vector2),
         .dbg_vector3(ddr_dbg_vector3), .dbg_vector4(ddr_dbg_vector4),
+        .vfb_overflow_count(vfb_overflow_count),
+        .vfb_underflow_count(vfb_underflow_count),
+        .write_cmd_req_count(write_cmd_req_count),
+        .write_cmd_accept_count(write_cmd_accept_count),
+        .read_cmd_req_count(read_cmd_req_count),
+        .read_cmd_accept_count(read_cmd_accept_count),
+        .write_data_accept_count(write_data_accept_count),
+        .read_data_count(read_data_count),
         .frame_vs(syn_off0_vs),
-        .pixel_valid(off0_syn_de), .pixel_x(lcd_x[9:0]),
-        .pixel_y(lcd_y[9:0]), .pixel_data(off0_syn_data),
+        .pixel_valid(off0_syn_de), .pixel_x(lcd_x_d2[9:0]),
+        .pixel_y(lcd_y_d2[9:0]), .pixel_data(off0_syn_data),
         .uart_tx(uart_tx)
     );
 
@@ -272,6 +362,8 @@ module top #(
         .rd_data_end          (rd_data_end),
         .sr_req               (1'b0),
         .ref_req              (1'b0),
+        .sr_ack               (ddr_sr_ack),
+        .ref_ack              (ddr_ref_ack),
         .init_calib_complete  (init_calib_complete),
         .clk_out              (dma_clk),
         .ddr_rst              (ddr_internal_rst),
@@ -308,7 +400,7 @@ module top #(
     always @(posedge video_clk or negedge rst_n) begin
         if (!rst_n) begin
             center_pixel_probe <= 16'd0;
-        end else if (off0_syn_de && (lcd_x == 10'd640) && (lcd_y == 10'd360)) begin
+        end else if (off0_syn_de && (lcd_x_d2 == 11'd640) && (lcd_y_d2 == 11'd360)) begin
             center_pixel_probe <= off0_syn_data;
         end
     end
@@ -318,7 +410,7 @@ module top #(
     // led[1]: 探针捕获到了非黑色的数据 (验证整条读取通路有数据流出)
     // led[7]: 存活心跳灯 (0.5秒闪烁)
     reg [25:0] heartbeat;
-    always @(posedge clk) heartbeat <= heartbeat + 1;
+    always @(posedge clk) heartbeat <= heartbeat + 26'd1;
 
     assign state_led[0] = ~init_calib_complete; // 低电平点亮，初始化完成变暗
     assign state_led[1] = ~(center_pixel_probe != 16'd0); // 读到了数据变暗

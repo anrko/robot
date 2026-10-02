@@ -5,20 +5,14 @@
     <Version>5</Version>
     <Device name="GW5AT-60B" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device>
     <FileList>
-        <File path="src/DDR3MI/DDR3MI.v" type="file.verilog" enable="1"/>
-        <File path="src/DDR3_d/DDR3_d.v" type="file.verilog" enable="1"/>
-        <File path="src/debug_uart_tx.v" type="file.verilog" enable="1"/>
-        <File path="../ch38_uart_ddr3_tft_hdmi/src/ddr_pll/ddr_pll.v" type="file.verilog" enable="1"/>
-        <File path="../ch38_uart_ddr3_tft_hdmi/src/ddr_pll/ddr_pll_mod.v" type="file.verilog" enable="1"/>
-        <File path="../ch38_uart_ddr3_tft_hdmi/src/pll_mDRP_intf.v" type="file.verilog" enable="1"/>
-        <File path="src/frame_debug_uart.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_pll/gowin_pll.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_pll/gowin_pll_mod.v" type="file.verilog" enable="1"/>
-        <File path="src/pll_init.v" type="file.verilog" enable="1"/>
         <File path="src/testpattern.v" type="file.verilog" enable="1"/>
-        <File path="src/top.v" type="file.verilog" enable="1"/>
-        <File path="src/vga_timing.v" type="file.verilog" enable="1"/>
-        <File path="src/video_frame_buffer/video_frame_buffer.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin.cst" type="file.cst" enable="1"/>
+        <File path="src/rgmii_debug_top.v" type="file.verilog" enable="1"/>
+        <File path="src/rgb565_udp_sender.v" type="file.verilog" enable="1"/>
+        <File path="src/rgmii_debug/rgmii_pll.v" type="file.verilog" enable="1"/>
+        <File path="src/rgmii_debug/eth_udp_tx_gmii.v" type="file.verilog" enable="1"/>
+        <File path="src/rgmii_debug/ip_checksum.v" type="file.verilog" enable="1"/>
+        <File path="src/rgmii_debug/crc32_d8.v" type="file.verilog" enable="1"/>
+        <File path="src/rgmii_debug/gmii_to_rgmii.v" type="file.verilog" enable="1"/>
+        <File path="src/rgmii_debug.cst" type="file.cst" enable="1"/>
     </FileList>
 </Project>
