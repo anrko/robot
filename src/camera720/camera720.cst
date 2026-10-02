@@ -1,0 +1,53 @@
+// ACG138 P16 FMC -> MES-FMC-LPC-IO J2 -> DOUBLE-DVP-OV5640 J17.
+// P20 must be set to VCCADJ=3.3 V only after checking the module's DOVDD.
+IO_LOC "clk50m" F13;
+IO_PORT "clk50m" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3;
+IO_LOC "rgmii_tx_clk" E18;
+IO_PORT "rgmii_tx_clk" IO_TYPE=LVCMOS18 PULL_MODE=NONE BANK_VCCIO=1.8;
+IO_LOC "rgmii_tx_ctl" F19;
+IO_PORT "rgmii_tx_ctl" IO_TYPE=LVCMOS18 PULL_MODE=NONE BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[0]" B20;
+IO_PORT "rgmii_txd[0]" IO_TYPE=LVCMOS18 PULL_MODE=NONE BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[1]" A20;
+IO_PORT "rgmii_txd[1]" IO_TYPE=LVCMOS18 PULL_MODE=NONE BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[2]" C19;
+IO_PORT "rgmii_txd[2]" IO_TYPE=LVCMOS18 PULL_MODE=NONE BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[3]" F18;
+IO_PORT "rgmii_txd[3]" IO_TYPE=LVCMOS18 PULL_MODE=NONE BANK_VCCIO=1.8;
+IO_LOC "state_led[0]" E13;
+IO_LOC "state_led[1]" E14;
+IO_LOC "state_led[2]" D14;
+IO_LOC "state_led[3]" D15;
+IO_LOC "state_led[4]" B17;
+IO_LOC "state_led[5]" B18;
+IO_LOC "state_led[6]" B15;
+IO_LOC "state_led[7]" B16;
+IO_PORT "state_led[0]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+IO_PORT "state_led[1]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+IO_PORT "state_led[2]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+IO_PORT "state_led[3]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+IO_PORT "state_led[4]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+IO_PORT "state_led[5]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+IO_PORT "state_led[6]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+IO_PORT "state_led[7]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+// Use CAM2/J5 on the DOUBLE-DVP-OV5640 module.  Its DVP signals occupy
+// J2-20..35 on the MES-FMC-LPC-IO card; this avoids CAM1 PCLK's L19 pad,
+// which is dedicated I2C on the GW5AT-LV60PG484 package.
+// Configure P20/VADJ for 3.3 V before powering the adapter.  The camera
+// module's CAM2_DOVDD is strapped to 2.8 V, compatible with these 3.3-V IOs.
+IO_LOC "cam_sda" M15;       IO_PORT "cam_sda" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // CAM2 pin20 / J2-20 LA03_P
+IO_LOC "cam_data[7]" L21;   IO_PORT "cam_data[7]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin21 / J2-21 LA06_N
+IO_LOC "cam_data[6]" M21;   IO_PORT "cam_data[6]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin22 / J2-22 LA06_P
+IO_LOC "cam_scl" K16;       IO_PORT "cam_scl" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // CAM2 pin23 / J2-23 LA05_N
+IO_LOC "cam_data[3]" L16;   IO_PORT "cam_data[3]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin24 / J2-24 LA05_P
+IO_LOC "cam_data[1]" M22;   IO_PORT "cam_data[1]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin25 / J2-25 LA08_N
+IO_LOC "cam_data[2]" N22;   IO_PORT "cam_data[2]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin26 / J2-26 LA08_P
+IO_LOC "cam_data[4]" G20;   IO_PORT "cam_data[4]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin27 / J2-27 LA16_N
+IO_LOC "cam_data[5]" G18;   IO_PORT "cam_data[5]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin29 / J2-29 LA12_N
+IO_LOC "cam_data[0]" V19;   IO_PORT "cam_data[0]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin31 / J2-31 LA17_N
+// J2-32 LA17_P/CC is an ordinary user IO on this package and clock-capable.
+IO_LOC "cam_pclk" V18;      IO_PORT "cam_pclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin32 PCLK
+IO_LOC "cam_href" K22;      IO_PORT "cam_href" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin33 / J2-33 LA10_N
+IO_LOC "cam_vsync" K21;     IO_PORT "cam_vsync" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin34 / J2-34 LA10_P
+IO_LOC "cam_rst_n" G16;     IO_PORT "cam_rst_n" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin35 / J2-35 LA09_N
+IO_LOC "cam_xclk" H15;      IO_PORT "cam_xclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 XCLK pin13 / J2-13 LA15_N
