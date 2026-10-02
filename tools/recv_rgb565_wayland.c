@@ -151,6 +151,7 @@ int main(int argc, char **argv)
     while (running) {
         ssize_t received = recv(socket_fd, packet, sizeof(packet), 0);
         uint64_t now;
+        int camera_frame_complete = 0;
 
         if (received < 0) {
             if (errno == EINTR)
@@ -207,6 +208,7 @@ int main(int argc, char **argv)
                 }
                 continue;
             }
+            camera_frame_complete = 1;
         } else if (received == LINE_BYTES) {
             /* Keep the verified colorbar format working: one full pixel row
              * per datagram, repeated to fill a visible frame. */
@@ -253,6 +255,10 @@ int main(int argc, char **argv)
         }
         frames++;
         next_frame_ns = now + 33333333ULL;
+        if (camera_frame_complete) {
+            rows_in_frame = 0;
+            memset(row_seen, 0, sizeof(row_seen));
+        }
 
         if (now >= next_report_ns) {
             fprintf(stderr,

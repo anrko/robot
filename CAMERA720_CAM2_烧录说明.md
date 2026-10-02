@@ -1,5 +1,11 @@
 # OV5640 720p CAM2 → RGMII/UDP
 
+## 2026-10-02 联调修正
+
+- OV5640 必须输出 RGB565（寄存器 `0x4300=0x61`、`0x501f=0x01`）。此前的 RAW8 设置会让 1280 字节的传感器行被错误地当成 2560 字节 RGB565 行，导致 UDP 包跨行、行号出现在包中间并造成花屏。
+- RK3588 接收器只在收满 720 行后提交一帧，并在提交后清空行状态。正常日志中 `displayed_frames` 应约等于 `RX packets / 720`，不能接近 `RX packets`。
+- 本次修正需要同时重新烧录 `release/camera720_cam2_720p.fs`，并替换 RK3588 上的 `release/recv_rgb565_wayland`。
+
 ## 当前交付
 
 - Gowin 工程：`camera720.gprj`

@@ -33,7 +33,7 @@ module ov5640_init_table_rgb #(
   output reg [(DATA_WIDTH-1):0] q;
 
   localparam IMAGE_FLIP_DAT   = IMAGE_FLIP_EN ? 8'h46 : 8'h40;
-  // RAW bypass: use sensor direction explicitly; BGGR is qualified with 0x00.
+  // Keep the selected sensor direction in RGB565 mode.
   localparam IMAGE_MIRROR_DAT = IMAGE_MIRROR_EN ? 4'h6 : 4'h0;
 
 
@@ -95,8 +95,8 @@ module ov5640_init_table_rgb #(
       53: q <= 24'h3004_ff;
       54: q <= 24'h300e_58;
       55: q <= 24'h302e_00;
-      56: q <= 24'h4300_03;
-      57: q <= 24'h501f_03;
+      56: q <= 24'h4300_61; // RGB565, matching the byte-pair DVP capture path
+      57: q <= 24'h501f_01; // route the ISP RGB output to DVP
       58: q <= 24'h440e_00;
       59: q <= 24'h5000_a7;
       60: q <= 24'h3a0f_30;
