@@ -81,6 +81,8 @@ int main(int argc, char **argv)
     unsigned bad_samples = 0;
     uint64_t frames = 0;
     unsigned rows_in_frame = 0;
+    unsigned sequential_row = 0;
+    int sequential_mode = 0;
     uint64_t next_frame_ns;
     uint64_t next_report_ns;
     int receive_buffer = 8 * 1024 * 1024;
@@ -161,42 +163,35 @@ int main(int argc, char **argv)
             unsigned camera_row = (unsigned)packet[0] |
                                   ((unsigned)packet[1] << 8);
 
-            if (camera_row >= HEIGHT) {
-                bad_packets++;
-                if (bad_samples < 5) {
-                    unsigned row_be = ((unsigned)packet[0] << 8) |
-                                      (unsigned)packet[1];
-                    fprintf(stderr,
-                            "Rejected row datagram: len=%zd prefix=%02x %02x (LE=%u BE=%u)\n",
-                            received, packet[0], packet[1], camera_row,
-                            row_be);
-                    bad_samples++;
-                }
-                if (now >= next_report_ns) {
-                    fprintf(stderr,
-                            "RX packets=%llu bad_length=%llu camera_rows=%u displayed_frames=%llu\n",
-                            (unsigned long long)packets,
-                            (unsigned long long)bad_packets, rows_in_frame,
-                            (unsigned long long)frames);
-                    next_report_ns = now + 1000000000ULL;
-                }
-                continue;
+            if (!sequential_mode && camera_row >= HEIGHT) {
+                sequential_mode = 1;
+                sequential_row = 0;
+                rows_in_frame = 0;
+                memset(row_seen, 0, sizeof(row_seen));
+                fprintf(stderr,
+                        "No valid row header detected; using packet-order compatibility mode\n");
             }
-            if (camera_row == 0 && rows_in_frame != 0) {
+            if (!sequential_mode && camera_row == 0 && rows_in_frame != 0) {
                 memset(row_seen, 0, sizeof(row_seen));
                 rows_in_frame = 0;
             }
 
             /* The sensor sends RGB565 high byte first; appsrc's RGB16 caps
              * use native-endian 16-bit pixels on this little-endian RK3588. */
+            unsigned output_row = sequential_mode ? sequential_row : camera_row;
             for (unsigned x = 0; x < LINE_BYTES; x += 2) {
-                size_t dst = (size_t)camera_row * LINE_BYTES + x;
+                size_t dst = (size_t)output_row * LINE_BYTES + x;
                 frame[dst] = packet[2 + x + 1];
                 frame[dst + 1] = packet[2 + x];
             }
-            if (!row_seen[camera_row]) {
-                row_seen[camera_row] = 1;
+            if (!row_seen[output_row]) {
+                row_seen[output_row] = 1;
                 rows_in_frame++;
+            }
+            if (sequential_mode) {
+                sequential_row++;
+                if (sequential_row == HEIGHT)
+                    sequential_row = 0;
             }
             packets++;
             if (rows_in_frame != HEIGHT) {
