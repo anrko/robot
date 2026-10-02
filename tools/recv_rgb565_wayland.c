@@ -78,6 +78,7 @@ int main(int argc, char **argv)
     uint8_t row_seen[HEIGHT] = {0};
     uint64_t packets = 0;
     uint64_t bad_packets = 0;
+    unsigned bad_samples = 0;
     uint64_t frames = 0;
     unsigned rows_in_frame = 0;
     uint64_t next_frame_ns;
@@ -162,6 +163,15 @@ int main(int argc, char **argv)
 
             if (camera_row >= HEIGHT) {
                 bad_packets++;
+                if (bad_samples < 5) {
+                    unsigned row_be = ((unsigned)packet[0] << 8) |
+                                      (unsigned)packet[1];
+                    fprintf(stderr,
+                            "Rejected row datagram: len=%zd prefix=%02x %02x (LE=%u BE=%u)\n",
+                            received, packet[0], packet[1], camera_row,
+                            row_be);
+                    bad_samples++;
+                }
                 if (now >= next_report_ns) {
                     fprintf(stderr,
                             "RX packets=%llu bad_length=%llu camera_rows=%u displayed_frames=%llu\n",
@@ -212,6 +222,14 @@ int main(int argc, char **argv)
                 memcpy(frame + (size_t)row * LINE_BYTES, packet, LINE_BYTES);
         } else {
             bad_packets++;
+            if (bad_samples < 5) {
+                fprintf(stderr,
+                        "Rejected datagram: len=%zd first_bytes=%02x %02x (expected %d camera / %d legacy)\n",
+                        received, received > 0 ? packet[0] : 0,
+                        received > 1 ? packet[1] : 0,
+                        CAMERA_PACKET_BYTES, LINE_BYTES);
+                bad_samples++;
+            }
             if (now >= next_report_ns) {
                 fprintf(stderr,
                         "RX packets=%llu bad_length=%llu camera_rows=%u displayed_frames=%llu\n",
