@@ -15,6 +15,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 #define LINE_BYTES (WIDTH * 2)
+#define CAMERA_PACKET_BYTES (LINE_BYTES + 2)
 #define FRAME_BYTES (LINE_BYTES * HEIGHT)
 #define UDP_PORT 6102
 
@@ -72,17 +73,18 @@ int main(int argc, char **argv)
     GstElement *source = NULL;
     GError *gst_error = NULL;
     struct sockaddr_in address;
-    uint8_t line[LINE_BYTES];
+    uint8_t packet[CAMERA_PACKET_BYTES];
     uint8_t *frame = NULL;
+    uint8_t row_seen[HEIGHT] = {0};
     uint64_t packets = 0;
     uint64_t bad_packets = 0;
     uint64_t frames = 0;
+    unsigned rows_in_frame = 0;
     uint64_t next_frame_ns;
     uint64_t next_report_ns;
     int receive_buffer = 8 * 1024 * 1024;
     int socket_fd = -1;
     int result = 1;
-    int row;
 
     (void)argc;
     (void)argv;
@@ -138,13 +140,13 @@ int main(int argc, char **argv)
     }
 
     fprintf(stderr,
-            "Listening on UDP %d for 1280x720 RGB565 color bars; Ctrl+C stops\n",
+            "Listening on UDP %d for 1280x720 RGB565; camera rows include a 2-byte little-endian row index; Ctrl+C stops\n",
             UDP_PORT);
     next_frame_ns = monotonic_ns();
     next_report_ns = next_frame_ns + 1000000000ULL;
 
     while (running) {
-        ssize_t received = recv(socket_fd, line, sizeof(line), 0);
+        ssize_t received = recv(socket_fd, packet, sizeof(packet), 0);
         uint64_t now;
 
         if (received < 0) {
@@ -153,17 +155,73 @@ int main(int argc, char **argv)
             perror("recv");
             break;
         }
-        if (received != LINE_BYTES) {
+        now = monotonic_ns();
+        if (received == CAMERA_PACKET_BYTES) {
+            unsigned camera_row = (unsigned)packet[0] |
+                                  ((unsigned)packet[1] << 8);
+
+            if (camera_row >= HEIGHT) {
+                bad_packets++;
+                if (now >= next_report_ns) {
+                    fprintf(stderr,
+                            "RX packets=%llu bad_length=%llu camera_rows=%u displayed_frames=%llu\n",
+                            (unsigned long long)packets,
+                            (unsigned long long)bad_packets, rows_in_frame,
+                            (unsigned long long)frames);
+                    next_report_ns = now + 1000000000ULL;
+                }
+                continue;
+            }
+            if (camera_row == 0 && rows_in_frame != 0) {
+                memset(row_seen, 0, sizeof(row_seen));
+                rows_in_frame = 0;
+            }
+
+            /* The sensor sends RGB565 high byte first; appsrc's RGB16 caps
+             * use native-endian 16-bit pixels on this little-endian RK3588. */
+            for (unsigned x = 0; x < LINE_BYTES; x += 2) {
+                size_t dst = (size_t)camera_row * LINE_BYTES + x;
+                frame[dst] = packet[2 + x + 1];
+                frame[dst + 1] = packet[2 + x];
+            }
+            if (!row_seen[camera_row]) {
+                row_seen[camera_row] = 1;
+                rows_in_frame++;
+            }
+            packets++;
+            if (rows_in_frame != HEIGHT) {
+                if (now >= next_report_ns) {
+                    fprintf(stderr,
+                            "RX packets=%llu bad_length=%llu camera_rows=%u displayed_frames=%llu\n",
+                            (unsigned long long)packets,
+                            (unsigned long long)bad_packets, rows_in_frame,
+                            (unsigned long long)frames);
+                    next_report_ns = now + 1000000000ULL;
+                    if (report_bus_error(pipeline) < 0)
+                        break;
+                }
+                continue;
+            }
+        } else if (received == LINE_BYTES) {
+            /* Keep the verified colorbar format working: one full pixel row
+             * per datagram, repeated to fill a visible frame. */
+            packets++;
+            if (now < next_frame_ns)
+                continue;
+            for (int row = 0; row < HEIGHT; row++)
+                memcpy(frame + (size_t)row * LINE_BYTES, packet, LINE_BYTES);
+        } else {
             bad_packets++;
+            if (now >= next_report_ns) {
+                fprintf(stderr,
+                        "RX packets=%llu bad_length=%llu camera_rows=%u displayed_frames=%llu\n",
+                        (unsigned long long)packets,
+                        (unsigned long long)bad_packets, rows_in_frame,
+                        (unsigned long long)frames);
+                next_report_ns = now + 1000000000ULL;
+            }
             continue;
         }
-        packets++;
-        now = monotonic_ns();
-        if (now < next_frame_ns)
-            continue;
-
-        for (row = 0; row < HEIGHT; row++)
-            memcpy(frame + (size_t)row * LINE_BYTES, line, LINE_BYTES);
 
         GstBuffer *buffer = gst_buffer_new_allocate(NULL, FRAME_BYTES, NULL);
         GstFlowReturn flow;
@@ -185,9 +243,9 @@ int main(int argc, char **argv)
 
         if (now >= next_report_ns) {
             fprintf(stderr,
-                    "RX packets=%llu bad_length=%llu displayed_frames=%llu\n",
+                    "RX packets=%llu bad_length=%llu camera_rows=%u displayed_frames=%llu\n",
                     (unsigned long long)packets,
-                    (unsigned long long)bad_packets,
+                    (unsigned long long)bad_packets, rows_in_frame,
                     (unsigned long long)frames);
             next_report_ns = now + 1000000000ULL;
             if (report_bus_error(pipeline) < 0)
