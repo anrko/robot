@@ -6,6 +6,7 @@
 - RGB565 输出还必须配套使用官方 720p 的裁剪、抽样、HTS/VTS 与 PCLK 分频参数；不能只在 RAW8 时序上修改输出格式，否则 I2C 初始化虽然完成，但 DVP/FIFO 无法形成可发送的完整 RGB565 行。
 - RK3588 接收器只在收满 720 行后提交一帧，并在提交后清空行状态。正常日志中 `displayed_frames` 应约等于 `RX packets / 720`，不能接近 `RX packets`。
 - 本次修正需要同时重新烧录 `release/camera720_cam2_720p.fs`，并替换 RK3588 上的 `release/recv_rgb565_wayland`。
+- 接收器会把启动后收到的第一帧自动转换并保存为 `/root/camera_capture.bmp`，用于检查 RGB565 字节序、颜色通道与行同步；每次重新启动程序会覆盖该文件。
 
 ## 当前交付
 

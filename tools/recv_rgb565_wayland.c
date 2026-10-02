@@ -35,6 +35,65 @@ static uint64_t monotonic_ns(void)
     return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
 }
 
+static void put_le16(uint8_t *dst, uint16_t value)
+{
+    dst[0] = (uint8_t)value;
+    dst[1] = (uint8_t)(value >> 8);
+}
+
+static void put_le32(uint8_t *dst, uint32_t value)
+{
+    dst[0] = (uint8_t)value;
+    dst[1] = (uint8_t)(value >> 8);
+    dst[2] = (uint8_t)(value >> 16);
+    dst[3] = (uint8_t)(value >> 24);
+}
+
+static int save_bmp(const char *path, const uint8_t *frame)
+{
+    const uint32_t pixel_bytes = WIDTH * HEIGHT * 3;
+    uint8_t header[54] = {0};
+    uint8_t row[WIDTH * 3];
+    FILE *file;
+
+    header[0] = 'B';
+    header[1] = 'M';
+    put_le32(header + 2, 54 + pixel_bytes);
+    put_le32(header + 10, 54);
+    put_le32(header + 14, 40);
+    put_le32(header + 18, WIDTH);
+    put_le32(header + 22, HEIGHT);
+    put_le16(header + 26, 1);
+    put_le16(header + 28, 24);
+    put_le32(header + 34, pixel_bytes);
+
+    file = fopen(path, "wb");
+    if (file == NULL)
+        return -1;
+    if (fwrite(header, 1, sizeof(header), file) != sizeof(header))
+        goto error;
+
+    for (int y = HEIGHT - 1; y >= 0; y--) {
+        for (int x = 0; x < WIDTH; x++) {
+            size_t src = ((size_t)y * WIDTH + x) * 2;
+            uint16_t pixel = (uint16_t)frame[src] |
+                             ((uint16_t)frame[src + 1] << 8);
+            row[x * 3] = (uint8_t)((pixel & 0x1f) * 255 / 31);
+            row[x * 3 + 1] = (uint8_t)(((pixel >> 5) & 0x3f) * 255 / 63);
+            row[x * 3 + 2] = (uint8_t)(((pixel >> 11) & 0x1f) * 255 / 31);
+        }
+        if (fwrite(row, 1, sizeof(row), file) != sizeof(row))
+            goto error;
+    }
+    if (fclose(file) != 0)
+        return -1;
+    return 0;
+
+error:
+    fclose(file);
+    return -1;
+}
+
 static int report_bus_error(GstElement *pipeline)
 {
     GstBus *bus = gst_element_get_bus(pipeline);
@@ -88,6 +147,7 @@ int main(int argc, char **argv)
     int receive_buffer = 8 * 1024 * 1024;
     int socket_fd = -1;
     int result = 1;
+    int capture_attempted = 0;
 
     (void)argc;
     (void)argv;
@@ -246,6 +306,13 @@ int main(int argc, char **argv)
             break;
         }
         gst_buffer_fill(buffer, 0, frame, FRAME_BYTES);
+        if (!capture_attempted) {
+            capture_attempted = 1;
+            if (save_bmp("/root/camera_capture.bmp", frame) == 0)
+                fprintf(stderr, "Saved first complete frame to /root/camera_capture.bmp\n");
+            else
+                perror("Cannot save /root/camera_capture.bmp");
+        }
         GST_BUFFER_PTS(buffer) = frames * GST_SECOND / 30;
         GST_BUFFER_DURATION(buffer) = GST_SECOND / 30;
         flow = gst_app_src_push_buffer(GST_APP_SRC(source), buffer);
