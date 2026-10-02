@@ -237,13 +237,13 @@ int main(int argc, char **argv)
                 rows_in_frame = 0;
             }
 
-            /* The sensor sends RGB565 high byte first; appsrc's RGB16 caps
-             * use native-endian 16-bit pixels on this little-endian RK3588. */
+            /* The FPGA payload is already in the native little-endian RGB565
+             * byte order expected by RGB16 on the RK3588. */
             unsigned output_row = sequential_mode ? sequential_row : camera_row;
             for (unsigned x = 0; x < LINE_BYTES; x += 2) {
                 size_t dst = (size_t)output_row * LINE_BYTES + x;
-                frame[dst] = packet[2 + x + 1];
-                frame[dst + 1] = packet[2 + x];
+                frame[dst] = packet[2 + x];
+                frame[dst + 1] = packet[2 + x + 1];
             }
             if (!row_seen[output_row]) {
                 row_seen[output_row] = 1;
