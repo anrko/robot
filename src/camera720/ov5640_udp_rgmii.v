@@ -77,7 +77,8 @@ module ov5640_udp_rgmii(
   wire          tx_done;
   wire          fifo_rd;
   wire [7:0]    fifo_dout;
-  localparam [15:0] UDP_PAYLOAD_LENGTH = IMAGE_WIDTH + 2;
+  // Each captured pixel is RGB565 (2 bytes); prepend a 16-bit row index.
+  localparam [15:0] UDP_PAYLOAD_LENGTH = IMAGE_WIDTH * 2 + 2;
 
   assign g_rst_p     = ~pll_locked;
   assign led         = camera_init_done;
@@ -181,7 +182,8 @@ module ov5640_udp_rgmii(
   eth_tx_ctrl
   #(
     .PAYLOAD_DATA_BYTE (2              ),
-    .PAYLOAD_LENGTH    (IMAGE_WIDTH/2 +1 )
+    // FIFO input is 16 bits: one row-index word plus IMAGE_WIDTH pixel words.
+    .PAYLOAD_LENGTH    (IMAGE_WIDTH + 1 )
   )eth_tx_ctrl_inst
   (
     .reset_p          (g_rst_p          ),

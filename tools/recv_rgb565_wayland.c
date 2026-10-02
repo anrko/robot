@@ -141,7 +141,7 @@ int main(int argc, char **argv)
     }
 
     fprintf(stderr,
-            "Listening on UDP %d for 1280x720 RGB565; camera rows include a 2-byte little-endian row index; Ctrl+C stops\n",
+            "Listening on UDP %d for 1280x720 RGB565; expected 2562-byte camera rows with 2-byte little-endian row index; Ctrl+C stops\n",
             UDP_PORT);
     next_frame_ns = monotonic_ns();
     next_report_ns = next_frame_ns + 1000000000ULL;
