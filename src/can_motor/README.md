@@ -26,3 +26,8 @@ SN65 CANH/CANL -> C620 and USB-CAN CANH/CANL
 
 The current constraints use P7 candidates V15/T15/U16. Verify the board
 connector and bank voltage before wiring.
+
+The generated programming file is `release/can_motor_1mb_rx_uart.fs`; its
+SHA-256 is recorded in the adjacent `.sha256` file. The implementation report
+is under `impl/pnr/can_motor.rpt.txt` after running `tools/build_can_motor.tcl`
+through Gowin `gw_sh`.
