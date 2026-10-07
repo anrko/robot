@@ -69,6 +69,11 @@ module ov5640_udp_rgmii(
   wire          image_data_vs;
   wire [11:0]   image_data_xaddr;
   wire [11:0]   image_data_yaddr;
+  wire [15:0]   image_data_osd;
+
+  // Placeholder angle fields until the BMI088 interface and estimator are added.
+  // BCD layout: {hundreds, tens, ones, tenths}; sign=0 displays '+' .
+  localparam [15:0] OSD_ZERO_BCD = 16'h0000;
 
   reg           pixel_data_valid;
   reg  [15:0]   pixel_data;
@@ -146,6 +151,21 @@ module ov5640_udp_rgmii(
     .Yaddr      (image_data_yaddr ) //output    [11:0]
   );
 
+  // Add the text before line framing/FIFO insertion so the OSD only changes
+  // camera pixels; the 16-bit row-index word remains untouched.
+  attitude_osd_rgb565 u_attitude_osd (
+    .pixel_x        (image_data_xaddr),
+    .pixel_y        (image_data_yaddr),
+    .pixel_in       (image_data),
+    .roll_bcd       (OSD_ZERO_BCD),
+    .roll_negative  (1'b0),
+    .pitch_bcd      (OSD_ZERO_BCD),
+    .pitch_negative (1'b0),
+    .yaw_bcd        (OSD_ZERO_BCD),
+    .yaw_negative   (1'b0),
+    .pixel_out      (image_data_osd)
+  );
+
 //-------------------------------------------
   //对摄像头采集数据每行加上行号，2byte
   reg        image_data_hs_dly1;
@@ -156,7 +176,7 @@ module ov5640_udp_rgmii(
   begin
     image_data_hs_dly1    <= image_data_hs;
     //image_data_dly1       <= image_data_xaddr; //use to sim
-    image_data_dly1       <= image_data;
+    image_data_dly1       <= image_data_osd;
     image_data_valid_dly1 <= image_data_valid;
   end
 

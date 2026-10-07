@@ -4,6 +4,8 @@
 
 `OV5640 CAM2/J5 DVP → RGB565 → 行 FIFO → UDP/RGMII → RK3588`
 
+视频行进入 FIFO 前由 `attitude_osd_rgb565.v` 叠加轻透的飞行仪表风格 HUD：标题、`ROLL`、`PITCH`、`YAW`，青色标签、浅色角度数字和橙色单位。摄像头图像会透过暗色面板保留可见细节。当前三路数值固定显示为 `+000.0°`，使用纯 Verilog 5×7 字符点阵，不依赖厂商 RAM/IP；后续将占位 BCD/符号输入替换为软核姿态数据即可。OSD 已通过 Icarus Verilog 仿真和 Gowin P&R，尚未上板验证。
+
 ## 当前 720p 工程：`src/camera720`
 
 | 路径 | 用途 | 当前状态 |
