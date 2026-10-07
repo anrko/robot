@@ -1,0 +1,5 @@
+# Bitstreams must retain their exact bytes and published SHA256 across checkout.
+/release/camera720_cam2_720p.fs binary
+/release/camera720_cam2_720p_imu_demo.fs binary
+# Preserve the supplied upstream regression snapshot verbatim.
+/src/imu/vendor/mqfu/* -text

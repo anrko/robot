@@ -11,3 +11,6 @@ src/**/temp/
 __pycache__/
 *.pyc
 /tmp/
+
+# Regenerated IMU simulation logs, vectors and plots; summaries live in docs.
+/sim/imu/results/

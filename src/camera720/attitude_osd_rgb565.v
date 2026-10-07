@@ -2,7 +2,8 @@
 // Angle digits are packed BCD: {hundreds, tens, ones, tenths}.
 module attitude_osd_rgb565 #(
     parameter [11:0] PANEL_X = 12'd24,
-    parameter [11:0] PANEL_Y = 12'd24
+    parameter [11:0] PANEL_Y = 12'd24,
+    parameter DEMO_MODE = 0
 )(
     input  wire [11:0] pixel_x,
     input  wire [11:0] pixel_y,
@@ -151,6 +152,13 @@ module attitude_osd_rgb565 #(
                     4'd12: ascii_char = 8'h44;
                     4'd13: ascii_char = 8'h45;
                     default: ascii_char = 8'h20;
+                endcase
+                if(DEMO_MODE) case(char_index)
+                    4'd6:ascii_char=8'h44; // IMU / DEMO
+                    4'd7:ascii_char=8'h45;
+                    4'd8:ascii_char=8'h4D;
+                    4'd9:ascii_char=8'h4F;
+                    4'd10,4'd11,4'd12,4'd13:ascii_char=8'h20;
                 endcase
                 glyph_color = LABEL_COLOR;
             end

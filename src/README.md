@@ -4,9 +4,11 @@
 
 `OV5640 CAM2/J5 DVP → RGB565 → 行 FIFO → UDP/RGMII → RK3588`
 
-视频行进入 FIFO 前由 `attitude_osd_rgb565.v` 叠加轻透的飞行仪表风格 HUD：标题、`ROLL`、`PITCH`、`YAW`，青色标签、浅色角度数字和橙色单位。摄像头图像会透过暗色面板保留可见细节。当前三路数值固定显示为 `+000.0°`，使用纯 Verilog 5×7 字符点阵，不依赖厂商 RAM/IP；后续将占位 BCD/符号输入替换为软核姿态数据即可。OSD 已通过 Icarus Verilog 仿真和 Gowin P&R，尚未上板验证。
+视频行进入 FIFO 前由 `attitude_osd_rgb565.v` 叠加轻透的飞行仪表风格 HUD：标题、`ROLL`、`PITCH`、`YAW`，青色标签、浅色角度数字和橙色单位。摄像头图像会透过暗色面板保留可见细节。当前三路数值固定显示为 `+000.0°`，使用纯 Verilog 5×7 字符点阵，不依赖厂商 RAM/IP；后续将占位 BCD/符号输入替换为姿态解算输出；纯 FPGA 演示接入见下文。OSD 已通过 Icarus Verilog 仿真和 Gowin P&R，尚未上板验证。
 
 ## 当前 720p 工程：`src/camera720`
+
+新增独立的纯 FPGA 六轴 Madgwick 验证与接入链路，见 `src/imu/README.md` 和 `docs/imu/验证与烧录说明.md`。`camera720.gprj` 默认仍显示占位角度；`camera720_imu_demo.gprj` 将模拟 IMU 采样经过实际解算核心后送入 OSD，标题为 `IMU / DEMO`。模拟模式不代表已经连接 BMI088。
 
 | 路径 | 用途 | 当前状态 |
 |---|---|---|

@@ -45,6 +45,14 @@ wire [13:0] rd_data_count;
 reg  [3:0]  eth_interval_cnt;
 reg  [3:0]  curr_state;
 reg  [3:0]  next_state;
+// Synchronise reset release for the read-clock state machine.
+// The vendor dual-clock FIFO retains its original common reset input.
+reg [2:0] control_reset_sync;
+wire control_reset_p=control_reset_sync[2];
+always @(posedge eth_txfifo_rd_clk or posedge reset_p)
+  if(reset_p) control_reset_sync<=3'b111;
+  else control_reset_sync<={control_reset_sync[1:0],1'b0};
+
 
 	eth_tx_fifo eth_tx_fifo(
 		.Data(data_i), //input [15:0] Data
@@ -61,9 +69,9 @@ reg  [3:0]  next_state;
 		.Full() //output Full
 	);
 
-  always@(posedge eth_txfifo_rd_clk or posedge reset_p)
+  always@(posedge eth_txfifo_rd_clk or posedge control_reset_p)
   begin
-    if(reset_p)
+    if(control_reset_p)
       tx_en_pulse <= 1'b0;
     else if(curr_state == TX_START)
       tx_en_pulse <= 1'b1;
@@ -71,9 +79,9 @@ reg  [3:0]  next_state;
       tx_en_pulse <= 1'b0;
   end
 
-  always@(posedge eth_txfifo_rd_clk or posedge reset_p)
+  always@(posedge eth_txfifo_rd_clk or posedge control_reset_p)
   begin
-    if(reset_p)
+    if(control_reset_p)
       eth_interval_cnt <= 1'b0;
     else if(curr_state == DELAY)
       eth_interval_cnt <= eth_interval_cnt + 1'b1;
@@ -84,9 +92,9 @@ reg  [3:0]  next_state;
 //------------------------
 //State machine
 //------------------------
-  always@(posedge eth_txfifo_rd_clk or posedge reset_p)
+  always@(posedge eth_txfifo_rd_clk or posedge control_reset_p)
   begin
-    if(reset_p)
+    if(control_reset_p)
       curr_state <= 1'b0;
     else
       curr_state <= next_state;

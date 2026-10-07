@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE gowin-fpga-project>
 <Project><Template>FPGA</Template><Version>5</Version><Device name="GW5AT-60B" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device><FileList>
+<File path="src/imu/isqrt_u66.v" type="file.verilog" enable="1"/>
+<File path="src/imu/normalize_q24.v" type="file.verilog" enable="1"/>
+<File path="src/imu/madgwick_imu.v" type="file.verilog" enable="1"/>
+<File path="src/imu/atan2_cordic.v" type="file.verilog" enable="1"/>
+<File path="src/imu/quaternion_euler.v" type="file.verilog" enable="1"/>
+<File path="src/imu/angle_bcd.v" type="file.verilog" enable="1"/>
+<File path="src/imu/attitude_pipeline.v" type="file.verilog" enable="1"/>
+<File path="src/imu/osd_attitude_cdc.v" type="file.verilog" enable="1"/>
+<File path="src/imu/imu_demo_source.v" type="file.verilog" enable="1"/>
+
 <File path="src/camera720/attitude_osd_rgb565.v" type="file.verilog" enable="1"/>
 <File path="src/camera720/ov5640_init_table_raw.v" type="file.verilog" enable="1"/>
 <File path="src/camera720/ov5640_udp_rgmii.v" type="file.verilog" enable="1"/>

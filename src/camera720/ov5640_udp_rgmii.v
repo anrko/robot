@@ -17,6 +17,10 @@
 
 module ov5640_udp_rgmii(
  output [15:0] af_status,
+  output imu_reset_n,
+  input attitude_valid,
+  output attitude_ready,
+  input [50:0] attitude_payload,
   //System clock reset
   input       clk50m        , //系统时钟输入，50MHz
   input       reset_n       , //复位信号输入
@@ -52,6 +56,7 @@ module ov5640_udp_rgmii(
   parameter SRC_IP    = 32'hc0_a8_00_02;
   parameter DST_PORT  = 16'd6102;
   parameter SRC_PORT  = 16'd5000;
+  parameter OSD_DEMO  = 0;
   //*****************************
   //clock
   wire          pll_locked;
@@ -60,6 +65,13 @@ module ov5640_udp_rgmii(
   wire          loc_clk24m;
   //reset
   wire          g_rst_p;
+  // PLL lock is generated in the 50 MHz domain. Release the UDP reset only
+  // after three 125 MHz edges, so CRC/state registers meet recovery timing.
+  reg [2:0] udp_reset_sync;
+  wire udp_reset_p=udp_reset_sync[2];
+  always @(posedge loc_clk125m or posedge g_rst_p)
+    if(g_rst_p) udp_reset_sync<=3'b111;
+    else udp_reset_sync<={udp_reset_sync[1:0],1'b0};
   //camera interface
   wire          camera_init_done;
   wire          pclk_bufg_o;
@@ -71,9 +83,18 @@ module ov5640_udp_rgmii(
   wire [11:0]   image_data_yaddr;
   wire [15:0]   image_data_osd;
 
-  // Placeholder angle fields until the BMI088 interface and estimator are added.
-  // BCD layout: {hundreds, tens, ones, tenths}; sign=0 displays '+' .
-  localparam [15:0] OSD_ZERO_BCD = 16'h0000;
+  wire [50:0] osd_frame_payload;
+  reg camera_vsync_d;
+  reg [1:0] osd_reset_sync;
+  assign imu_reset_n=~g_rst_p;
+  always @(posedge pclk_bufg_o or posedge g_rst_p)
+    if(g_rst_p) begin camera_vsync_d<=0;osd_reset_sync<=0;end
+    else begin camera_vsync_d<=camera_vsync;osd_reset_sync<={osd_reset_sync[0],1'b1};end
+  osd_attitude_cdc u_osd_cdc(
+    .src_clk(clk50m),.src_rst_n(~g_rst_p),.src_valid(attitude_valid),
+    .src_ready(attitude_ready),.src_payload(attitude_payload),
+    .dst_clk(pclk_bufg_o),.dst_rst_n(osd_reset_sync[1]),
+    .frame_start(camera_vsync && !camera_vsync_d),.frame_payload(osd_frame_payload));
 
   reg           pixel_data_valid;
   reg  [15:0]   pixel_data;
@@ -153,16 +174,16 @@ module ov5640_udp_rgmii(
 
   // Add the text before line framing/FIFO insertion so the OSD only changes
   // camera pixels; the 16-bit row-index word remains untouched.
-  attitude_osd_rgb565 u_attitude_osd (
+  attitude_osd_rgb565 #(.DEMO_MODE(OSD_DEMO)) u_attitude_osd (
     .pixel_x        (image_data_xaddr),
     .pixel_y        (image_data_yaddr),
     .pixel_in       (image_data),
-    .roll_bcd       (OSD_ZERO_BCD),
-    .roll_negative  (1'b0),
-    .pitch_bcd      (OSD_ZERO_BCD),
-    .pitch_negative (1'b0),
-    .yaw_bcd        (OSD_ZERO_BCD),
-    .yaw_negative   (1'b0),
+    .roll_bcd       (osd_frame_payload[49:34]),
+    .roll_negative  (osd_frame_payload[50]),
+    .pitch_bcd      (osd_frame_payload[32:17]),
+    .pitch_negative (osd_frame_payload[33]),
+    .yaw_bcd        (osd_frame_payload[15:0]),
+    .yaw_negative   (osd_frame_payload[16]),
     .pixel_out      (image_data_osd)
   );
 
@@ -227,7 +248,7 @@ module ov5640_udp_rgmii(
   //eth udp 1g
   eth_udp_tx_gmii eth_udp_tx_gmii(
     .clk125m      (loc_clk125m           ),
-    .reset_p      (g_rst_p               ),
+    .reset_p      (udp_reset_p           ),
 
     .tx_en_pulse  (tx_en_pulse           ),
     .tx_done      (tx_done               ),

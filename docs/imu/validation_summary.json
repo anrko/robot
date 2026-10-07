@@ -1,0 +1,301 @@
+{
+  "upstream": {
+    "original_default_bug_reproduced": true,
+    "samples": 16,
+    "rotating_samples": 8,
+    "gyro_z_rad_s": 1,
+    "observed_quaternion_q14": [
+      16384,
+      0,
+      0,
+      0
+    ],
+    "observed_qdot_z": 0,
+    "diagnostic_only": true
+  },
+  "euler": {
+    "passed": true,
+    "samples": 16850,
+    "max_error_deg_roll_pitch_yaw": [
+      0.05003399191551239,
+      0.0500134403602317,
+      0.05004978588087283
+    ],
+    "threshold_deg": 0.11,
+    "max_cycles": 142
+  },
+  "math": {
+    "passed": true,
+    "normalizer_vectors": 188,
+    "normalizer_bit_exact": true,
+    "cdc_mailbox_frame_latching_stopped_clock_reset": true,
+    "ethernet_reset_release": true
+  },
+  "demo": {
+    "passed": true,
+    "samples": 2048,
+    "rom_wraps": 2,
+    "max_rtl_float_deg": 0.21503764233811698,
+    "max_display_float_deg": 0.18644527368923036,
+    "max_synthetic_truth_deg": 0.21189972614264188,
+    "threshold_rotation_deg": 0.35,
+    "threshold_display_deg": 0.4,
+    "scope": "Synthetic 100 Hz samples through the complete RTL pipeline; not BMI088 hardware."
+  },
+  "core": {
+    "passed": true,
+    "samples": 16200,
+    "threshold_deg": 0.25,
+    "norm_threshold": 2e-06,
+    "failures": [],
+    "scenarios": [
+      {
+        "scenario": "stationary",
+        "samples": 700,
+        "max_rtl_float_deg": 0.0,
+        "rms_rtl_float_deg": 0.0,
+        "max_norm_error": 0.0,
+        "max_core_cycles": 771,
+        "final_euler_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max_truth_deg": 0.0
+      },
+      {
+        "scenario": "yaw_positive",
+        "samples": 1600,
+        "max_rtl_float_deg": 0.0031333478860254265,
+        "rms_rtl_float_deg": 0.002243639283342196,
+        "max_norm_error": 7.220398934304484e-08,
+        "max_core_cycles": 771,
+        "final_euler_deg": [
+          0.0,
+          -0.0,
+          -176.65610699695912
+        ],
+        "max_truth_deg": 0.0031598936595139578
+      },
+      {
+        "scenario": "yaw_negative",
+        "samples": 1000,
+        "max_rtl_float_deg": 0.0029657240591522698,
+        "rms_rtl_float_deg": 0.0013179242459444172,
+        "max_norm_error": 7.235187471366089e-08,
+        "max_core_cycles": 771,
+        "final_euler_deg": [
+          0.0,
+          0.0,
+          -114.59301123409907
+        ],
+        "max_truth_deg": 0.002927527959354219
+      },
+      {
+        "scenario": "roll_rotation",
+        "samples": 800,
+        "max_rtl_float_deg": 0.022687166860987575,
+        "rms_rtl_float_deg": 0.009510442171760556,
+        "max_norm_error": 7.155025982807928e-08,
+        "max_core_cycles": 1035,
+        "final_euler_deg": [
+          59.58618193363043,
+          0.0,
+          0.0
+        ],
+        "max_truth_deg": 0.022686862848739102
+      },
+      {
+        "scenario": "pitch_rotation",
+        "samples": 700,
+        "max_rtl_float_deg": 0.022651086582590865,
+        "rms_rtl_float_deg": 0.003425341673742421,
+        "max_norm_error": 5.8842891448307455e-08,
+        "max_core_cycles": 1035,
+        "final_euler_deg": [
+          0.0,
+          -40.10656204039039,
+          0.0
+        ],
+        "max_truth_deg": 0.022650728600858795
+      },
+      {
+        "scenario": "coupled_motion",
+        "samples": 2400,
+        "max_rtl_float_deg": 0.023524867997326407,
+        "rms_rtl_float_deg": 0.011202555293203185,
+        "max_norm_error": 9.014137225538121e-08,
+        "max_core_cycles": 1035,
+        "final_euler_deg": [
+          11.009200336025922,
+          -46.985786292433275,
+          91.11156991928671
+        ],
+        "max_truth_deg": 0.023524482782623143
+      },
+      {
+        "scenario": "sensor_noise",
+        "samples": 1600,
+        "max_rtl_float_deg": 0.008569352076018959,
+        "rms_rtl_float_deg": 0.005180696328017326,
+        "max_norm_error": 8.077316737686857e-08,
+        "max_core_cycles": 1035,
+        "final_euler_deg": [
+          26.41201066905846,
+          -13.063229295871041,
+          48.460597515866645
+        ],
+        "max_truth_deg": 0.21143238492185648
+      },
+      {
+        "scenario": "missing_acceleration",
+        "samples": 1000,
+        "max_rtl_float_deg": 0.006974549815335699,
+        "rms_rtl_float_deg": 0.00485871294518556,
+        "max_norm_error": 8.553695896029723e-08,
+        "max_core_cycles": 414,
+        "final_euler_deg": [
+          26.56137378261139,
+          -41.55152077795796,
+          63.09051654140791
+        ],
+        "max_truth_deg": 0.006990344085081511
+      },
+      {
+        "scenario": "variable_dt",
+        "samples": 1200,
+        "max_rtl_float_deg": 0.045652635456419864,
+        "rms_rtl_float_deg": 0.01770137427166592,
+        "max_norm_error": 8.65549572015567e-08,
+        "max_core_cycles": 1035,
+        "final_euler_deg": [
+          13.162673945555708,
+          -54.59990790086386,
+          87.36515254184044
+        ],
+        "max_truth_deg": 0.04565228807998755
+      },
+      {
+        "scenario": "tilt_convergence",
+        "samples": 2600,
+        "max_rtl_float_deg": 0.012527904327222767,
+        "rms_rtl_float_deg": 0.007132046236809843,
+        "max_norm_error": 6.968130494833247e-08,
+        "max_core_cycles": 1035,
+        "final_euler_deg": [
+          30.00017282292099,
+          -20.00010133194031,
+          -5.409447362607444
+        ],
+        "final_tilt_error_deg": 0.00017282292098741436
+      },
+      {
+        "scenario": "negative_tilt",
+        "samples": 2600,
+        "max_rtl_float_deg": 0.03330436487175454,
+        "rms_rtl_float_deg": 0.012344019052800423,
+        "max_norm_error": 6.885053649430262e-08,
+        "max_core_cycles": 1035,
+        "final_euler_deg": [
+          -35.01492636682913,
+          25.009525822452638,
+          -8.00334837548044
+        ],
+        "final_tilt_error_deg": 0.014926366829115523
+      }
+    ],
+    "scope": "Synthetic quantised inputs; no real BMI088 or magnetic heading validation."
+  },
+  "gowin": {
+    "tool": "V1.9.12.03",
+    "part": "GW5AT-LV60PG484AC1/I0",
+    "created": "Thu Oct 8 00:19:50 2026",
+    "setup_violated_endpoints": 0,
+    "hold_violated_endpoints": 0,
+    "fmax": [
+      {
+        "clock": "clk50m",
+        "constraint_mhz": 50.0,
+        "actual_mhz": 52.15
+      },
+      {
+        "clock": "cam_pclk",
+        "constraint_mhz": 41.999,
+        "actual_mhz": 42.113
+      },
+      {
+        "clock": "u_board/u_camera/your_instance_name/u_pll/PLLA_inst/CLKOUT0.default_gen_clk",
+        "constraint_mhz": 50.0,
+        "actual_mhz": 123.029
+      },
+      {
+        "clock": "u_board/u_camera/your_instance_name/u_pll/PLLA_inst/CLKOUT1.default_gen_clk",
+        "constraint_mhz": 125.0,
+        "actual_mhz": 125.549
+      }
+    ],
+    "resources": {
+      "Logic": {
+        "used": 8000.0,
+        "available": 59904.0
+      },
+      "Register": {
+        "used": 3130.0,
+        "available": 60780.0
+      },
+      "BSRAM": {
+        "used": 19.0,
+        "available": 118.0
+      },
+      "DSP": {
+        "used": 18.5,
+        "available": 118.0
+      }
+    },
+    "remaining_warning": "PR1014: clk50m_d uses generic routing; board validation required."
+  },
+  "bitstream": {
+    "path": "release/camera720_cam2_720p_imu_demo.fs",
+    "sha256": "06663491CC5469A827AD3E0FB049E78581EDE5AD8ECBBA115F0C63C6ADF53D91"
+  },
+  "source_sha256": {
+    "camera720.gprj": "E4DCFC0AC0793BA76ECB43F0D8738685F11988C207754B79B78C2880D3C81D88",
+    "camera720_imu_demo.gprj": "D60C8D319729C8CF778660791067BB4307645F5146FC021645B4BA519A113B15",
+    "src/camera720/attitude_osd_rgb565.v": "7B368DFFC2A859FA55788AF5C058336808721106E4DF153D35E3503500200E73",
+    "src/camera720/camera720.cst": "04754E07169DAB6BD9CCFA6DE9C4079F277ED1A0624E3706FC096CD608856FEF",
+    "src/camera720/camera720.sdc": "698ACD5D69A3740998108AFB53DBEB5CEA702249474CCD255F27783A19DE4F2A",
+    "src/camera720/camera_common/camera_diag.v": "04A6069222FF283038037AE5A1F244123E09999892ABDBB1B427261F7CAAC7E7",
+    "src/camera720/camera_common/ov5640_af_loader.v": "1F5105F2D9D6263304E688FAB319338B55D3B96CBD0ABEFE070FD21E89323B14",
+    "src/camera720/camera_single/camera_init/camera_init.v": "5E4557A9C2D7A9495E4BD3A5A735DCB9F2C5C8B4057B142789DA9841215EB240",
+    "src/camera720/camera_single/camera_init/i2c_control/i2c_bit_shift.v": "E3A29F047C41EB5298DB87CC5BE4E217B432DBCD2CAC5C2D281EEDAA6DD9B091",
+    "src/camera720/camera_single/camera_init/i2c_control/i2c_control.v": "77435A56D5ECEBCBA2207792B94B3AD7FA9F018203C27BF14D0E9D095B0EC28E",
+    "src/camera720/camera_single/camera_init/ov5640_init_table_jpeg.v": "2A547F2352C169C6F726AE5E952B8301F5378EC71CF44A01FBBED8E3BBC1EED8",
+    "src/camera720/camera_single/camera_init/ov7725_init_table_rgb.v": "0ED862C79E570B3391F5CA0822D4E649B111A3F14ED164D598516173D1F9B42F",
+    "src/camera720/camera_single/DVP_Capture/DVP_Capture.v": "EF74E559E3C859D53742C8A8D510FC957D97C39071A79FAA289AF6A957CEFAC4",
+    "src/camera720/camera_single/eth_tx_ctrl/eth_tx_ctrl.v": "1071248E95E503178474343D16613DC2452144BC3ABD213EFBDB2706F2A2898E",
+    "src/camera720/camera_single/eth_tx_fifo/eth_tx_fifo.v": "19B03E561E3223AA73391DC63EAEE3F1318CD8C37944F0FFA7CB794779912DF7",
+    "src/camera720/camera_single/eth_udp_gmii/crc32_d8.v": "BC5F7B1EE9D60FA0AE75B1BE7DB055680C545E826ECAFD86138C4F842D660F3D",
+    "src/camera720/camera_single/eth_udp_gmii/eth_udp_tx_gmii.v": "44F2E7F9DCD444F3300E72AC59A96EB7F28E19F06097274886316361412A74C2",
+    "src/camera720/camera_single/eth_udp_gmii/ip_checksum.v": "20E74286FEB737DA7BCC9FF72B19EF9EE85D96F3BF6882BFB66572B76C84F856",
+    "src/camera720/camera_single/gmii_rgmii_gmii/gmii_to_rgmii.v": "3F4B1C9C46AB3690E8A45C4A969B09D8F05BAD18C4BB1269687C1F2E50B2002F",
+    "src/camera720/camera_single/gowin_pll/gowin_pll.v": "08759F94D64823D5A6D23935E3F10E80C174401CE30613D3F0DBE332FB7AD4E0",
+    "src/camera720/camera_single/gowin_pll/gowin_pll_mod.v": "495395F7CF26ADE4C10BA757B9F63753E1B000797007C2C9291E9B6C9BC23885",
+    "src/camera720/camera_single/mdio/mdio_bit_shift.v": "470BF1FF074072ECD9977403651B18D8DF125E5C0D670D35CE06CD5139796057",
+    "src/camera720/camera_single/mdio/phy_reg_config.v": "2401A4A435482341B0DD78168A2ED4C5E9E91C5624A97D5DBC01176C061F2043",
+    "src/camera720/camera_single/pll_init.v": "3FC6BEF9A7086F0920BFA47265B1766854A53F6CA1C0F75084EAF6B6EF4D6258",
+    "src/camera720/ov5640_init_table_raw.v": "B63402313210EA2D9EAB0C3053A9453BD48993384FDC28B683A8D11ED53FA895",
+    "src/camera720/ov5640_udp_rgmii.v": "38CDBCC250676BBF55665801BC6AC3CD56485877F1933347A50771F7AA671C3B",
+    "src/camera720/top_camera720.v": "5874BEBFE08D5CF5B17F4B84BD6D0B799665753E86B7E3952DDF8EBBB9A1E4AA",
+    "src/camera720/top_camera720_imu_demo.v": "9567EF04FB4105FE65F298C61F2FF8D096337599F40850075D835B109A0F249C",
+    "src/imu/angle_bcd.v": "3A3B66BDBA9BA1C937C3A3C0C3C6694FA2F2F7856572623101C2B73FE9108F0A",
+    "src/imu/atan2_cordic.v": "0F81DAC668A667240C7BBE2BB8FCCA030487A12D4E3EC34C78391FD448D8EFEE",
+    "src/imu/attitude_pipeline.v": "91F3129C375197A35C26E751181B2F347E57E3476664D3DDED34477DC85F779E",
+    "src/imu/demo_samples.hex": "248FB4D4D47AF9E860F8F99EB9345C9A42436D6FB83FA6AB32D80F16AB31C87E",
+    "src/imu/imu_demo_source.v": "74C31BF70782B1F6BCB70FDD70E18C82A488267038B649A28727BFBD32632919",
+    "src/imu/isqrt_u66.v": "25332EEA774C7D179D56CAF1E88533EF43BC42C3A5B05DA2971F4C387C751D38",
+    "src/imu/madgwick_imu.v": "6C1F06D21DFC88F009EC3D5C7E412DAC09DB7D4375C6FCDCE47D4F2042BE31C9",
+    "src/imu/normalize_q24.v": "12AD7CC4801BC0819F001D4DD58CC334DFD204A0BF4AA56184C47B91F9F574CD",
+    "src/imu/osd_attitude_cdc.v": "3EA5C690CD1A3312741CB8E2AAE865C56D21E71A8F3CFF7CC5ED88DE2A226281",
+    "src/imu/quaternion_euler.v": "164002325DCC5D5616576CCA752CE140C9A35079AC04C755E5A9DCFC13B0FEEF"
+  }
+}
