@@ -1,0 +1,56 @@
+// ACG138 integrated camera + BMI088 + Murax + dual CAN target.
+IO_LOC "clk50m" F13;
+IO_PORT "clk50m" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3;
+
+IO_LOC "rgmii_tx_clk" E18; IO_PORT "rgmii_tx_clk" IO_TYPE=LVCMOS18 BANK_VCCIO=1.8;
+IO_LOC "rgmii_tx_ctl" F19; IO_PORT "rgmii_tx_ctl" IO_TYPE=LVCMOS18 BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[0]" B20; IO_PORT "rgmii_txd[0]" IO_TYPE=LVCMOS18 BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[1]" A20; IO_PORT "rgmii_txd[1]" IO_TYPE=LVCMOS18 BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[2]" C19; IO_PORT "rgmii_txd[2]" IO_TYPE=LVCMOS18 BANK_VCCIO=1.8;
+IO_LOC "rgmii_txd[3]" F18; IO_PORT "rgmii_txd[3]" IO_TYPE=LVCMOS18 BANK_VCCIO=1.8;
+
+IO_LOC "state_led[0]" E13; IO_LOC "state_led[1]" E14; IO_LOC "state_led[2]" D14; IO_LOC "state_led[3]" D15;
+IO_LOC "state_led[4]" B17; IO_LOC "state_led[5]" B18; IO_LOC "state_led[6]" B15; IO_LOC "state_led[7]" B16;
+IO_PORT "state_led[0]" IO_TYPE=LVCMOS33 DRIVE=8; IO_PORT "state_led[1]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "state_led[2]" IO_TYPE=LVCMOS33 DRIVE=8; IO_PORT "state_led[3]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "state_led[4]" IO_TYPE=LVCMOS33 DRIVE=8; IO_PORT "state_led[5]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "state_led[6]" IO_TYPE=LVCMOS33 DRIVE=8; IO_PORT "state_led[7]" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// CAM2 on the existing MES-FMC-LPC-IO wiring. The camera-module schematic
+// straps DOVDD to 2.8 V while these FPGA banks are constrained to 3.3 V;
+// confirm the actual carrier/module interface compatibility before wiring.
+IO_LOC "cam_sda" M15; IO_PORT "cam_sda" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "cam_data[7]" L21; IO_PORT "cam_data[7]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_data[6]" M21; IO_PORT "cam_data[6]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_scl" K16; IO_PORT "cam_scl" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "cam_data[3]" L16; IO_PORT "cam_data[3]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_data[1]" M22; IO_PORT "cam_data[1]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_data[2]" N22; IO_PORT "cam_data[2]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_data[4]" G20; IO_PORT "cam_data[4]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_data[5]" G18; IO_PORT "cam_data[5]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_data[0]" V19; IO_PORT "cam_data[0]" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_pclk" V18; IO_PORT "cam_pclk" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_href" K22; IO_PORT "cam_href" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_vsync" K21; IO_PORT "cam_vsync" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "cam_rst_n" G16; IO_PORT "cam_rst_n" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+
+// BMI088 J3 wiring (VCCADJ must be 3.3 V for this constraint set).
+IO_LOC "bmi_sclk" H13; IO_PORT "bmi_sclk" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "bmi_mosi" G13; IO_PORT "bmi_mosi" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "bmi_miso" M13; IO_PORT "bmi_miso" IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
+IO_LOC "bmi_csb1" L13; IO_PORT "bmi_csb1" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "bmi_csb2" U20; IO_PORT "bmi_csb2" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "bmi_int1" V20; IO_PORT "bmi_int1" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "bmi_int3" H17; IO_PORT "bmi_int3" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+
+// USB_DEBUG FPGA UART: C13 TX / B13 RX.
+IO_LOC "uart_txd" C13; IO_PORT "uart_txd" IO_TYPE=LVCMOS33 DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "uart_rxd" B13; IO_PORT "uart_rxd" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+
+// Two independent CAN transceiver channels on P7 GPIO pairs.
+// CAN0: GPIO0/V15 TX, GPIO2/T15 RX.
+// CAN1: GPIO4/U16 TX, GPIO5/N15 RX.
+IO_LOC "can0_tx" V15; IO_PORT "can0_tx" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "can0_rx" T15; IO_PORT "can0_rx" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "can1_tx" U16; IO_PORT "can1_tx" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "can1_rx" N15; IO_PORT "can1_rx" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;

@@ -12,27 +12,27 @@
   <Part Number>: GW5AT-LV60PG484AC1/I0
   <Device>: GW5AT-60
   <Device Version>: B
-  <Created Time>:Thu Oct  8 00:19:50 2026
+  <Created Time>:Thu Oct  8 14:06:36 2026
 
 
 2. PnR Details
 
   Running placement:
-    Placement Phase 0: CPU time = 0h 0m 3s, Elapsed time = 0h 0m 3s
-    Placement Phase 1: CPU time = 0h 0m 0.701s, Elapsed time = 0h 0m 0.701s
-    Placement Phase 2: CPU time = 0h 0m 5s, Elapsed time = 0h 0m 5s
-    Placement Phase 3: CPU time = 0h 0m 5s, Elapsed time = 0h 0m 5s
-    Total Placement: CPU time = 0h 0m 14s, Elapsed time = 0h 0m 14s
+    Placement Phase 0: CPU time = 0h 0m 2s, Elapsed time = 0h 0m 2s
+    Placement Phase 1: CPU time = 0h 0m 0.637s, Elapsed time = 0h 0m 0.637s
+    Placement Phase 2: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
+    Placement Phase 3: CPU time = 0h 0m 4s, Elapsed time = 0h 0m 4s
+    Total Placement: CPU time = 0h 0m 10s, Elapsed time = 0h 0m 10s
  Running routing:
-    Routing Phase 0: CPU time = 0h 0m 0.003s, Elapsed time = 0h 0m 0.003s
-    Routing Phase 1: CPU time = 0h 1m 38s, Elapsed time = 0h 1m 38s
-    Routing Phase 2: CPU time = 0h 0m 0.367s, Elapsed time = 0h 0m 0.367s
+    Routing Phase 0: CPU time = 0h 0m 0.004s, Elapsed time = 0h 0m 0.004s
+    Routing Phase 1: CPU time = 0h 0m 32s, Elapsed time = 0h 0m 32s
+    Routing Phase 2: CPU time = 0h 0m 0.263s, Elapsed time = 0h 0m 0.263s
     Routing Phase 3: CPU time = 0h 0m 0s, Elapsed time = 0h 0m 0s
-    Total Routing: CPU time = 0h 1m 38s, Elapsed time = 0h 1m 38s
+    Total Routing: CPU time = 0h 0m 32s, Elapsed time = 0h 0m 32s
  Generate output files:
-    CPU time = 0h 0m 12s, Elapsed time = 0h 0m 12s
+    CPU time = 0h 0m 7s, Elapsed time = 0h 0m 7s
 
- Total Time and Memory Usage: CPU time = 0h 2m 4s, Elapsed time = 0h 2m 4s, Peak memory usage = 1849MB
+ Total Time and Memory Usage: CPU time = 0h 0m 49s, Elapsed time = 0h 0m 49s, Peak memory usage = 1821MB
 
 
 3. Resource Usage Summary
@@ -40,19 +40,19 @@
   --------------------------------------------------------------------------------
   Resources                   | Usage                               | Utilization
   --------------------------------------------------------------------------------
-  Logic                       | 8000/59904                          |  14%
-    --LUT,ALU,ROM16           | 7976(6569 LUT, 1407 ALU, 0 ROM16)   | -
+  Logic                       | 8204/59904                          |  14%
+    --LUT,ALU,ROM16           | 8180(6773 LUT, 1407 ALU, 0 ROM16)   | -
     --SSRAM(RAM16)            | 4                                   | -
-  Register                    | 3130/60780                          |  6%
+  Register                    | 3258/60780                          |  6%
     --Logic Register as Latch | 0/59904                             |  0%
-    --Logic Register as FF    | 3120/59904                          |  6%
+    --Logic Register as FF    | 3244/59904                          |  6%
     --I/O Register as Latch   | 0/876                               |  0%
-    --I/O Register as FF      | 10/876                              |  2%
-  CLS                         | 4949/29952                          |  17%
-  I/O Port                    | 30/297                              |  11%
-  I/O Buf                     | 30                                  | -
-    --Input Buf               | 12                                  | -
-    --Output Buf              | 17                                  | -
+    --I/O Register as FF      | 14/876                              |  2%
+  CLS                         | 5028/29952                          |  17%
+  I/O Port                    | 36/297                              |  13%
+  I/O Buf                     | 34                                  | -
+    --Input Buf               | 13                                  | -
+    --Output Buf              | 20                                  | -
     --Inout Buf               | 1                                   | -
   IOLOGIC                     | 6/293                               | 3%
     --ODDR                    | 6
@@ -75,11 +75,11 @@
   bank 1   | 9/25        | 36%         
   bank 2   | 6/26        | 24%         
   bank 3   | 0/8         | 0%          
-  bank 4   | 5/16        | 32%         
-  bank 5   | 8/34        | 24%         
+  bank 4   | 7/16        | 44%         
+  bank 5   | 10/34       | 30%         
   bank 6   | 0/20        | 0%          
   bank 7   | 0/24        | 0%          
-  bank 8   | 2/24        | 9%          
+  bank 8   | 4/24        | 17%         
   bank 9   | 0/66        | 0%          
   bank 10  | 0/25        | 0%          
   bank 11  | 0/25        | 0%          
@@ -94,7 +94,7 @@
   ------------------------------------------
   PRIMARY       | 8/8           | 100%
   LW            | 8/8           | 100%
-  GCLK_PIN      | 5/40          | 13%
+  GCLK_PIN      | 7/40          | 18%
   PLLA          | 1/8           | 13%
   ==========================================
 
@@ -106,18 +106,18 @@
   -------------------------------------------
   clk50m_d       | PRIMARY        |  TR BR
   cam_pclk_d     | PRIMARY        |  TR BR
-  u_board/g_imu_demo.u_attitude/u_filter/a[0]_31_7| PRIMARY        |  TR BR
-  u_board/g_imu_demo.u_attitude/u_filter/u_norm/n2083_14| PRIMARY        |  TR
-  u_board/g_imu_demo.u_attitude/u_euler/u_atan/angle_q16_31_7| PRIMARY        |  BR
-  u_board/u_camera/loc_clk50m| PRIMARY        |  TR BR
+  u_board/g_imu_demo.u_attitude/u_filter/a[0]_31_7| PRIMARY        |  BR
+  u_board/g_imu_demo.u_attitude/u_euler/u_sqrt/sqrt_busy| PRIMARY        |  TR
+  u_board/g_imu_demo.u_attitude/u_euler/u_atan/angle_q16_31_7| PRIMARY        |  TR
+  u_board/u_camera/loc_clk50m| PRIMARY        |  BR
   u_board/u_camera/gmii_tx_clk| PRIMARY        |  TR
-  u_board/u_camera/osd_reset_sync[1]| PRIMARY        |  TR BR
-  cam_xclk_d     | LW             |  -
-  u_board/n5353_10| LW             |  -
+  u_board/u_camera/osd_reset_sync[1]| PRIMARY        |  TR
+  u_board/n5353_12| LW             |  -
   u_board/rLockOut| LW             |  -
   u_board/imu_reset_sync[1]| LW             |  -
   u_board/g_imu_demo.u_attitude/u_filter/n4451_9| LW             |  -
-  u_board/g_imu_demo.u_attitude/u_filter/u_norm/n4440_7| LW             |  -
+  u_board/g_imu_demo.u_attitude/u_filter/u_norm/n4440_3| LW             |  -
+  u_board/g_imu_demo.u_attitude/u_filter/u_norm/n2083_14| LW             |  -
   u_board/g_imu_demo.u_attitude/u_euler/n2767_11| LW             |  -
   u_board/u_camera/udp_reset_sync[2]| LW             |  -
   ===========================================
@@ -140,6 +140,9 @@ cam_data[4]   | -         | G20/5         | Y          | in    | IOR43[B] | -   
 cam_data[5]   | -         | G18/4         | Y          | in    | IOR30[B] | -               | LVCMOS33   | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | OFF           | bus4         
 cam_data[6]   | -         | M21/5         | Y          | in    | IOR68[A] | -               | LVCMOS33   | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | OFF           | bus4         
 cam_data[7]   | -         | L21/5         | Y          | in    | IOR68[B] | -               | LVCMOS33   | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | OFF           | bus4         
+bmi_miso      | -         | M13/5         | Y          | in    | IOR50[A] | -               | LVCMOS33   | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | OFF           | bus4         
+bmi_int1      | -         | V20/8         | Y          | in    | IOB95[B] | GCLKC_8         | LVCMOS33   | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | OFF           | bus4         
+bmi_int3      | -         | H17/4         | Y          | in    | IOR32[A] | -               | LVCMOS33   | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | OFF           | -            
 state_led[0]  | -         | E13/1         | Y          | out   | IOT78[A] | -               | LVCMOS33   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus2         
 state_led[1]  | -         | E14/1         | Y          | out   | IOT78[B] | -               | LVCMOS33   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus2         
 state_led[2]  | -         | D14/1         | Y          | out   | IOT82[A] | PCIE_HOST_RSTN/TPLL0_T_IN2/TPLL0_T_FB0 | LVCMOS33   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus2         
@@ -156,7 +159,10 @@ rgmii_txd[3]  | -         | F18/2         | Y          | out   | IOT117[A] | -  
 rgmii_tx_ctl  | -         | F19/2         | Y          | out   | IOT124[A] | -               | LVCMOS18   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 1.8        | MEDIUM        | NONE          | NONE          | bus1         
 cam_scl       | -         | K16/4         | Y          | out   | IOR34[B] | -               | LVCMOS33   | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | -            
 cam_rst_n     | -         | G16/4         | Y          | out   | IOR24[B] | -               | LVCMOS33   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus4         
-cam_xclk      | -         | H15/4         | Y          | out   | IOR22[B] | -               | LVCMOS33   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus4         
+bmi_sclk      | -         | H13/4         | Y          | out   | IOR20[A] | -               | LVCMOS33   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus4         
+bmi_mosi      | -         | G13/4         | Y          | out   | IOR20[B] | -               | LVCMOS33   | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus4         
+bmi_csb1      | -         | L13/5         | Y          | out   | IOR50[B] | -               | LVCMOS33   | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus4         
+bmi_csb2      | -         | U20/8         | Y          | out   | IOB95[A] | GCLKT_8         | LVCMOS33   | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | NONE          | bus4         
 cam_sda       | -         | M15/5         | Y          | io    | IOR52[A] | -               | LVCMOS33   | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE          | OFF           | bus4         
 =====================================================================================================================================================================================================================
 
@@ -304,8 +310,8 @@ W14/8    | -             | in    | IOB91[A] | -               | LVCMOS33 | OFF  
 V14/8    | -             | in    | IOB91[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 W19/8    | -             | in    | IOB93[A] | GCLKT_9         | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 W20/8    | -             | in    | IOB93[B] | GCLKC_9         | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
-U20/8    | -             | in    | IOB95[A] | GCLKT_8         | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
-V20/8    | -             | in    | IOB95[B] | GCLKC_8         | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
+U20/8    | bmi_csb2      | out   | IOB95[A] | GCLKT_8         | LVCMOS33 | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | NONE          | bus4         
+V20/8    | bmi_int1      | in    | IOB95[B] | GCLKC_8         | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 AB21/8   | -             | in    | IOB97[A] | D14             | LVCMOS33 | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 AB22/8   | -             | in    | IOB97[B] | D15             | LVCMOS33 | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 Y21/8    | -             | in    | IOB99[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
@@ -418,17 +424,17 @@ G11/3    | -             | in    | IOR9[A]  | DONE            | LVCMOS33 | OFF  
 N12/3    | -             | in    | IOR9[B]  | RECONFIG_N      | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | -            
 U8/3     | -             | in    | IOR11[A] | TPLL1_T_IN0/TPLL1_T_FB1 | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus3         
 U9/3     | -             | in    | IOR11[B] | MODE2/TPLL1_C_IN0/TPLL1_C_FB1 | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus3         
-H13/4    | -             | in    | IOR20[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
-G13/4    | -             | in    | IOR20[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
+H13/4    | bmi_sclk      | out   | IOR20[A] | -               | LVCMOS33 | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | NONE          | bus4         
+G13/4    | bmi_mosi      | out   | IOR20[B] | -               | LVCMOS33 | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | NONE          | bus4         
 J15/4    | -             | in    | IOR22[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
-H15/4    | cam_xclk      | out   | IOR22[B] | -               | LVCMOS33 | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | NONE          | bus4         
+H15/4    | -             | in    | IOR22[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 G15/4    | -             | in    | IOR24[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 G16/4    | cam_rst_n     | out   | IOR24[B] | -               | LVCMOS33 | 8     | NONE      | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | NONE          | bus4         
 J14/4    | -             | in    | IOR26[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 H14/4    | -             | in    | IOR26[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 G17/4    | -             | in    | IOR30[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 G18/4    | cam_data[5]   | in    | IOR30[B] | -               | LVCMOS33 | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
-H17/4    | -             | in    | IOR32[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | -            
+H17/4    | bmi_int3      | in    | IOR32[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | -            
 H18/4    | -             | in    | IOR32[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | -            
 L16/4    | cam_data[3]   | in    | IOR34[A] | -               | LVCMOS33 | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | -            
 K16/4    | cam_scl       | out   | IOR34[B] | -               | LVCMOS33 | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | NONE          | -            
@@ -445,8 +451,8 @@ H22/5    | -             | in    | IOR45[B] | -               | LVCMOS33 | OFF  
 J16/5    | -             | in    | IOR47[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 L14/5    | -             | in    | IOR48[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 L15/5    | -             | in    | IOR48[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
-M13/5    | -             | in    | IOR50[A] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
-L13/5    | -             | in    | IOR50[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
+M13/5    | bmi_miso      | in    | IOR50[A] | -               | LVCMOS33 | OFF   | NONE      | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
+L13/5    | bmi_csb1      | out   | IOR50[B] | -               | LVCMOS33 | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | NONE          | bus4         
 M15/5    | cam_sda       | io    | IOR52[A] | -               | LVCMOS33 | 8     | UP        | OFF       | OFF        | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 M16/5    | -             | in    | IOR52[B] | -               | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         
 J20/5    | -             | in    | IOR54[A] | GCLKT_5         | LVCMOS33 | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3   | MEDIUM        | NONE          | OFF           | bus4         

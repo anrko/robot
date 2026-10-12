@@ -1,0 +1,472 @@
+{
+  "date": "2026-10-08",
+  "passed": true,
+  "physical_io_bits": 37,
+  "method": "manual schematic review + automated top/CST/P&R comparison",
+  "cst_sha256": "3A5ED896016E20149163F6E9BFE5E555079C6A04A6EBFB4C136656CA773BB51D",
+  "electrical_compatibility_verified_on_board": false,
+  "bmi088_physical_pins_added": true,
+  "projects": {
+    "camera720": {
+      "top": "top_camera720",
+      "all_ports_constrained": true,
+      "unique_pads": true,
+      "report_sha256": "EBE7AC9D2F768C551A1E492D98087E3BCB6009FD0636E0D8A0DF64723572CA15",
+      "pnr_report_available": true,
+      "pins": {
+        "clk50m": {
+          "pad": "F13",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "rgmii_tx_clk": {
+          "pad": "E18",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_tx_ctl": {
+          "pad": "F19",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[0]": {
+          "pad": "B20",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[1]": {
+          "pad": "A20",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[2]": {
+          "pad": "C19",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[3]": {
+          "pad": "F18",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "state_led[0]": {
+          "pad": "E13",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[1]": {
+          "pad": "E14",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[2]": {
+          "pad": "D14",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[3]": {
+          "pad": "D15",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[4]": {
+          "pad": "B17",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[5]": {
+          "pad": "B18",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[6]": {
+          "pad": "B15",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[7]": {
+          "pad": "B16",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_sda": {
+          "pad": "M15",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_scl": {
+          "pad": "K16",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[0]": {
+          "pad": "V19",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[1]": {
+          "pad": "M22",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[2]": {
+          "pad": "N22",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[3]": {
+          "pad": "L16",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[4]": {
+          "pad": "G20",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[5]": {
+          "pad": "G18",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[6]": {
+          "pad": "M21",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[7]": {
+          "pad": "L21",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_pclk": {
+          "pad": "V18",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_href": {
+          "pad": "K22",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_vsync": {
+          "pad": "K21",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_rst_n": {
+          "pad": "G16",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_sclk": {
+          "pad": "H13",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_mosi": {
+          "pad": "G13",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_miso": {
+          "pad": "M13",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_csb1": {
+          "pad": "L13",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_csb2": {
+          "pad": "U20",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_int1": {
+          "pad": "V20",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_int3": {
+          "pad": "H17",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "imu_uart_tx": {
+          "pad": "C13",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        }
+      }
+    },
+    "camera720_imu_demo": {
+      "top": "top_camera720_imu_demo",
+      "all_ports_constrained": true,
+      "unique_pads": true,
+      "pnr_report_available": false,
+      "pins": {
+        "clk50m": {
+          "pad": "F13",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "rgmii_tx_clk": {
+          "pad": "E18",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_tx_ctl": {
+          "pad": "F19",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[0]": {
+          "pad": "B20",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[1]": {
+          "pad": "A20",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[2]": {
+          "pad": "C19",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "rgmii_txd[3]": {
+          "pad": "F18",
+          "bank": 2,
+          "io_type": "LVCMOS18",
+          "bank_vccio": "1.8"
+        },
+        "state_led[0]": {
+          "pad": "E13",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[1]": {
+          "pad": "E14",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[2]": {
+          "pad": "D14",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[3]": {
+          "pad": "D15",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[4]": {
+          "pad": "B17",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[5]": {
+          "pad": "B18",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[6]": {
+          "pad": "B15",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "state_led[7]": {
+          "pad": "B16",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_sda": {
+          "pad": "M15",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_scl": {
+          "pad": "K16",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[0]": {
+          "pad": "V19",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[1]": {
+          "pad": "M22",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[2]": {
+          "pad": "N22",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[3]": {
+          "pad": "L16",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[4]": {
+          "pad": "G20",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[5]": {
+          "pad": "G18",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[6]": {
+          "pad": "M21",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_data[7]": {
+          "pad": "L21",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_pclk": {
+          "pad": "V18",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_href": {
+          "pad": "K22",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_vsync": {
+          "pad": "K21",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "cam_rst_n": {
+          "pad": "G16",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_sclk": {
+          "pad": "H13",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_mosi": {
+          "pad": "G13",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_miso": {
+          "pad": "M13",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_csb1": {
+          "pad": "L13",
+          "bank": 5,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_csb2": {
+          "pad": "U20",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_int1": {
+          "pad": "V20",
+          "bank": 8,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "bmi_int3": {
+          "pad": "H17",
+          "bank": 4,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        },
+        "imu_uart_tx": {
+          "pad": "C13",
+          "bank": 1,
+          "io_type": "LVCMOS33",
+          "bank_vccio": "3.3"
+        }
+      }
+    }
+  }
+}

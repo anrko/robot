@@ -8,12 +8,14 @@ import shutil
 import zipfile
 import xml.etree.ElementTree as ET
 from validate import ROOT
+from audit_pins import audit
 
 
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest().upper()
 
 
 def main():
+    audit()
     results=ROOT/'sim/imu/results';docs=ROOT/'docs/imu';docs.mkdir(parents=True,exist_ok=True)
     reports={name:json.loads((results/f'{name}_summary.json').read_text())
              for name in ('upstream','euler','math','demo')}
@@ -50,6 +52,9 @@ def main():
     # so archiving a later build can update it without changing the source output.
     if fs.exists():fs.chmod(0o666)
     shutil.copyfile(pnr/'camera720_imu_demo.fs',fs)
+    base_fs=release/'camera720_cam2_720p.fs'
+    if base_fs.exists():base_fs.chmod(0o666)
+    shutil.copyfile(pnr/'camera720.fs',base_fs)
     (release/(fs.name+'.sha256')).write_text(f'{digest(fs)}  {fs.name}\n',encoding='ascii')
     reports['bitstream']={'path':str(fs.relative_to(ROOT)).replace('\\','/'),'sha256':digest(fs)}
     source_paths=set((ROOT/'src/imu').glob('*.v')) | set((ROOT/'src/imu').glob('*.hex'))
@@ -61,8 +66,11 @@ def main():
     shutil.copy2(results/'comparison.png',docs/'comparison.png')
     shutil.copy2(timing,docs/'gowin_timing.html')
     shutil.copy2(pnr/'camera720_imu_demo.rpt.txt',docs/'gowin_resources.txt')
+    shutil.copy2(pnr/'camera720.rpt.txt',docs/'gowin_camera_resources.txt')
+    shutil.copy2(pnr/'camera720_tr_content.html',docs/'gowin_camera_timing.html')
     # Include exactly the project dependencies and IMU development collateral.
-    include={ROOT/'camera720_imu_demo.gprj',ROOT/'camera720.gprj',fs,release/(fs.name+'.sha256'),
+    include={ROOT/'camera720_imu_demo.gprj',ROOT/'camera720.gprj',fs,base_fs,release/(fs.name+'.sha256'),
+        release/'recv_rgb565_wayland',
         ROOT/'tools/build_camera720_imu_demo.tcl',ROOT/'tools/build_camera720.tcl',ROOT/'src/README.md',
         ROOT/'.gitignore',ROOT/'.gitattributes',ROOT/'CAMERA720_CAM2_烧录说明.md'}
     for project in ('camera720.gprj','camera720_imu_demo.gprj'):
@@ -78,9 +86,16 @@ def main():
     with zipfile.ZipFile(archive) as z:
         assert z.testzip() is None
         assert hashlib.sha256(z.read(fs.relative_to(ROOT).as_posix())).hexdigest().upper()==digest(fs)
+        assert hashlib.sha256(z.read(base_fs.relative_to(ROOT).as_posix())).hexdigest().upper()==digest(base_fs)
+        for p in include:
+            assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes(),str(p)
+    # Both historical archive entry points now contain the corrected projects,
+    # both bitstreams and their complete dependencies; no stale H15 source copy.
+    base_archive=release/'camera720_cam2_720p_project.zip'
+    shutil.copyfile(archive,base_archive)
     sums=release/'SHA256SUMS.txt'
     old=sums.read_text(encoding='ascii').splitlines()
-    targets=(fs.name,archive.name)
+    targets=(fs.name,archive.name,base_fs.name,base_archive.name)
     old=[row for row in old if not any(row.endswith(name) for name in targets)]
     sums.write_text('\n'.join(old+[f'{digest(release/name)}  {name}' for name in targets])+'\n',encoding='ascii')
     print(json.dumps({'bitstream':str(fs),'sha256':digest(fs),'archive':str(archive),'gowin':reports['gowin']},ensure_ascii=False))

@@ -40,6 +40,7 @@ module tb_top_can_motor;
     ) sender (
         .rstn     (sender_rstn),
         .clk      (clk50m),
+        .tx_id    (11'h201),
         .can_rx   (can_bus),
         .can_tx   (can_tx_sender),
         .tx_valid (sender_tx_valid),

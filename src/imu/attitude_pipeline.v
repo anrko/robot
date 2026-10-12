@@ -6,7 +6,8 @@ module attitude_pipeline (
     input wire signed [31:0] ax,ay,az,wx,wy,wz,
     input wire [31:0] dt_q24,
     output wire attitude_valid,input wire attitude_ready,
-    output wire [50:0] attitude_payload
+    output wire [50:0] attitude_payload,
+    output wire signed [15:0] roll_d10,pitch_d10,yaw_d10
 );
     wire qvalid,qready;
     wire signed [31:0] qw,qx,qy,qz;
@@ -23,4 +24,7 @@ module attitude_pipeline (
     angle_bcd p(.angle_d10(pitch),.negative(pn),.bcd(pb));
     angle_bcd y(.angle_d10(yaw),.negative(yn),.bcd(yb));
     assign attitude_payload={rn,rb,pn,pb,yn,yb};
+    assign roll_d10=roll;
+    assign pitch_d10=pitch;
+    assign yaw_d10=yaw;
 endmodule

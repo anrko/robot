@@ -1,0 +1,71 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+E:\Program\MCU\NXP\Open1768\Open1768\CAN\Project\Project.uvproj
+Project File Date:  02/11/2012
+
+<h2>Output:</h2>
+Build target 'Open1786'
+assembling startup_LPC17xx.s...
+compiling system_LPC17xx.c...
+compiling core_cm3.c...
+compiling lpc17xx_gpio.c...
+compiling debug_frmwrk.c...
+..\Libraries\LCP1768_StdPeriph_Driver\source\debug_frmwrk.c(242): warning:  #223-D: function "vsprintf" declared implicitly
+..\Libraries\LCP1768_StdPeriph_Driver\source\debug_frmwrk.c(240): warning:  #177-D: variable "tmp" was declared but never referenced
+compiling lpc17xx_uart.c...
+compiling lpc17xx_pinsel.c...
+compiling lpc17xx_clkpwr.c...
+compiling lpc17xx_can.c...
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(144): warning:  #550-D: variable "temp" was set but never used
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(712): warning:  #550-D: variable "abc" was set but never used
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1105): warning:  #186-D: pointless comparison of unsigned integer with zero
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1374): warning:  #61-D: integer operation result is out of range
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1374): warning:  #68-D: integer conversion resulted in a change of sign
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1378): warning:  #61-D: integer operation result is out of range
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1414): warning:  #61-D: integer operation result is out of range
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1414): warning:  #68-D: integer conversion resulted in a change of sign
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1418): warning:  #61-D: integer operation result is out of range
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1454): warning:  #61-D: integer operation result is out of range
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1454): warning:  #68-D: integer conversion resulted in a change of sign
+..\Libraries\LCP1768_StdPeriph_Driver\source\lpc17xx_can.c(1458): warning:  #61-D: integer operation result is out of range
+compiling main.c...
+..\User\main.c(56): warning:  #1295-D: Deprecated declaration print_menu - give arg types
+compiling systen_delay.c...
+linking...
+Program Size: Code=22712 RO-data=752 RW-data=460 ZI-data=1156  
+FromELF: creating hex file...
+".\Output\Project.axf" - 0 Error(s), 15 Warning(s).
+Load "E:\\Program\\MCU\\NXP\\Open1768\\Open1768\\CAN\\Project\\Output\\Project.AXF" 
+Erase Done.
+Programming Done.
+Verify OK.
+Application running ...
+Build target 'Open1786'
+compiling systen_delay.c...
+..\User\systen_delay.c(1): error:  #169: expected a declaration
+..\User\systen_delay.c(1): error:  #10: "#" not expected here
+..\User\systen_delay.c(4): warning:  #12-D: parsing restarts here after previous syntax error
+..\User\systen_delay.c(18): error:  #20: identifier "SysTickCnt" is undefined
+..\User\systen_delay.c(23): warning:  #223-D: function "SysTick_Config" declared implicitly
+..\User\systen_delay.c(23): error:  #20: identifier "SystemCoreClock" is undefined
+..\User\systen_delay.c(35): error:  #20: identifier "SysTickCnt" is undefined
+Target not created
+Build target 'Open1786'
+compiling systen_delay.c...
+..\User\systen_delay.c(1): error:  #169: expected a declaration
+..\User\systen_delay.c(1): error:  #10: "#" not expected here
+..\User\systen_delay.c(4): warning:  #12-D: parsing restarts here after previous syntax error
+..\User\systen_delay.c(18): error:  #20: identifier "SysTickCnt" is undefined
+..\User\systen_delay.c(23): warning:  #223-D: function "SysTick_Config" declared implicitly
+..\User\systen_delay.c(23): error:  #20: identifier "SystemCoreClock" is undefined
+..\User\systen_delay.c(35): error:  #20: identifier "SysTickCnt" is undefined
+Target not created
+Build target 'Open1786'
+compiling systen_delay.c...
+linking...
+Program Size: Code=22712 RO-data=752 RW-data=460 ZI-data=1156  
+FromELF: creating hex file...
+".\Output\Project.axf" - 0 Error(s), 0 Warning(s).

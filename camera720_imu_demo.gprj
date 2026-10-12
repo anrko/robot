@@ -11,6 +11,10 @@
 <File path="src/imu/attitude_pipeline.v" type="file.verilog" enable="1"/>
 <File path="src/imu/osd_attitude_cdc.v" type="file.verilog" enable="1"/>
 <File path="src/imu/imu_demo_source.v" type="file.verilog" enable="1"/>
+<File path="src/imu/spi_byte_engine.v" type="file.verilog" enable="1"/>
+<File path="src/imu/bmi088_spi.v" type="file.verilog" enable="1"/>
+<File path="src/imu/bmi088_q24.v" type="file.verilog" enable="1"/>
+<File path="src/imu/bmi088_telemetry_uart.v" type="file.verilog" enable="1"/>
 
 <File path="src/camera720/attitude_osd_rgb565.v" type="file.verilog" enable="1"/>
 <File path="src/camera720/ov5640_init_table_raw.v" type="file.verilog" enable="1"/>

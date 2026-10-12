@@ -10,12 +10,15 @@
 module can_level_packet #(
     parameter [ 0:0] TX_RTR         = 1'b0,
     parameter [10:0] TX_ID          = 11'h456,
+    // The original example used four bytes; C620 command frames use eight.
+    parameter [ 3:0] TX_DLC         = 4'd4,
     parameter [15:0] default_c_PTS  = 16'd34,
     parameter [15:0] default_c_PBS1 = 16'd5,
     parameter [15:0] default_c_PBS2 = 16'd10
 ) (
     input  wire        rstn,      // set to 1 while working
     input  wire        clk,       // system clock
+    input  wire [10:0] tx_id,     // standard ID selected for the next frame
     
     // CAN TX and RX
     input  wire        can_rx,
@@ -23,7 +26,7 @@ module can_level_packet #(
     
     // user tx packet interface
     input  wire        tx_start,
-    input  wire [31:0] tx_data,
+    input  wire [TX_DLC*8-1:0] tx_data,
     output reg         tx_done,
     output reg         tx_acked,
     
@@ -96,9 +99,14 @@ reg        tx_arbitrary = 1'b0;
 reg [14:0] rx_crc = 15'd0;
 wire[14:0] rx_crc_next = {rx_crc[13:0], 1'b0} ^ (rx_crc[14] ^ bit_rx ? 15'h4599 : 15'h0);
 
-reg [49:0] tx_shift = 50'h3ffff_ffff_ffff;
+localparam integer TX_SHIFT_WIDTH = 18 + TX_DLC * 8;
+localparam [7:0] TX_CRC_START = 8'd36 + (TX_DLC - 4) * 8;
+localparam [7:0] TX_PAYLOAD_END = 8'd52 + (TX_DLC - 4) * 8;
+
+reg [TX_SHIFT_WIDTH-1:0] tx_shift = {TX_SHIFT_WIDTH{1'b1}};
 reg [14:0] tx_crc = 15'd0;
-wire[14:0] tx_crc_next = {tx_crc[13:0], 1'b0} ^ (tx_crc[14] ^ tx_shift[49] ? 15'h4599 : 15'h0);
+wire[14:0] tx_crc_next = {tx_crc[13:0], 1'b0} ^
+                         (tx_crc[14] ^ tx_shift[TX_SHIFT_WIDTH-1] ? 15'h4599 : 15'h0);
 
 wire[ 3:0] rx_len_next = {rx_len[2:0], bit_rx};
 wire[ 7:0] rx_cnt = rx_len[3] ? 8'd63 : {1'd0, rx_len, 3'd0} - 8'd1;
@@ -147,7 +155,7 @@ always @ (posedge clk or negedge rstn)
         bit_tx <= 1'b1;
         tx_arbitrary <= 1'b0;
         tx_crc <= 15'd0;
-        tx_shift <= 50'h3ffff_ffff_ffff;
+        tx_shift <= {TX_SHIFT_WIDTH{1'b1}};
         cnt <= 8'd0;
         stat <= INIT;
     end else begin
@@ -166,7 +174,7 @@ always @ (posedge clk or negedge rstn)
                     tx_arbitrary <= 1'b0;
                     {rx_id,rx_ide,rx_rtr,rx_len,rx_data,rx_crc} <= 0;
                     tx_crc <= 15'd0;
-                    tx_shift <= {TX_ID, TX_RTR, 1'b0, 1'b0, 4'd4, tx_data};
+                    tx_shift <= {tx_id, TX_RTR, 1'b0, 1'b0, TX_DLC, tx_data};
                     if(bit_rx == 1'b0) begin
                         cnt <= 8'd0;
                         stat <= TRX_ID_BASE;
@@ -231,8 +239,8 @@ always @ (posedge clk or negedge rstn)
                     end else if(tx_ben) begin
                         {bit_tx, tx_shift} <= {tx_shift, 1'b1};
                         tx_crc <= tx_crc_next;
-                        if(cnt==8'd36) tx_shift[49:35] <= tx_crc_next;
-                        if(cnt<8'd52) begin
+                        if(cnt==TX_CRC_START) tx_shift[TX_SHIFT_WIDTH-1:TX_SHIFT_WIDTH-15] <= tx_crc_next;
+                        if(cnt<TX_PAYLOAD_END) begin
                             cnt <= cnt + 8'd1;
                         end else begin
                             cnt <= 8'd0;

@@ -12,5 +12,17 @@ __pycache__/
 *.pyc
 /tmp/
 
+# Downloaded host compiler bundle; fetch separately when building softcore apps.
+/softcore_apps/toolchain/
+/tmp_dm_device_sdk/
+
+# Vendor IDE/compiler outputs (sources and project files remain tracked).
+**/OBJ/
+**/obj/
+**/bin/
+**/Debug/
+**/Release/
+*.ko
+
 # Regenerated IMU simulation logs, vectors and plots; summaries live in docs.
 /sim/imu/results/

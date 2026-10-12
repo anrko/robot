@@ -33,8 +33,11 @@ IO_PORT "state_led[7]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
 // Use CAM2/J5 on the DOUBLE-DVP-OV5640 module.  Its DVP signals occupy
 // J2-20..35 on the MES-FMC-LPC-IO card; this avoids CAM1 PCLK's L19 pad,
 // which is dedicated I2C on the GW5AT-LV60PG484 package.
-// Configure P20/VADJ for 3.3 V before powering the adapter.  The camera
-// module's CAM2_DOVDD is strapped to 2.8 V, compatible with these 3.3-V IOs.
+// Current build expects measured VCCADJ=3.3 V on Banks 4/5/8.
+// Module schematic straps CAM2_DOVDD to 2.8 V. This does NOT establish
+// full electrical compatibility with 3.3-V push-pull SCL/SDA/RESET outputs.
+// Verify actual module/supply and interface ratings before programming.
+// XCLK comes from module U27 (24 MHz); J17-13 is CAM1 D2, not XCLK.
 IO_LOC "cam_sda" M15;       IO_PORT "cam_sda" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // CAM2 pin20 / J2-20 LA03_P
 IO_LOC "cam_data[7]" L21;   IO_PORT "cam_data[7]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin21 / J2-21 LA06_N
 IO_LOC "cam_data[6]" M21;   IO_PORT "cam_data[6]" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin22 / J2-22 LA06_P
@@ -50,4 +53,16 @@ IO_LOC "cam_pclk" V18;      IO_PORT "cam_pclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE B
 IO_LOC "cam_href" K22;      IO_PORT "cam_href" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin33 / J2-33 LA10_N
 IO_LOC "cam_vsync" K21;     IO_PORT "cam_vsync" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin34 / J2-34 LA10_P
 IO_LOC "cam_rst_n" G16;     IO_PORT "cam_rst_n" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 pin35 / J2-35 LA09_N
-IO_LOC "cam_xclk" H15;      IO_PORT "cam_xclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // CAM2 XCLK pin13 / J2-13 LA15_N
+
+// BMI088 on MES-FMC-LPC-IO J3.  J3 is the spare header; J2 remains the
+// camera connector.  These banks use the carrier VCCADJ rail, which must be
+// measured/configured as 3.3 V before connecting a 3.3-V BMI088 module.
+IO_LOC "bmi_sclk" H13; IO_PORT "bmi_sclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // J3-26 LA23_P
+IO_LOC "bmi_mosi" G13; IO_PORT "bmi_mosi" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // J3-25 LA23_N
+IO_LOC "bmi_miso" M13; IO_PORT "bmi_miso" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3; // J3-24 LA22_P
+IO_LOC "bmi_csb1" L13; IO_PORT "bmi_csb1" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // J3-23 LA22_N
+IO_LOC "bmi_csb2" U20; IO_PORT "bmi_csb2" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // J3-18 LA18_P_CC
+IO_LOC "bmi_int1" V20; IO_PORT "bmi_int1" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // J3-17 LA18_N_CC
+IO_LOC "bmi_int3" H17; IO_PORT "bmi_int3" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // J3-36 LA13_P
+// FPGA UART TX routes through CH340E U15 to the USB_DEBUG/J2 FPGA COM port.
+IO_LOC "imu_uart_tx" C13; IO_PORT "imu_uart_tx" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3; // B1_T93_P / FPGA_UART_TX

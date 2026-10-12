@@ -30,6 +30,10 @@
 | `attitude_pipeline.v` | 采样到三路 OSD 字段的完整解算链 |
 | `osd_attitude_cdc.v` | 握手邮箱跨时钟域传输，并在帧边界更新显示 |
 | `imu_demo_source.v` | 模拟采样 ROM 驱动，供无 BMI088 时联调 |
+| `spi_byte_engine.v` | BMI088 SPI mode-0 字节收发器 |
+| `bmi088_spi.v` | BMI088 双片选初始化和 100 Hz 原始数据轮询 |
+| `bmi088_q24.v` | BMI088 原始计数到 Q8.24 的量程换算 |
+| `bmi088_telemetry_uart.v` | 每个解算样本经 USB_DEBUG 的 FPGA 串口发送原始值和角度 |
 
 ## 验证与使用
 
@@ -43,8 +47,21 @@ python tools/imu/validate_all.py
 
 `camera720.gprj` 默认保持占位值；`camera720_imu_demo.gprj` 使用模拟采样驱动真实解算 RTL，画面标题 **IMU / DEMO**。100 Hz、1024 组 ROM 样本按周期运动循环，输入数据由 `tools/imu/generate_demo.py` 生成，并非绕过解算直接让显示数字变化。
 
-BMI088 到货后替换 `imu_demo_source`：读取原始寄存器 → 量程换算 → 静止零偏标定 → 安装坐标变换 → 同步采样/时间戳 → `attitude_pipeline`。尚未添加 BMI088 总线驱动和物理引脚，不能把 demo 数据当作真实姿态。
+`camera720.gprj` 已将 BMI088 SPI 驱动接入 `attitude_pipeline`；`camera720_imu_demo.gprj` 继续使用 `imu_demo_source`。上板前还需要按安装方向补充坐标轴变换和静止零偏标定，不能把 demo 数据当作真实姿态。
 
 六轴不能确定绝对航向，Yaw 随陀螺仪零偏漂移；静态倾斜测试只验收 Roll/Pitch 的收敛，不能用生成数据中的 Yaw 当作可观测真值。当前验证也不能证明轮腿机器人可稳定运行一小时。
+
+## 通过 USB_DEBUG 记录实测数据
+
+实时 `camera720.gprj` 配置会把 BMI088 原始六轴计数和对应的 FPGA Roll/Pitch/Yaw 一起通过板载 CH340E FPGA 串口发送。USB_DEBUG 接电脑后，在设备管理器中选择 **FPGA 的 CH340E COM 口**，不要选 RK3588 的 CH9102F 控制台。串口参数为 115200、8-N-1、无流控。工程使用 FPGA_UART_TX 网络，封装脚 C13；该网络由底板连到 CH340E，无需额外飞线。
+
+每帧 26 字节：`A5 5A`、32 位小端样本序号、`ax ay az gx gy gz` 六个有符号 16 位原始计数、Roll/Pitch/Yaw 三个有符号 16 位 0.1° 值，以及覆盖前 24 字节的 CRC-16/CCITT-FALSE（小端）。USB_DEBUG 的 FPGA COM 口可用：
+
+```powershell
+python -m pip install pyserial
+python tools/imu/read_uart.py --port COM7 --output sim/imu/live_capture.csv
+```
+
+把 `COM7` 换成设备管理器中 CH340E 的实际端口。脚本校验帧头和 CRC，将原始值、FPGA 角度、同一批采样逐步运行的 Python 浮点 Madgwick 结果及角度差写入 CSV。记录开始时应复位 FPGA，使 FPGA 与 Python 都从单位四元数起算；若板子中途复位，需重新开始一份记录。每帧对应解算器接收的最新 BMI088 样本，100 Hz 下串口占用约 23% 带宽。
 
 数学参考：用户提供的 MQFU RTL objective/Jacobian，以及 [经典 Madgwick IMU 方程参考实现](https://github.com/PaulStoffregen/MadgwickAHRS/blob/master/src/MadgwickAHRS.cpp)。Python 使用独立浮点 Hamilton 乘法、Jacobian 和 `math.sqrt`；没有照搬原仓库的定点 Python 模型。

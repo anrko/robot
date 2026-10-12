@@ -23,7 +23,7 @@
 | `camera_single/eth_tx_fifo` | Gowin FIFO IP 生成的双时钟 FIFO | 已使用；不要手工编辑加密区 |
 | `camera_single/eth_udp_gmii` | UDP/IP/CRC 发送 | 已使用 |
 | `camera_single/gmii_rgmii_gmii` | GMII 转 RGMII DDR 输出 | 已使用 |
-| `camera_single/gowin_pll`、`pll_init.v` | 24 MHz XCLK、125 MHz 网口时钟等 PLL | 已使用 |
+| `camera_single/gowin_pll`、`pll_init.v` | 内部 PLL 时钟、125 MHz 网口时钟；子卡 XCLK 由 U27 提供，未导出 FPGA XCLK | 已使用 |
 | `camera_single/mdio` | PHY MDIO 配置接口 | 当前工程保留例化，但综合可能优化掉；不影响构建 |
 | `camera_common/camera_diag.v` | 诊断串口采样模块 | 未例化，保留作调试参考 |
 | `camera_common/ov5640_af_loader.v`、`ov5640_af.hex` | OV5640 自动对焦固件加载器 | 当前禁用，保留作后续自动对焦功能 |

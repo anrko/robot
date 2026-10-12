@@ -1,0 +1,40 @@
+// -----------------------------------------------------------------------------
+// Pin constraints for the ACG138 (GW5AT-LV60PG484AC1/I0).
+//
+// Balls come from the board manual plus the SoM schematic; see gowin_top.v for
+// the full evidence trail.  Every pin below is reachable on the carrier:
+// the LEDs drive D0..D7, and the UART goes to the CH340E (U15).
+// -----------------------------------------------------------------------------
+
+// ------------------------------ 50 MHz oscillator ----------------------------
+// U12 active oscillator -> net CLK_50MHz -> U10 F13 (IOT80A, a PLL-capable input)
+IO_LOC  "clk" F13;
+IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
+
+// ------------------------------ 8 user LEDs ----------------------------------
+// Active HIGH: the LED cathodes return to GND, so the FPGA sources the current.
+IO_LOC  "led[0]" E13;
+IO_LOC  "led[1]" E14;
+IO_LOC  "led[2]" D14;
+IO_LOC  "led[3]" D15;
+IO_LOC  "led[4]" B17;
+IO_LOC  "led[5]" B18;
+IO_LOC  "led[6]" B15;
+IO_LOC  "led[7]" B16;
+IO_PORT "led[0]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[1]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[2]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[3]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[4]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[5]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[6]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[7]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+
+// -------------------------- UART to the CH340E --------------------------------
+// C13 / B13 = IOT93A / IOT93B = SoM nets B1_T93_P / B1_T93_N.
+// uart_rxd is pulled up so an idle (unconnected) line reads as a logical 1,
+// which is the UART idle state.
+IO_LOC  "uart_txd" C13;
+IO_PORT "uart_txd" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC  "uart_rxd" B13;
+IO_PORT "uart_rxd" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=OFF BANK_VCCIO=3.3;

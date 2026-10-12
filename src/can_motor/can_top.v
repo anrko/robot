@@ -17,6 +17,9 @@ module can_top #(
     parameter [10:0] RX_ID_SHORT_MASK   = 11'h7ff,
     parameter [28:0] RX_ID_LONG_FILTER  = 29'h12345678,
     parameter [28:0] RX_ID_LONG_MASK    = 29'h1fffffff,
+
+    // Number of bytes in application-level transmitted frames.
+    parameter [3:0] TX_DLC             = 4'd4,
     
     // CAN timing parameters
     parameter [15:0] default_c_PTS  = 16'd34,
@@ -25,6 +28,7 @@ module can_top #(
 ) (
     input  wire        rstn,      // set to 1 while working
     input  wire        clk,       // system clock
+    input  wire [10:0] tx_id,     // standard ID selected for the next frame
     
     // CAN TX and RX, connect to external CAN phy (e.g., TJA1050)
     input  wire        can_rx,
@@ -33,14 +37,16 @@ module can_top #(
     // user tx-buffer write interface
     input  wire        tx_valid,  // when tx_valid=1 and tx_ready=1, push a data to tx fifo
     output wire        tx_ready,  // whether the tx fifo is available
-    input  wire [31:0] tx_data,   // the data to push to tx fifo
+    input  wire [TX_DLC*8-1:0] tx_data, // the data to push to tx fifo
     
     // user rx data interface (byte per cycle, unbuffered)
     output reg         rx_valid,  // whether data byte is valid
     output reg         rx_last,   // indicate the last data byte of a packet
     output reg  [ 7:0] rx_data,   // a data byte in the packet
     output reg  [28:0] rx_id,     // the ID of a packet
-    output reg         rx_ide     // whether the ID is LONG or SHORT
+    output reg         rx_ide,    // whether the ID is LONG or SHORT
+    output wire        tx_ack_event,  // one-cycle pulse after a CAN ACK
+    output wire        tx_fail_event  // one-cycle pulse after all retries fail
 );
 
 
@@ -49,10 +55,10 @@ initial {rx_valid, rx_last, rx_data, rx_id, rx_ide} = 0;
 
 reg         buff_valid = 1'b0;
 reg         buff_ready = 1'b0;
-wire [31:0] buff_data;
+wire [TX_DLC*8-1:0] buff_data;
 
 reg         pkt_txing = 1'b0;
-reg  [31:0] pkt_tx_data = 0;
+reg  [TX_DLC*8-1:0] pkt_tx_data = 0;
 wire        pkt_tx_done;
 wire        pkt_tx_acked;
 wire        pkt_rx_valid;
@@ -70,12 +76,15 @@ reg  [ 3:0] r_len = 4'd0;
 reg  [63:0] r_data = 64'h0;
 reg  [ 1:0] t_retry_cnt = 2'h0;
 
+assign tx_ack_event  = pkt_tx_done && pkt_tx_acked;
+assign tx_fail_event = pkt_tx_done && !pkt_tx_acked && (t_retry_cnt == 2'd3);
+
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 //  TX buffer
 // ---------------------------------------------------------------------------------------------------------------------------------------
-localparam DSIZE = 32;
+localparam DSIZE = TX_DLC * 8;
 localparam ASIZE = 10;
 
 reg [DSIZE-1:0] buffer [0:((1<<ASIZE)-1)];  // may automatically synthesize to BRAM
@@ -130,12 +139,14 @@ always @ (posedge clk)
 // ---------------------------------------------------------------------------------------------------------------------------------------
 can_level_packet #(
     .TX_ID           ( LOCAL_ID         ),
+    .TX_DLC          ( TX_DLC           ),
     .default_c_PTS   ( default_c_PTS    ),
     .default_c_PBS1  ( default_c_PBS1   ),
     .default_c_PBS2  ( default_c_PBS2   )
 ) u_can_level_packet (
     .rstn            ( rstn             ),
     .clk             ( clk              ),
+    .tx_id           ( tx_id            ),
     
     .can_rx          ( can_rx           ),
     .can_tx          ( can_tx           ),

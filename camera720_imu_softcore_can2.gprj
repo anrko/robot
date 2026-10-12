@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project><Template>FPGA</Template><Version>5</Version><Device name="GW5AT-60B" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device><FileList>
+<File path="src/imu/isqrt_u66.v" type="file.verilog" enable="1" />
+<File path="src/imu/normalize_q24.v" type="file.verilog" enable="1" />
+<File path="src/imu/madgwick_imu.v" type="file.verilog" enable="1" />
+<File path="src/imu/atan2_cordic.v" type="file.verilog" enable="1" />
+<File path="src/imu/quaternion_euler.v" type="file.verilog" enable="1" />
+<File path="src/imu/angle_bcd.v" type="file.verilog" enable="1" />
+<File path="src/imu/attitude_pipeline.v" type="file.verilog" enable="1" />
+<File path="src/imu/osd_attitude_cdc.v" type="file.verilog" enable="1" />
+<File path="src/imu/imu_demo_source.v" type="file.verilog" enable="1" />
+<File path="src/imu/spi_byte_engine.v" type="file.verilog" enable="1" />
+<File path="src/imu/bmi088_spi.v" type="file.verilog" enable="1" />
+<File path="src/imu/bmi088_q24.v" type="file.verilog" enable="1" />
+<File path="src/imu/bmi088_telemetry_uart.v" type="file.verilog" enable="1" />
+
+<File path="src/camera720/attitude_osd_rgb565.v" type="file.verilog" enable="1" />
+<File path="src/camera720/ov5640_init_table_raw.v" type="file.verilog" enable="1" />
+<File path="src/camera720/ov5640_udp_rgmii.v" type="file.verilog" enable="1" />
+<File path="src/camera720/top_camera720.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_common/camera_diag.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_common/ov5640_af_loader.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/pll_init.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/camera_init/camera_init.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/camera_init/ov5640_init_table_jpeg.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/camera_init/ov7725_init_table_rgb.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/camera_init/i2c_control/i2c_bit_shift.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/camera_init/i2c_control/i2c_control.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/DVP_Capture/DVP_Capture.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/eth_tx_ctrl/eth_tx_ctrl.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/eth_tx_fifo/eth_tx_fifo.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/eth_udp_gmii/crc32_d8.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/eth_udp_gmii/eth_udp_tx_gmii.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/eth_udp_gmii/ip_checksum.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/gmii_rgmii_gmii/gmii_to_rgmii.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/gowin_pll/gowin_pll_mod.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/gowin_pll/gowin_pll.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/mdio/mdio_bit_shift.v" type="file.verilog" enable="1" />
+<File path="src/camera720/camera_single/mdio/phy_reg_config.v" type="file.verilog" enable="1" />
+<File path="src/integrated/top_camera720_imu_softcore_can2.v" type="file.verilog" enable="1" /><File path="src/softcore/Murax.v" type="file.verilog" enable="1" /><File path="src/softcore/RobotApb.v" type="file.verilog" enable="1" /><File path="src/integrated/camera720_imu_softcore_can2.cst" type="file.cst" enable="1" /><File path="src/integrated/camera720_imu_softcore_can2.sdc" type="file.sdc" enable="1" /><File path="src/can_motor/can_level_bit.v" type="file.verilog" enable="1" /><File path="src/can_motor/can_level_packet.v" type="file.verilog" enable="1" /><File path="src/can_motor/can_top.v" type="file.verilog" enable="1" /></FileList></Project>
